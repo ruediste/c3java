@@ -33,7 +33,7 @@
       <!-- exceptions are for unit testing the authored code -->
       <module name="junit" vendor="junit.org" version="3.8.1"/>
       <module name="template-project-resources" 
-        vendor="lshift.net" version="v1_0"/>
+        vendor="lshift.net" version="v1_0_1"/>
     </use>
 
     <property name="resources.home" 
@@ -103,7 +103,6 @@
       <pathelement path="${junit.home}/junit.jar"/>
     </path>
 
-    <!--
     <javac
       srcdir="${test.src.home}"
       destdir="${test.compile.out}"
@@ -112,7 +111,19 @@
 
       <classpath refid="test.compile.classpath"/>
     </javac>
-    -->
+
+    <path id="test.classpath">
+      <path refid="compile.classpath"/>
+      <pathelement path="${compile.out}"/>
+      <pathelement path="${test.compile.out}"/>
+    </path>
+
+    <junit fork="yes">
+      <classpath refid="test.classpath"/>
+      <formatter type="plain"/>
+      <test name="net.lshift.sisc.compiler.AllTest"/>
+    </junit>
+
   </target>
 
   <!-- ==================================================================== -->
