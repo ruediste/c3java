@@ -55,12 +55,18 @@ public class DynamicDispatchTest
 	{
 	    return "CB";
 	}
+
+	public String toString(A a, int i)
+	{
+	    return "A"+ i;
+	}
     }
 
     public interface ToString
     {
 	public String toString(Object o);
 	public String toString(Object o1, Object o2);
+	public String toString(Object o, int i);
     }
 
     private Method toStringProcedure()
@@ -118,7 +124,6 @@ public class DynamicDispatchTest
 	assertEquals(2, methods.size());
 	assertTrue("contains BC", methods.contains(toStringMethod(B.class, C.class)));
 	assertTrue("contains CB", methods.contains(toStringMethod(C.class, B.class)));
-
     }
 
     public void testToStringABC()
@@ -130,5 +135,8 @@ public class DynamicDispatchTest
 	assertEquals("A", x.toString(new D()));
 	assertEquals("BC", x.toString(new B(), new C()));
 	assertEquals("CB", x.toString(new C(), new B()));
+	assertEquals("A1", x.toString(new A(), 1));
     }
+
+    
 }

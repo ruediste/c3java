@@ -8,12 +8,33 @@ import java.util.*;
  * Generate an implementation of an interface which uses
  * dynamic dispatch to call the closest matching method
  * in a java class.
- * The first dispatch of a given signature is O(N) while
- * subsequent dispatches are O(1). N = number of methods in closure.
+ * The first dispatch of a given signature is O(N^2) while
+ * subsequent dispatches are O(1). N = number of parameters or
+ * the number of types in the linearization of each paramter type.
+ * Note, you can pass primitive types as arguments, but they
+ * are ignored for the purposes of dispatch - for a method
+ * to be a member in a procedure, the primitive parameters
+ * must match exactly. Thats because java will always have
+ * chosen a procedure based on the types, and then promoted
+ * the converted the arguments as required for it.
  */
 public class DynamicDispatch
 {
     private static Map dispatchers = new HashMap();
+    private static final Map PRIMITIVES;
+    static {
+	Map primitives = new HashMap();
+	primitives.put(Void.class, Void.TYPE);
+	primitives.put(Boolean.class, Boolean.TYPE);
+	primitives.put(Double.class, Double.TYPE);
+	primitives.put(Float.class, Float.TYPE);
+	primitives.put(Long.class, Long.TYPE);
+	primitives.put(Integer.class, Integer.TYPE);
+	primitives.put(Short.class, Short.TYPE);
+	primitives.put(Byte.class, Byte.TYPE);
+	primitives.put(Character.class, Character.TYPE);
+	PRIMITIVES = Collections.unmodifiableMap(primitives);
+    }
 
     /**
      * Generate an implementation of constraint, using methods
@@ -91,9 +112,17 @@ public class DynamicDispatch
 	public Signature(Method procedure, Object [] args)
 	{
 	    this.procedure = procedure;
+	    Class [] parameterTypes = procedure.getParameterTypes();
 	    this.args = new Class[args.length];
-	    for(int i = 0; i != args.length; ++i)
-		this.args[i] = args[i].getClass();
+	    for(int i = 0; i != args.length; ++i) {
+		// this is how I handle primitives: I work out from the
+		// procedure if the argument should be a primitive, and
+		// then convert the type appropriately.
+		if(parameterTypes[i].isPrimitive())
+		    this.args[i] = (Class)PRIMITIVES.get(args[i].getClass());
+		else
+		    this.args[i] = args[i].getClass();
+	    }
 	}
 
 	public int hashCode()
@@ -217,7 +246,6 @@ public class DynamicDispatch
 
 	return cmethods;
     }
-
 
     // ------------------------------------------------------------------------
 
