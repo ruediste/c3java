@@ -1,0 +1,157 @@
+<?xml version='1.0'?>
+<project default="compile" basedir=".">
+
+  <property environment="env"/>
+  <property name="config" value="debug"/>
+  <property name="module" value="java"/>
+  <property name="vendor" value="lshift.net"/>
+  <property name="version" value="v1_0"/>
+
+  <property name="build.home" value="build"/>
+  <property name="doc.home" value="${build.home}/doc"/>
+
+  <property name="compile.out" value="${build.home}/classes"/>
+
+  <property name="dist.home" value="dist"/>
+  <property name="web.home" value="web"/>
+  <property name="src.home" value="src"/>
+
+
+  <property name="test.src.home" value="test/src"/>
+  <property name="test.compile.out" value="${build.home}/test/classes"/>
+
+  <!-- ==================================================================== -->
+
+  <target name="use">
+    <taskdef name="use" classname="net.lshift.cm.Use"/>
+
+    <use>
+      <!-- This project should use anything - it should depend solely
+      on things included in java, and should preferable fail gracefully
+      with non current versions of java too -->
+
+      <!-- exceptions are for unit testing the authored code -->
+      <module name="junit" vendor="junit.org" version="3.8.1"/>
+      <module name="template-project-resources" 
+        vendor="lshift.net" version="v1_0"/>
+    </use>
+
+    <property name="resources.home" 
+      value="${template-project-resources.home}"/>
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="init" depends="use"/>
+
+  <!-- ==================================================================== -->
+
+  <target name="compile" depends="build"/>
+
+  <!-- ==================================================================== -->
+
+  <target name="build" depends="init">
+    <property file="config/${config}/build.properties"/>
+
+    <mkdir dir="${build.home}"/>
+
+    <mkdir dir="${compile.out}"/>
+
+    <path id="compile.classpath"/>
+
+    <javac
+      srcdir="${src.home}"
+      destdir="${compile.out}"
+      debug="${javac.debug}"
+      deprecation="${javac.deprecation}"
+      optimize="${javac.optimize}"
+      target="${javac.target}">
+
+      <classpath refid="compile.classpath"/>
+    </javac>
+
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="doc" depends="build">
+    <mkdir dir="${doc.home}/javadoc"/>
+
+    <javadoc sourcepath="src"
+        destdir="${doc.home}/api"
+        packagenames="*"
+        author="true"
+        version="true"
+        use="true"
+        windowtitle="LShift - Java Utilities"
+        bottom="Copyright (C) 2002-2003 LShift Ltd."
+        doctitle="LShift - Java Utilities"
+        stylesheetfile="${resources.home}/etc/css/javadoc.css">
+      <classpath refid="compile.classpath"/>
+    </javadoc>
+
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="test" depends="build,use">
+    <mkdir dir="${test.compile.out}"/>
+
+    <path id="test.compile.classpath">
+      <path refid="compile.classpath"/>
+      <pathelement path="${compile.out}"/>
+      <pathelement path="${junit.home}/junit.jar"/>
+    </path>
+
+    <javac
+      srcdir="${test.src.home}"
+      destdir="${test.compile.out}"
+      debug="true"
+      target="${javac.target}">
+
+      <classpath refid="test.compile.classpath"/>
+    </javac>
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="dist" depends="build,test,doc">
+    <mkdir dir="${dist.home}"/>
+
+    <!-- build the template web-app into a war -->
+    <jar destfile="${dist.home}/java.lshift.net.jar"
+      basedir="${build.home}/classes"/>
+
+    <!-- add documentation to distribution -->
+    <mkdir dir="${dist.home}/doc"/>
+    <copy todir="${dist.home}/doc">
+      <fileset dir="${doc.home}"/>
+    </copy>
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="install" depends="dist">
+    <taskdef name="install" classname="net.lshift.cm.Install"
+      classpath="${dist.home}/bin/use.jar"/>
+
+    <install dist="${dist.home}"
+      name="${module}" vendor="${vendor}" version="${version}" />
+  </target>
+
+  <target name="publish" depends="clean">
+    <cvs command="tag" tag="${version}"/>
+    <taskdef name="publish" classname="net.lshift.cm.Publish"
+      classpath="${dist.home}/bin/use.jar"/>
+
+    <publish name="${module}" vendor="${vendor}" version="${version}" />
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="clean">
+    <delete dir="${build.home}"/>
+    <delete dir="${dist.home}"/>
+  </target>
+
+</project>
