@@ -281,7 +281,12 @@ public class DynamicDispatch
 	    throws Throwable
 	{
 	    Method method = method(procedure, args);
-	    return method.invoke(closure, args);
+	    try {
+		return method.invoke(closure, args);
+	    }
+	    catch(InvocationTargetException e) {
+		throw e.getTargetException();
+	    }
 	}
     }
 
