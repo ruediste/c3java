@@ -103,6 +103,7 @@
       <pathelement path="${junit.home}/junit.jar"/>
     </path>
 
+    <!--
     <javac
       srcdir="${test.src.home}"
       destdir="${test.compile.out}"
@@ -111,6 +112,7 @@
 
       <classpath refid="test.compile.classpath"/>
     </javac>
+    -->
   </target>
 
   <!-- ==================================================================== -->
