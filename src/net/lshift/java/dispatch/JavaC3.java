@@ -199,8 +199,6 @@ public class JavaC3
 	    linearizations.put(c, linearization);
 	}
 
-	System.out.println(c.getName() + ": " + linearization);
-
 	return linearization;
     }
 

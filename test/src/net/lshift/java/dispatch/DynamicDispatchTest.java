@@ -45,11 +45,22 @@ public class DynamicDispatchTest
 	{
 	    return "X";
 	}
+
+	public String toString(B b, C c)
+	{
+	    return "BC";
+	}
+
+	public String toString(C c, B b)
+	{
+	    return "CB";
+	}
     }
 
     public interface ToString
     {
 	public String toString(Object o);
+	public String toString(Object o1, Object o2);
     }
 
     private Method toStringProcedure()
@@ -59,11 +70,25 @@ public class DynamicDispatchTest
 	    ("toString", new Class [] { Object.class });
     }
 
+    private Method toString2Procedure()
+	throws Exception
+    {
+	return ToString.class.getDeclaredMethod
+	    ("toString", new Class [] { Object.class, Object.class });
+    }
+
     private Method toStringMethod(Class c)
 	throws Exception
     {
 	return ToStringABC.class.getDeclaredMethod
 	    ("toString", new Class [] { c });
+    }
+
+    private Method toStringMethod(Class c1, Class c2)
+	throws Exception
+    {
+	return ToStringABC.class.getDeclaredMethod
+	    ("toString", new Class [] { c1, c2 });
     }
 
     public void testAppliesTo()
@@ -87,6 +112,13 @@ public class DynamicDispatchTest
 	assertTrue("contains B", methods.contains(toStringMethod(B.class)));
 	assertTrue("contains C", methods.contains(toStringMethod(C.class)));
 	assertTrue("contains X", methods.contains(toStringMethod(X.class)));
+
+	methods = DynamicDispatch.procedureMethods
+	    (toString2Procedure(), ToStringABC.class.getDeclaredMethods());
+	assertEquals(2, methods.size());
+	assertTrue("contains BC", methods.contains(toStringMethod(B.class, C.class)));
+	assertTrue("contains CB", methods.contains(toStringMethod(C.class, B.class)));
+
     }
 
     public void testToStringABC()
@@ -96,6 +128,7 @@ public class DynamicDispatchTest
 	assertEquals("B", x.toString(new B()));
 	assertEquals("C", x.toString(new C()));
 	assertEquals("A", x.toString(new D()));
-	assertEquals("A", x.toString(new E()));
+	assertEquals("BC", x.toString(new B(), new C()));
+	assertEquals("CB", x.toString(new C(), new B()));
     }
 }

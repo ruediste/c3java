@@ -146,18 +146,18 @@ public class DynamicDispatch
 	    }
 	}
 
-	private Set methods(int position, Iterator parameterTypes)
+	private Set methods(int position, Class [] parameterTypes)
 	    throws JavaC3.JavaC3Exception
 	{
-	    Class paramterType = (Class)parameterTypes.next();
+	    Class paramterType = parameterTypes[position];
 	    List linearization = JavaC3.allSuperclasses(paramterType);
 	    Map index = indexes[position];
 	    Iterator i = linearization.iterator();
 	    while(i.hasNext()) {
 		Set methods = (Set)index.get(i.next());
 		if(methods != null) {
-		    if(parameterTypes.hasNext())
-			methods.removeAll(methods(position + 1, parameterTypes));
+		    if(parameterTypes.length != position + 1)
+			methods.retainAll(methods(position + 1, parameterTypes));
 		    if(!methods.isEmpty())
 			return methods;
 		}
@@ -169,7 +169,7 @@ public class DynamicDispatch
 	private Method lookup(Signature signature)
 	{
 	    try {
-		Set methods = methods(0, Arrays.asList(signature.args).iterator());
+		Set methods = methods(0, signature.args);
 		if(methods.isEmpty())
 		    throw new NoSuchMethodError();
 		return (Method)methods.iterator().next();
