@@ -112,7 +112,72 @@ public class DynamicDispatch
 		result = (this.args[i] == other.args[i]);
 	    return result;
 	}
+    }
 
+    // ------------------------------------------------------------------------
+
+    private static class Procedure
+    {
+	// Each Map in this array is for a parameter. It Maps from a type
+	// to a set of methods with that parameter type at that position.
+	private Map [] indexes;
+
+	public Procedure(Method procedure, Method [] methods)
+	{
+	    
+	    indexes = new Map[procedure.getParameterTypes().length];
+	    for(int i = 0; i != indexes.length; ++i)
+		indexes[i] = new HashMap();
+
+	    Set pmethods = procedureMethods(procedure, methods);
+	    Iterator pmi = pmethods.iterator();
+
+	    while(pmi.hasNext()) {
+		Method method = (Method)pmi.next();
+		Class [] parameters = method.getParameterTypes();
+		for(int i = 0; i != parameters.length; ++i) {
+		    Set s = (Set)indexes[i].get(parameters[i]);
+		    if(s == null) {
+			s = new HashSet();
+			indexes[i].put(parameters[i], s);
+		    }
+		    s.add(method);
+		}
+	    }
+	}
+
+	private Set methods(int position, Iterator parameterTypes)
+	    throws JavaC3.JavaC3Exception
+	{
+	    Class paramterType = (Class)parameterTypes.next();
+	    List linearization = JavaC3.allSuperclasses(paramterType);
+	    Map index = indexes[position];
+	    Iterator i = linearization.iterator();
+	    while(i.hasNext()) {
+		Set methods = (Set)index.get(i.next());
+		if(methods != null) {
+		    if(parameterTypes.hasNext())
+			methods.removeAll(methods(position + 1, parameterTypes));
+		    if(!methods.isEmpty())
+			return methods;
+		}
+	    }
+
+	    return Collections.EMPTY_SET;
+	}
+
+	private Method lookup(Signature signature)
+	{
+	    try {
+		Set methods = methods(0, Arrays.asList(signature.args).iterator());
+		if(methods.isEmpty())
+		    throw new NoSuchMethodError();
+		return (Method)methods.iterator().next();
+	    }
+	    catch(JavaC3.JavaC3Exception e) {
+		throw new NoSuchMethodError(e.toString());
+	    }
+	}
     }
 
     // ------------------------------------------------------------------------
@@ -144,7 +209,6 @@ public class DynamicDispatch
      */
     protected static Set procedureMethods(Method constraint, Method [] methods)
     {
-	// the ArrayList is important since I want to sort them later
 	Set cmethods = new HashSet();
 	for(int i = 0; i != methods.length; ++i) {
 	    if(appliesTo(constraint, methods[i]))
@@ -154,51 +218,6 @@ public class DynamicDispatch
 	return cmethods;
     }
 
-
-    /**
-     * Order a set of methods by specificity
-     */
-    protected static List linearize(Set methods)
-    {
-	// TODO: Can I prove this always completes?
-	// I think this is a way of writing a bubble sort.
-	List linearized = new ArrayList(methods.size());
-	// each iteration of this loop finds all the methods in the
-	// set with no more specific methods the set, places them in
-	// any order in the linearization, and removes them from methods,
-	// until methods is empty.
-	while(!methods.isEmpty()) {
-	    int start = linearized.size();
-	    Iterator i = methods.iterator();
-	    loop: while(i.hasNext()) {
-		Method method = (Method)i.next();
-		Iterator j = methods.iterator();
-		while(j.hasNext()) {
-		    Method testmethod = (Method)j.next();
-		    if(testmethod != method && appliesTo(method, testmethod))
-			continue loop;
-		}
-
-		linearized.add(method);
-	    }
-
-	    methods.removeAll(linearized.subList(start, linearized.size()));
-	}
-
-	return linearized;
-    }
-
-    private static Method lookup(List linearized, Signature signature)
-    {
-	Iterator i = linearized.iterator();
-	while(i.hasNext()) {
-	    Method method = (Method)i.next();
-	    if(appliesTo(method, signature.args))
-		return method;
-	}
-
-	throw new NoSuchMethodError();
-    }
 
     // ------------------------------------------------------------------------
 
@@ -213,18 +232,17 @@ public class DynamicDispatch
 	    Method [] methods = closure.getDeclaredMethods();
 	    for(int p = 0; p != procedures.length; ++p) {
 		this.procedures.put
-		    (procedures[p], linearize
-		     (procedureMethods(procedures[p], methods)));
+		    (procedures[p], new Procedure(procedures[p], methods));
 	    }
 	}
 
-	private final Method method(Method procedure, Object [] args)
+	private final Method method(Method procedureMethod, Object [] args)
 	{
-	    Signature signature = new Signature(procedure, args);
+	    Signature signature = new Signature(procedureMethod, args);
 	    Method method = (Method)shortcuts.get(signature);
 	    if(method == null) {
-		List linearized = (List)procedures.get(procedure);
-		method = lookup(linearized, signature);
+		Procedure procedure = (Procedure)procedures.get(procedureMethod);
+		method = procedure.lookup(signature);
 		shortcuts.put(signature, method);
 	    }
 

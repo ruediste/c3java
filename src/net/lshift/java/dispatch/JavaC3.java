@@ -11,15 +11,16 @@ public class JavaC3
      * Thrown when its not possible to linearize
      * all superclasses.
      */
-    public static class InconsistentPrecedenceGraphError 
-	extends Error 
+    public static class JavaC3Exception
+	extends Exception
     { 
 	private List reversedPartialResult;
 	private List remainingInputs;
 
-	protected InconsistentPrecedenceGraphError
+	protected JavaC3Exception
 	    (List reversedPartialResult, List remainingInputs)
 	{
+	    super("inconsistent precedence");
 	    this.reversedPartialResult = reversedPartialResult;
 	    this.remainingInputs = remainingInputs;
 	}
@@ -97,6 +98,7 @@ public class JavaC3
 	private List remainingInputs;
 
 	public MergeLists(Class c, List inputs)
+	    throws JavaC3Exception
 	{
 	    reversedPartialResult = new LinkedList();
 	    this.reversedPartialResult.add(c);
@@ -137,6 +139,7 @@ public class JavaC3
 	}
 
 	private void mergeLists()
+	    throws JavaC3Exception
 	{
 	    while(remainingInputs()) {
 
@@ -152,8 +155,7 @@ public class JavaC3
 		    reversedPartialResult.addFirst(next);
 		}
 		else {
-		    throw new InconsistentPrecedenceGraphError
-			(reversedPartialResult, remainingInputs);
+		    throw new JavaC3Exception(reversedPartialResult, remainingInputs);
 		}
 	    }
 
@@ -167,6 +169,7 @@ public class JavaC3
     }
 
     protected static List computeClassLinearization(Class c)
+	throws JavaC3Exception
     {
 	List cDirectSuperclasses = directSuperclasses(c);
 	List inputs = new ArrayList(cDirectSuperclasses.size()+1);
@@ -177,6 +180,7 @@ public class JavaC3
 	    allSuperclasses.addAll(allSuperclasses((Class)i.next()));
 	    inputs.add(allSuperclasses);
 	}
+
 	inputs.add(cDirectSuperclasses);
 
 	MergeLists ml = new MergeLists(c, inputs);
@@ -184,6 +188,7 @@ public class JavaC3
     }
 
     public static List allSuperclasses(Class c)
+	throws JavaC3Exception
     {
 	List linearization = (List)linearizations.get(c);
 	if(linearization == null) {
