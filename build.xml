@@ -3,9 +3,9 @@
 
   <property environment="env"/>
   <property name="config" value="debug"/>
-  <property name="module" value="java"/>
-  <property name="vendor" value="lshift.net"/>
-  <property name="version" value="v1_0"/>
+  <property name="cm.module" value="java"/>
+  <property name="cm.vendor" value="lshift.net"/>
+  <property name="cm.version" value="v1_0"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -149,15 +149,21 @@
       classpath="${dist.home}/bin/use.jar"/>
 
     <install dist="${dist.home}"
-      name="${module}" vendor="${vendor}" version="${version}" />
+      name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
   </target>
 
   <target name="publish" depends="clean">
-    <cvs command="tag" tag="${version}"/>
+    <cvs>
+      <commandline>
+        <argument value="tag"/>
+        <argument value="${cm.version}"/>
+      </commandline>
+    </cvs>
+
     <taskdef name="publish" classname="net.lshift.cm.Publish"
       classpath="${dist.home}/bin/use.jar"/>
 
-    <publish name="${module}" vendor="${vendor}" version="${version}" />
+    <publish name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
   </target>
 
   <!-- ==================================================================== -->

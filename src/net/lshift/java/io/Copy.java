@@ -54,4 +54,33 @@ public class Copy
             out.close();
         }
     }
+
+    public static void copy(Reader in, Writer out, char [] buffer)
+        throws IOException
+    {
+        int read = 0;
+        while(read != -1) {
+            read = in.read(buffer);
+            if(read > 0) {
+                out.write(buffer, 0, read);
+            }
+        }
+    }
+
+    public static void copy(Reader in, Writer out)
+        throws IOException
+    {
+        copy(in, out, new char[DEFAULT_BUFFER_SIZE]);
+    }
+
+    public static void copy(Reader in, File dest)
+    {
+        Writer out = new FileWriter(dest);
+        try {
+            copy(in, out);
+        }
+        finally {
+            out.close();
+        }
+    }
 }
