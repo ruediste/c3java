@@ -138,5 +138,45 @@ public class DynamicDispatchTest
 	assertEquals("A1", x.toString(new A(), 1));
     }
 
+    public static class TestException
+	extends Exception
+    {
+	public TestException(String message)
+	{
+	    super(message);
+	}
+    }
+
+    public interface TestExceptionInterface
+    {
+	public void test(String message)
+	    throws TestException;
+    }
+
+    public void testException()
+	throws Exception
+    {
+	TestExceptionInterface x = 
+	    (TestExceptionInterface)
+	    DynamicDispatch.proxy
+	    (TestExceptionInterface.class, 
+	     new TestExceptionInterface() {
+		 public void test(String message)
+		     throws TestException
+		     {
+			 throw new TestException(message);
+		     }
+	     });
+
+	String msg = "hello";
+	try {
+	    x.test(msg);
+	    assertTrue("execution should not reach this point", false);
+	}
+	catch(TestException e) {
+
+	}
+    }
+
     
 }
