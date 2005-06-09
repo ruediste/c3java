@@ -37,6 +37,27 @@ public class DynamicDispatch
     }
 
     /**
+     * Illegal access exception
+     * this is really a runtime version java.lang.IllegalAccessException,
+     * thrown in response to catching java.lang.IllegalAccessException
+     * when we invoke a method. This can occur as a result of
+     * invoking any method on a dynamic dispatch proxy.
+     * Note: this will not be thrown as a result of a private method
+     * in your dynamic dispatch class - that results in a
+     * NoSuchMethodError - because private methods are ignored. This
+     * really only happens as a result of a security policy
+     * preventing access to a method.
+     */
+    public static class IllegalAccessException
+	extends RuntimeException
+    {
+	public IllegalAccessException(String message)
+	{
+	    super(message);
+	}
+    }
+
+    /**
      * Generate an implementation of constraint, using methods
      * with matching signatures in delegate.
      * The implemtation of each method in constraint is to call
@@ -141,6 +162,22 @@ public class DynamicDispatch
 		result = (this.args[i] == other.args[i]);
 	    return result;
 	}
+
+	public String toString()
+	{
+	    StringBuffer b = new StringBuffer();
+	    b.append(procedure.getDeclaringClass().getName());
+	    b.append('.');
+	    b.append(procedure.getName());
+	    b.append('(');
+	    for(int i = 0; i != args.length; ++i) {
+		if(i != 0) b.append(',');
+		b.append(args[i].getName());
+	    }
+	    b.append(')');
+
+	    return b.toString();
+	}
     }
 
     // ------------------------------------------------------------------------
@@ -185,6 +222,7 @@ public class DynamicDispatch
 	    while(i.hasNext()) {
 		Set methods = (Set)index.get(i.next());
 		if(methods != null) {
+		    methods = new HashSet(methods);
 		    if(parameterTypes.length != position + 1)
 			methods.retainAll(methods(position + 1, parameterTypes));
 		    if(!methods.isEmpty())
@@ -199,8 +237,11 @@ public class DynamicDispatch
 	{
 	    try {
 		Set methods = methods(0, signature.args);
-		if(methods.isEmpty())
-		    throw new NoSuchMethodError();
+		if(methods.isEmpty()) {
+		    for(int i = 0; i != indexes.length; ++i)
+			System.err.println(i + ": " + indexes[i]);
+		    throw new NoSuchMethodError(signature.toString());
+		}
 		return (Method)methods.iterator().next();
 	    }
 	    catch(JavaC3.JavaC3Exception e) {
@@ -286,6 +327,11 @@ public class DynamicDispatch
 	    }
 	    catch(InvocationTargetException e) {
 		throw e.getTargetException();
+	    }
+	    catch(IllegalAccessException e) {
+		/* This can happen because of a security policy (it doesn't
+		   seem to be possible to provoke it otherwise - see test) */
+		throw new DynamicDispatch.IllegalAccessException(e.getMessage());
 	    }
 	}
     }

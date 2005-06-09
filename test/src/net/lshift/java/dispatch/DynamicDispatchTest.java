@@ -147,10 +147,19 @@ public class DynamicDispatchTest
 	}
     }
 
-    public interface TestExceptionInterface
+    private static interface TestExceptionInterface
     {
 	public void test(String message)
 	    throws TestException;
+    }
+
+    private static class TestExceptionImpl
+    {
+	public void test(String message)
+	    throws TestException
+	{
+	    throw new TestException(message);
+	}
     }
 
     public void testException()
@@ -159,23 +168,18 @@ public class DynamicDispatchTest
 	TestExceptionInterface x = 
 	    (TestExceptionInterface)
 	    DynamicDispatch.proxy
-	    (TestExceptionInterface.class, 
-	     new TestExceptionInterface() {
-		 public void test(String message)
-		     throws TestException
-		     {
-			 throw new TestException(message);
-		     }
-	     });
+	    (TestExceptionInterface.class, new TestExceptionImpl());
 
 	String msg = "hello";
+	boolean caught = false;
 	try {
 	    x.test(msg);
-	    assertTrue("execution should not reach this point", false);
 	}
 	catch(TestException e) {
-
+	    caught = true;
 	}
+
+	assertTrue("exception thrown & caught", caught);
     }
 
     
