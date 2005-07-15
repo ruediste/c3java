@@ -80,12 +80,13 @@ public class Lists
 	return foldRight
 	    (new FoldProcedure<T,Pair<U>>() {
 		public FoldState<Pair<U>> apply(T item, Pair<U> accumulator) {
-		    return new Lists.FoldState
+		    return new Lists.FoldState<Pair<U>>
 			(true, Pair.cons(proc.apply(item), accumulator));
 		}
 	    }, null, c);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T,U> U[] map(final Transform<T,U> proc, T[] a)
     {
 	U[] result = (U[])new Object[a.length];
@@ -100,7 +101,7 @@ public class Lists
 	    (new FoldProcedure<T,Boolean>() {
 		public FoldState<Boolean> apply(T item, Boolean accumulator) {
 		    boolean result = proc.apply(item) || accumulator;
-		    return new FoldState(!result, result);
+		    return new FoldState<Boolean>(!result, result);
 		}
 	    }, false, c);
     }
@@ -111,7 +112,7 @@ public class Lists
 	    (new FoldProcedure<T,Boolean>() {
 		public FoldState<Boolean> apply(T item, Boolean accumulator) {
 		    boolean result = proc.apply(item) && accumulator;
-		    return new FoldState(result, result);
+		    return new FoldState<Boolean>(result, result);
 		}
 	    }, false, c);
     }

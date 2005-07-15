@@ -1,18 +1,17 @@
 
 package net.lshift.java.collections;
 
+import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.AbstractCollection;
-import java.util.NoSuchElementException;
 
 /**
  * Implement Collection using LISP style pairs.
  */
 public class Pair<T>
-    extends AbstractCollection
-    implements Collection
+    extends AbstractCollection<T>
+    implements Collection<T>
 {
     private T car;
     private Pair<T> cdr;
@@ -33,7 +32,7 @@ public class Pair<T>
 
     public static <U> Pair<U> cons(U car, Pair<U> cdr)
     {
-	return new Pair(car, cdr);
+	return new Pair<U>(car, cdr);
     }
 
     public static class Cons<U>
@@ -41,7 +40,7 @@ public class Pair<T>
     {
 	public Lists.FoldState<Pair<U>> apply(U car, Pair<U> cdr)
 	{
-	    return new Lists.FoldState(true, new Pair(car, cdr));
+	    return new Lists.FoldState<Pair<U>>(true, new Pair<U>(car, cdr));
 	}
     }
 
@@ -57,7 +56,7 @@ public class Pair<T>
 
     public Iterator<T> iterator()
     {
-	return new Iterator() {
+	return new Iterator<T>() {
 
 		Pair<T> pair = Pair.this;
 
