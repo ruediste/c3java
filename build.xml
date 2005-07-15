@@ -121,7 +121,7 @@
     <junit fork="yes">
       <classpath refid="test.classpath"/>
       <formatter type="plain"/>
-      <test name="net.lshift.java.dispatch.AllTest"/>
+      <test name="net.lshift.java.AllTest"/>
     </junit>
 
   </target>
