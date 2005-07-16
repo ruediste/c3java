@@ -42,7 +42,7 @@ public class Lists
     /**
      * LISP like fold-right.
      */
-    public static <T,U> U foldRight(FoldProcedure<T,U> proc, U seed, Collection<T> c)
+    public static <T,U> U foldLeft(FoldProcedure<T,U> proc, U seed, Collection<T> c)
     {
 	for(Iterator<T> i = c.iterator(); i.hasNext();) {
 	    FoldState<U> proceed = proc.apply(i.next(), seed);
@@ -56,7 +56,7 @@ public class Lists
     /**
      * LISP like fold-left.
      */ 
-    public static <T,U> U foldLeft(FoldProcedure<T,U> proc, U seed, Collection<T> c)
+    public static <T,U> U foldRight(FoldProcedure<T,U> proc, U seed, Collection<T> c)
     {
 	List<T> l = (c instanceof List) ? (List<T>)c : new ArrayList<T>(c);
 	for(ListIterator<T> i = l.listIterator(l.size()); i.hasPrevious();) {
@@ -86,14 +86,14 @@ public class Lists
 	    }, null, c);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T,U> U[] map(final Transform<T,U> proc, T[] a)
-    {
-	U[] result = (U[])new Object[a.length];
-	for(int i = 0; i != a.length; ++i)
-	    result[i] = proc.apply(a[i]);
-	return result;
-    }
+// This is really non-functional for some reason. Try using it...
+//    public static <T,U> U[] map(final Transform<T,U> proc, T[] a)
+//    {
+//	U[] result = (U[]) new Object[a.length];
+//	for(int i = 0; i != a.length; ++i)
+//	    result[i] = proc.apply(a[i]);
+//	return result;
+//    }
 
     public static <T> boolean any(final Predicate<T> proc, Collection<T> c)
     {
@@ -114,24 +114,38 @@ public class Lists
 		    boolean result = proc.apply(item) && accumulator;
 		    return new FoldState<Boolean>(result, result);
 		}
-	    }, false, c);
+	    }, true, c);
     }
 
-    private static Transform<Collection,Iterator> ITERATOR_TRANSFORM
-	= new Transform<Collection,Iterator>() {
-	public Iterator apply(Collection c) {
-	    return c.iterator();
+    public static <T> Collection<Collection<T>> zip(Collection<T>... c)
+    {
+	Transform<Collection<T>, Iterator<T>> it = new Transform<Collection<T>, Iterator<T>>() {
+	    public Iterator<T> apply(Collection<T> x)
+	    {
+		return x.iterator();
+	    }
+	};
+	Collection<Collection<T>> collections = Arrays.asList(c);
+	Collection<Iterator<T>> iteratorsCollection = map(it, collections);
+	Predicate<Iterator<T>> allHasNext = new Predicate<Iterator<T>>() {
+	    public Boolean apply(Iterator<T> x)
+	    {
+		return x.hasNext();
+	    }
+	};
+	Collection<Collection<T>> result = new ArrayList<Collection<T>>();
+	Transform<Iterator<T>, T> nextTransform = new Transform<Iterator<T>, T>() {
+
+	    public T apply(Iterator<T> x)
+	    {
+		return x.next();
+	    }
+	};
+	while (all(allHasNext, iteratorsCollection))
+	{
+	    Collection<T> slice = map(nextTransform, iteratorsCollection);
+	    result.add(slice);
 	}
-    };
-
-    public static <T> Transform<Collection<T>,Iterator<T>> iteratorTransform()
-    {
-	return (Transform<Collection<T>,Iterator<T>>)ITERATOR_TRANSFORM;
-    }
-
-    public static <T> Collection<T[]> zip(Collection<T> ... c)
-    {
-	Transform<Collection<T>,Iterator<T>> it = List.<T>iteratorTransform();
-	Iterator<T> [] iterators = map(it, c);
+	return result;
     }
 }
