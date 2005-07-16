@@ -184,6 +184,6 @@ public class Lists
 	    if (!all(equalToElem, slice))
 		return false;
 	}
-	return true;
+	return !(controlIt.hasNext() || zippedIt.hasNext());
     }
 }
