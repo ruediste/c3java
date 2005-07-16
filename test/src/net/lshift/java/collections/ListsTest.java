@@ -21,9 +21,9 @@ public class ListsTest
 
     public void testFoldLeft()
     {
-	assertEquals(Pair.<Character>list('a', 'b', 'c'),
+	assertTrue(Lists.equal(Pair.<Character>list('a', 'b', 'c'),
 		     Lists.foldLeft(new Pair.Cons<Character>(), null,
-				    Pair.<Character>list('a', 'b', 'c')));
+				    Pair.<Character>list('c', 'b', 'a'))));
     }
 
     public void testFoldRight()
@@ -38,14 +38,13 @@ public class ListsTest
 			return new FoldState<Integer>(true, item.intValue()
 				- accumulator.intValue());
 		    }
-		}, 2, Pair.list(5, 1));
+		}, 2, Pair.list(1, 5));
 	assertEquals(minusTwo, new Integer(-2));
 
 	Collection<Character> hello = Lists.foldRight(
 		new Pair.Cons<Character>(), Pair.cons('o', null), Arrays
 			.asList('h', 'e', 'l', 'l'));
-	assertEquals(Arrays.asList("hello".toCharArray()), hello);
-
+	assertTrue(Lists.equal(Arrays.asList('h', 'e', 'l', 'l', 'o'), hello));
     }
     
     public void testMap() {
@@ -59,7 +58,7 @@ public class ListsTest
 	List<Integer> input = Arrays.asList(2,3,4,5,6);
 	Collection<Integer> output = Lists.map(plusOne, input);
 	Collections.reverse(input);
-	assertEquals(input, output);
+	assertTrue(Lists.equal(input, output));
     }
     
     public void testZip()

@@ -69,6 +69,14 @@ public class Lists
 	return seed;
     }
 
+    public static <T, U> T foldRight1(FoldProcedure<T,T> proc, Collection<T> c) {
+	if (c.isEmpty())
+	    return null;
+	List<T> pruned = new ArrayList<T>(c);
+	T seed = pruned.remove(pruned.size() - 1);
+	return foldRight(proc, seed, pruned);
+    }
+    
     /**
      * LISP like map.
      * @return a collection which is the result of
@@ -147,5 +155,35 @@ public class Lists
 	    result.add(slice);
 	}
 	return result;
+    }
+    
+    public static <T> boolean equal(Collection<T> control,
+	    Collection<T>... tests)
+    {
+	Collection<Collection<T>> zipped = zip(tests);
+	
+	Iterator<T> controlIt = control.iterator();
+	Iterator<Collection<T>> zippedIt = zipped.iterator();
+	while (controlIt.hasNext() && zippedIt.hasNext())
+	{
+	    final T elem = controlIt.next();
+	    Collection<T> slice = zippedIt.next();
+	    
+	    Predicate<T> equalToElem = new Predicate<T>() {
+
+		public Boolean apply(T x)
+		{
+		    if (null == x && null == elem)
+			return true;
+		    else if (null == x || null == elem)
+			return false;
+		    else
+			return elem.equals(x);
+		}
+	    };
+	    if (!all(equalToElem, slice))
+		return false;
+	}
+	return true;
     }
 }

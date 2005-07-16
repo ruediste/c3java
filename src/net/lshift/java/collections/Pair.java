@@ -46,7 +46,7 @@ public class Pair<T>
 
     public static <U> Pair<U> list(Collection<U> c)
     {
-	return Lists.foldLeft(new Cons<U>(), null, c);
+	return Lists.foldRight(new Cons<U>(), null, c);
     }
 
     public static <U> Pair<U> list(U ... a)
