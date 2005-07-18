@@ -157,9 +157,19 @@ public class Lists
 	return result;
     }
     
-    public static <T> boolean equal(Collection<T> control,
+    public static <T> boolean equal(final Collection<T> control,
 	    Collection<T>... tests)
     {
+	Predicate<Collection<T>> sameLength = new Predicate<Collection<T>>() {
+	    public Boolean apply(Collection<T> x)
+	    {
+		return control.size() == x.size();
+	    }
+	};
+	
+	if (!all(sameLength, Arrays.asList(tests)))
+	    return false;
+	
 	Collection<Collection<T>> zipped = zip(tests);
 	
 	Iterator<T> controlIt = control.iterator();

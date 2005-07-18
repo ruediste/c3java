@@ -79,4 +79,15 @@ public class ListsTest
 	assertTrue(Arrays.deepEquals(new Integer[] { 1, 6, 15 }, col2
 		.toArray(new Integer[col2.size()])));
     }
+    
+    public void testEquals()
+    {
+	List<Integer> row0 = Arrays.asList(1,2,3);
+	List<Integer> row1 = Arrays.asList(1,2,3,4,5);
+	List<Integer> row2 = Arrays.asList(1,2,3,4,5);
+	assertFalse(Lists.equal(row0, row1));
+	assertTrue(Lists.equal(row0, row0));
+	assertTrue(Lists.equal(row1, row2));
+	assertTrue(Lists.equal(row2, row1));
+    }
 }
