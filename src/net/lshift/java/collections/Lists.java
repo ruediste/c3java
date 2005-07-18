@@ -1,7 +1,12 @@
 
 package net.lshift.java.collections;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Primitives which operate on collections.
@@ -50,6 +55,7 @@ public class Lists
 	    if(!proceed.proceed)
 		break;
 	}
+
 	return seed;
     }
 
@@ -69,14 +75,6 @@ public class Lists
 	return seed;
     }
 
-    public static <T, U> T foldRight1(FoldProcedure<T,T> proc, Collection<T> c) {
-	if (c.isEmpty())
-	    return null;
-	List<T> pruned = new ArrayList<T>(c);
-	T seed = pruned.remove(pruned.size() - 1);
-	return foldRight(proc, seed, pruned);
-    }
-    
     /**
      * LISP like map.
      * @return a collection which is the result of
@@ -85,23 +83,13 @@ public class Lists
      */
     public static <T,U> Collection<U> map(final Transform<T,U> proc, Collection<T> c)
     {
-	return foldRight
-	    (new FoldProcedure<T,Pair<U>>() {
-		public FoldState<Pair<U>> apply(T item, Pair<U> accumulator) {
-		    return new Lists.FoldState<Pair<U>>
-			(true, Pair.cons(proc.apply(item), accumulator));
-		}
-	    }, null, c);
+	// because we know the size of the collection in advance
+	// may as well construct an array list
+	ArrayList<U> result = new ArrayList<U>(c.size());
+	for(T item: c)
+	    result.add(proc.apply(item));
+	return result;
     }
-
-// This is really non-functional for some reason. Try using it...
-//    public static <T,U> U[] map(final Transform<T,U> proc, T[] a)
-//    {
-//	U[] result = (U[]) new Object[a.length];
-//	for(int i = 0; i != a.length; ++i)
-//	    result[i] = proc.apply(a[i]);
-//	return result;
-//    }
 
     public static <T> boolean any(final Predicate<T> proc, Collection<T> c)
     {
@@ -127,38 +115,21 @@ public class Lists
 
     public static <T> Collection<Collection<T>> zip(Collection<T>... c)
     {
-	Transform<Collection<T>, Iterator<T>> it = new Transform<Collection<T>, Iterator<T>>() {
-	    public Iterator<T> apply(Collection<T> x)
-	    {
-		return x.iterator();
-	    }
-	};
-	Collection<Collection<T>> collections = Arrays.asList(c);
-	Collection<Iterator<T>> iteratorsCollection = map(it, collections);
-	Predicate<Iterator<T>> allHasNext = new Predicate<Iterator<T>>() {
-	    public Boolean apply(Iterator<T> x)
-	    {
-		return x.hasNext();
-	    }
-	};
-	Collection<Collection<T>> result = new ArrayList<Collection<T>>();
-	Transform<Iterator<T>, T> nextTransform = new Transform<Iterator<T>, T>() {
+	Collection<Iterator<T>> iterators = 
+	    map(Collections.Procedures.<T>iterator(), Arrays.asList(c));
 
-	    public T apply(Iterator<T> x)
-	    {
-		return x.next();
-	    }
-	};
-	while (all(allHasNext, iteratorsCollection))
+	Collection<Collection<T>> result = new ArrayList<Collection<T>>();
+	while (all(Collections.Procedures.<T>hasNext(), iterators))
 	{
-	    Collection<T> slice = map(nextTransform, iteratorsCollection);
+	    Collection<T> slice = map(Collections.Procedures.<T>next(), iterators);
 	    result.add(slice);
 	}
+
 	return result;
     }
     
-    public static <T> boolean equal(final Collection<T> control,
-	    Collection<T>... tests)
+    public static <T> boolean equal(Collection<T> control,
+				    Collection<T>... tests)
     {
 	Predicate<Collection<T>> sameLength = new Predicate<Collection<T>>() {
 	    public Boolean apply(Collection<T> x)
