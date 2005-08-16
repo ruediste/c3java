@@ -38,7 +38,7 @@ public class JavaC3Test
 			     Set.class,
 			     Cloneable.class,
 			     Serializable.class }),
-	     JavaC3.directSuperclasses(HashSet.class));
+	     DefaultDirectSuperclasses.SUPERCLASSES.directSuperclasses(HashSet.class));
     }
 
     public void testSet()

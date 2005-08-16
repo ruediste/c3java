@@ -1,31 +1,46 @@
 
 package net.lshift.java.dispatch;
 
-import java.lang.reflect.Array;
+
 import java.io.Serializable;
 import java.util.*;
 
 public class JavaC3
 {
-    private static Map linearizations = new WeakHashMap();
-    private static final Map PRIMITIVE_SUPERCLASSES;
-    static {
-	Map superclasses = new HashMap();
-	final List none =  Collections.EMPTY_LIST;
-	// does this make any sense? It does from a 'widening conversion'
-	// point of vview in java. 
-	superclasses.put(Void.TYPE, none);
-	superclasses.put(Boolean.TYPE, none);
-	superclasses.put(Double.TYPE, Collections.singletonList(Float.TYPE));
-	superclasses.put(Float.TYPE, Collections.singletonList(Long.TYPE));
-	superclasses.put(Long.TYPE, Collections.singletonList(Integer.TYPE));
-	superclasses.put
-	    (Integer.TYPE, Arrays.asList(new Class [] { Short.TYPE, Character.TYPE }));
-	superclasses.put(Short.TYPE, Collections.singletonList(Byte.TYPE));
-	superclasses.put(Byte.TYPE, none);
-	superclasses.put(Character.TYPE, none);
-	PRIMITIVE_SUPERCLASSES = Collections.unmodifiableMap(superclasses);
+    public interface DirectSuperclasses
+    {
+	/**
+	 * Get the super classes.
+	 * @param type the type to get the superclasses of.
+	 */
+	public List directSuperclasses(Class type);
     }
+
+    private static class LinearizationKey
+    {
+	public DirectSuperclasses directSuperclasses;
+	public Class type;
+
+	public  LinearizationKey(DirectSuperclasses directSuperclasses, Class type)
+	{
+	    this.directSuperclasses = directSuperclasses;
+	    this.type = type;
+	}
+
+	public boolean equals(Object o)
+	{
+	    LinearizationKey other = (LinearizationKey)o;
+	    return type.equals(other.type) &&
+		directSuperclasses.equals(other.directSuperclasses);
+	}
+
+	public int hashCode()
+	{
+	    return type.hashCode();
+	}
+    }
+
+    private static Map linearizations = new WeakHashMap();
 
     /**
      * Thrown when its not possible to linearize
@@ -76,93 +91,6 @@ public class JavaC3
 	}
     }
 
-    /**
-     * Get the direct superclasses of a class.
-     * This is complicated, and possibly evil: in dylan, any class
-     * which does not have another direct superclass extends Object.
-     * In java, interfaces do not extend Object, or any equivalent.
-     * This implementation makes an interface with no super interfaces
-     * extend Object. Further, in classes which extend object, and
-     * implement 1 or more interfaces, Object is last in the list
-     * of direct superclasses, while any other super class comes first.
-     * This seems a bit arbitrary, but works, and gives sensible
-     * results in most cases.
-     */
-    protected static List directSuperclasses(Class c)
-    {
-	if(c.isPrimitive()) {
-	    // I am not really sure that superclasses of primitive
-	    // types are actually useful for anything
-	    return new LinkedList((List)PRIMITIVE_SUPERCLASSES.get(c));
-	}
-	else if(c.isArray()) {
-	    return arrayDirectSuperclasses(0, c);
-	}
-	else {
-	    Class [] interfaces = c.getInterfaces();
-	    Class superclass = c.getSuperclass();
-
-	    List classes = new LinkedList();
-	    if(superclass == Object.class) {
-		classes.addAll(Arrays.asList(interfaces));
-		classes.add(Object.class);
-	    }
-	    else if(superclass == null) {
-		classes.addAll(Arrays.asList(interfaces));
-		if(classes.isEmpty() && c != Object.class)
-		    classes.add(Object.class);
-	    }
-	    else {
-		classes.add(superclass);
-		classes.addAll(Arrays.asList(interfaces));
-	    }
-
-	    return classes;
-	}
-    }
-
-    /* the following is translated from sisc 1.8.5 s2j/reflection.scm
-       java-array-superclasses. */
-
-    protected static List ARRAY_SUPERCLASSES = Arrays.asList
-	(new Class [] { Serializable.class, Cloneable.class, Object.class });
-
-    protected static List arrayDirectSuperclasses(int level, Class c)
-    {
-	List classes;
-
-	if(c.isArray()) {
-	    classes = arrayDirectSuperclasses(level + 1, c.getComponentType());
-	}
-	else {
-	    List componentSuperclasses = directSuperclasses(c);
-	    if(componentSuperclasses.isEmpty() && !c.isInterface()) {
-		classes = (level == 1) ? new LinkedList(ARRAY_SUPERCLASSES) :
-		    makeArrayClasses(ARRAY_SUPERCLASSES, level - 1);
-	    }
-	    else {
-		classes = makeArrayClasses(componentSuperclasses, level);
-	    }
-	}
-
-	return classes;
-    }
-
-    // this compensates for the lack of map
-    public static List makeArrayClasses(List classes, int dims)
-    {
-	Iterator i = classes.iterator();
-	LinkedList arrayClasses = new LinkedList();
-	while(i.hasNext())
-	    arrayClasses.add(makeArrayClass((Class)i.next(), dims));
-	return arrayClasses;
-    }
-
-    /* copied from sisc 1.8.5 s2j/Utils.java */
-    public static Class makeArrayClass(Class c, int dims) 
-    {
-        return Array.newInstance(c, new int[dims]).getClass();
-    }
 
     private static class MergeLists
     {
@@ -240,10 +168,11 @@ public class JavaC3
 	}
     }
 
-    protected static List computeClassLinearization(Class c)
+
+    protected static List computeClassLinearization(Class c, DirectSuperclasses dsc)
 	throws JavaC3Exception
     {
-	List cDirectSuperclasses = directSuperclasses(c);
+	List cDirectSuperclasses = dsc.directSuperclasses(c);
 	List inputs = new ArrayList(cDirectSuperclasses.size()+1);
 	Iterator i = cDirectSuperclasses.iterator();
 	// the lists in input are consumed, so they must be cloned
@@ -262,10 +191,17 @@ public class JavaC3
     public static List allSuperclasses(Class c)
 	throws JavaC3Exception
     {
-	List linearization = (List)linearizations.get(c);
+	return allSuperclasses(c, DefaultDirectSuperclasses.SUPERCLASSES);
+    }
+
+    public static List allSuperclasses(Class c, DirectSuperclasses dsc)
+	throws JavaC3Exception
+    {
+	LinearizationKey key = new LinearizationKey(dsc, c);
+	List linearization = (List)linearizations.get(key);
 	if(linearization == null) {
-	    linearization = computeClassLinearization(c);
-	    linearizations.put(c, linearization);
+	    linearization = computeClassLinearization(c, dsc);
+	    linearizations.put(key, linearization);
 	}
 
 	return linearization;
