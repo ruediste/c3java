@@ -11,7 +11,6 @@ public class AllTest
     {
 	TestSuite suite = new TestSuite("all");
 	suite.addTest(net.lshift.java.dispatch.DispatchTest.suite());
-	suite.addTest(net.lshift.java.collections.CollectionsTest.suite());
 	return suite;
     }
 }
