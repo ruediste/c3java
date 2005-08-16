@@ -53,5 +53,37 @@ public class Collections
 	{
 	    return (IteratorTransform<T>)ITERATOR;
 	}
+
+	public static interface SizeTransform<T>
+	    extends Transform<Collection<T>,Integer> { }
+
+	
+	public static final SizeTransform<Object> SIZE =
+	    new SizeTransform<Object>() {
+	    public Integer apply(Collection c) {
+		return c == null ? 0 : c.size();
+	    }
+	};
+
+	public static <T> SizeTransform<T> size()
+	{
+	    return (SizeTransform<T>)SIZE;
+	}
+
+	public static interface IsEmptyPredicate<T>
+	    extends Predicate<Collection<T>> { }
+
+	
+	public static final IsEmptyPredicate<Object> IS_EMPTY =
+	    new IsEmptyPredicate<Object>() {
+	    public Boolean apply(Collection c) {
+		return c == null || c.isEmpty();
+	    }
+	};
+
+	public static <T> IsEmptyPredicate<T> isEmpty()
+	{
+	    return (IsEmptyPredicate<T>)IS_EMPTY;
+	}
     }
 }
