@@ -16,7 +16,7 @@ import java.util.*;
  * to be a member in a procedure, the primitive parameters
  * must match exactly. Thats because java will always have
  * chosen a procedure based on the types, and then promoted
- * the converted the arguments as required for it.
+ * the arguments as required for it.
  */
 public class DynamicDispatch
 {
@@ -34,6 +34,23 @@ public class DynamicDispatch
 	primitives.put(Byte.class, Byte.TYPE);
 	primitives.put(Character.class, Character.TYPE);
 	PRIMITIVES = Collections.unmodifiableMap(primitives);
+    }
+
+    private static Class [] types(Method procedure, Object [] args)
+    {
+	Class [] parameterTypes = procedure.getParameterTypes();
+	Class [] types = new Class[args.length];
+	for(int i = 0; i != args.length; ++i) {
+	    // this is how I handle primitives: I work out from the
+	    // procedure if the argument should be a primitive, and
+	    // then convert the type appropriately.
+	    if(parameterTypes[i].isPrimitive())
+		types[i] = (Class)PRIMITIVES.get(args[i].getClass());
+	    else
+		types[i] = args[i].getClass();
+	}
+
+	return types;
     }
 
     /**
@@ -57,6 +74,21 @@ public class DynamicDispatch
 	}
     }
 
+    public static class AmbiguousMethodException
+	extends RuntimeException
+    {
+	public AmbiguousMethodException(String message)
+	{
+	    super(message);
+	}
+    }
+    
+
+    public static Object proxy(Class constraint, Object closure)
+    {
+	return proxy(constraint, closure, null);
+    }
+
     /**
      * Generate an implementation of constraint, using methods
      * with matching signatures in delegate.
@@ -64,7 +96,9 @@ public class DynamicDispatch
      * the closest matching method in closure given the types
      * of the arguments actually passed.
      */
-    public static Object proxy(Class constraint, final Object closure)
+    public static Object proxy(final Class constraint,
+			       final Object closure,
+			       final InvocationHandler fallback)
     {
 	final DynamicDispatchClass genclass = 
 	    dispatcher(constraint, closure.getClass());
@@ -73,10 +107,33 @@ public class DynamicDispatch
 	    (closure.getClass().getClassLoader(),
 	     new Class [] { constraint },
 	     new InvocationHandler() {
-		 public Object invoke(Object proxy, Method method, Object [] args)
+		 public Object invoke(Object proxy, Method procedure, Object [] args)
 		     throws Throwable
 		 {
-		     return genclass.invoke(method, closure, args);
+		     Method method = genclass.method(procedure, args);
+		     if(method == null) {
+			 if(fallback != null)
+			     return fallback.invoke(proxy, method, args);
+			 else
+			     throw new UnsupportedOperationException
+				 ((new Signature
+				   (procedure, types(procedure, args))).toString());
+		     }
+		     else {
+			 try {
+			     return method.invoke(closure, args);
+			 }
+			 catch(InvocationTargetException e) {
+			     throw e.getTargetException();
+			 }
+			 catch(IllegalAccessException e) {
+			     /* This can happen because of a security policy 
+				(it doesn't seem to be possible to provoke it 
+				otherwise - see test) */
+			     throw new DynamicDispatch.IllegalAccessException
+				 (e.getMessage());
+			 }
+		     }
 		 }
 	     });
     }
@@ -125,63 +182,6 @@ public class DynamicDispatch
 
     // ------------------------------------------------------------------------
 
-    private static class Signature
-    {
-	public Method procedure;
-	public Class [] args;
-
-	public Signature(Method procedure, Object [] args)
-	{
-	    this.procedure = procedure;
-	    Class [] parameterTypes = procedure.getParameterTypes();
-	    this.args = new Class[args.length];
-	    for(int i = 0; i != args.length; ++i) {
-		// this is how I handle primitives: I work out from the
-		// procedure if the argument should be a primitive, and
-		// then convert the type appropriately.
-		if(parameterTypes[i].isPrimitive())
-		    this.args[i] = (Class)PRIMITIVES.get(args[i].getClass());
-		else
-		    this.args[i] = args[i].getClass();
-	    }
-	}
-
-	public int hashCode()
-	{
-	    int hash = procedure.hashCode();
-	    for(int i = 0; i < args.length; ++i)
-		hash = hash ^ args[i].hashCode();
-	    return hash;
-	}
-
-	public boolean equals(Object o)
-	{
-	    Signature other = (Signature)o;
-	    boolean result = (this.procedure == other.procedure);
-	    for(int i = 0; result && i != this.args.length; ++i)
-		result = (this.args[i] == other.args[i]);
-	    return result;
-	}
-
-	public String toString()
-	{
-	    StringBuffer b = new StringBuffer();
-	    b.append(procedure.getDeclaringClass().getName());
-	    b.append('.');
-	    b.append(procedure.getName());
-	    b.append('(');
-	    for(int i = 0; i != args.length; ++i) {
-		if(i != 0) b.append(',');
-		b.append(args[i].getName());
-	    }
-	    b.append(')');
-
-	    return b.toString();
-	}
-    }
-
-    // ------------------------------------------------------------------------
-
     private static class Procedure
     {
 	// Each Map in this array is for a parameter. It Maps from a type
@@ -190,7 +190,6 @@ public class DynamicDispatch
 
 	public Procedure(Method procedure, Method [] methods)
 	{
-	    
 	    indexes = new Map[procedure.getParameterTypes().length];
 	    for(int i = 0; i != indexes.length; ++i)
 		indexes[i] = new HashMap();
@@ -209,7 +208,9 @@ public class DynamicDispatch
 		    }
 		    s.add(method);
 		}
+
 	    }
+
 	}
 
 	private Set methods(int position, Class [] parameterTypes)
@@ -236,7 +237,7 @@ public class DynamicDispatch
 	private Method lookup(Signature signature)
 	{
 	    try {
-		Set methods = methods(0, signature.args);
+		Set methods = methods(0, signature.parameterTypes);
 		if(methods.isEmpty()) {
 		    for(int i = 0; i != indexes.length; ++i)
 			System.err.println(i + ": " + indexes[i]);
@@ -245,9 +246,10 @@ public class DynamicDispatch
 		return (Method)methods.iterator().next();
 	    }
 	    catch(JavaC3.JavaC3Exception e) {
-		throw new NoSuchMethodError(e.toString());
+		throw new AmbiguousMethodException(e.toString());
 	    }
 	}
+
     }
 
     // ------------------------------------------------------------------------
@@ -305,33 +307,19 @@ public class DynamicDispatch
 	    }
 	}
 
-	private final Method method(Method procedureMethod, Object [] args)
+	protected final Method method(Method procedureMethod, Object [] args)
 	{
-	    Signature signature = new Signature(procedureMethod, args);
-	    Method method = (Method)shortcuts.get(signature);
-	    if(method == null) {
+	    Signature signature = new Signature
+		(procedureMethod, types(procedureMethod, args));
+	    if(shortcuts.containsKey(signature)) {
+		return (Method)shortcuts.get(signature);
+	    }
+	    else {
 		Procedure procedure = (Procedure)procedures.get(procedureMethod);
-		method = procedure.lookup(signature);
+		Method method = procedure.lookup(signature);
+		AccessibleObject.setAccessible(new AccessibleObject[] { method }, true);
 		shortcuts.put(signature, method);
-	    }
-
-	    return method;
-	}
-
-	protected Object invoke(Method procedure, Object closure, Object [] args)
-	    throws Throwable
-	{
-	    Method method = method(procedure, args);
-	    try {
-		return method.invoke(closure, args);
-	    }
-	    catch(InvocationTargetException e) {
-		throw e.getTargetException();
-	    }
-	    catch(IllegalAccessException e) {
-		/* This can happen because of a security policy (it doesn't
-		   seem to be possible to provoke it otherwise - see test) */
-		throw new DynamicDispatch.IllegalAccessException(e.getMessage());
+		return method;
 	    }
 	}
     }
