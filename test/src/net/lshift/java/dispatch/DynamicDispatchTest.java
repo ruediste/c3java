@@ -182,5 +182,33 @@ public class DynamicDispatchTest
 	assertTrue("exception thrown & caught", caught);
     }
 
+    public interface Add
+    {
+	public int add(int a, int b);
+	public long add(long a, long b);
+    }
+
+    public void testInvoke()
+	throws Exception
+    {
+	assertEquals
+	    (new Integer(2), 
+	     DynamicDispatch.invoke
+	     (Add.class,
+	      new Object() {
+		  public int add(int a, int b)
+		      {
+			  return a + b;
+		      }
+
+		  public long add(long a, long b)
+		      {
+			  return a + b;
+		      }
+	      },
+	      "add", 
+	      new Object[] { new Integer(1), new Integer(1) },
+	      new Class[] { Integer.TYPE, Integer.TYPE }));
+    }
     
 }

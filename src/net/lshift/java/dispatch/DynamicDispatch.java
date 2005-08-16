@@ -82,11 +82,32 @@ public class DynamicDispatch
 	    super(message);
 	}
     }
-    
 
     public static Object proxy(Class constraint, Object closure)
     {
 	return proxy(constraint, closure, null);
+    }
+
+    /**
+     * Alternate invocation method.
+     * This lets you dynamically select the method in the
+     * constraint you wish to select. This can be handy when
+     * dealing with primitive types dynamically.
+     */
+    public static Object invoke(Class constraint,
+				Object closure,
+				String methodName,
+				Object [] parameters,
+				Class [] parameterTypes)
+	throws NoSuchMethodException, java.lang.IllegalAccessException,
+	       InvocationTargetException
+    {
+	final DynamicDispatchClass genclass = 
+	    dispatcher(constraint, closure.getClass());
+
+	Method template = constraint.getMethod(methodName, parameterTypes);
+	Method method = genclass.method(template, parameters);
+	return method.invoke(closure, parameters);
     }
 
     /**
