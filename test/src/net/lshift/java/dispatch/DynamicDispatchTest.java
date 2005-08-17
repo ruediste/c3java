@@ -186,29 +186,47 @@ public class DynamicDispatchTest
     {
 	public int add(int a, int b);
 	public long add(long a, long b);
+	public boolean add(boolean a, boolean b);
     }
 
     public void testInvoke()
 	throws Exception
     {
+	Object adder = new Object() {
+		public int add(Object a, Object b)
+		{
+		    return 0;
+		}
+
+		public int add(int a, int b)
+		{
+		    return a + b;
+		}
+
+		public long add(long a, long b)
+		{
+		    return a + b;
+		}
+
+		public boolean add(boolean a, boolean b)
+		{
+		    return a && b;
+		}
+	    };
+
 	assertEquals
 	    (new Integer(2), 
 	     DynamicDispatch.invoke
-	     (Add.class,
-	      new Object() {
-		  public int add(int a, int b)
-		      {
-			  return a + b;
-		      }
-
-		  public long add(long a, long b)
-		      {
-			  return a + b;
-		      }
-	      },
-	      "add", 
+	     (Add.class, adder, "add",
 	      new Object[] { new Integer(1), new Integer(1) },
 	      new Class[] { Integer.TYPE, Integer.TYPE }));
+
+	assertEquals
+	    (Boolean.TRUE,
+	     DynamicDispatch.invoke
+	     (Add.class, adder, "add", 
+	      new Object[] { Boolean.TRUE, Boolean.TRUE },
+	      new Class[] { Boolean.TYPE, Boolean.TYPE }));
     }
     
 }
