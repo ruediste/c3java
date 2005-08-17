@@ -27,7 +27,7 @@ public class DefaultDirectSuperclasses
 	Map superclasses = new HashMap();
 	final List none =  Collections.EMPTY_LIST;
 	// does this make any sense? It does from a 'widening conversion'
-	// point of vview in java. 
+	// point of view in java. 
 	superclasses.put(Void.TYPE, none);
 	superclasses.put(Boolean.TYPE, none);
 	superclasses.put(Double.TYPE, Collections.singletonList(Float.TYPE));
