@@ -20,7 +20,8 @@ import java.util.*;
  */
 public class DynamicDispatch
 {
-    private static Map dispatchers = new HashMap();
+    private static Map dispatchers = Collections.synchronizedMap(new HashMap());
+
     private static final Map PRIMITIVES;
     static {
 	Map primitives = new HashMap();

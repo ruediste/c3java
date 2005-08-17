@@ -29,9 +29,18 @@ public class JavaC3
 
 	public boolean equals(Object o)
 	{
-	    LinearizationKey other = (LinearizationKey)o;
-	    return type.equals(other.type) &&
-		directSuperclasses.equals(other.directSuperclasses);
+	    if(o == null) {
+		// you wouldn't think this could happen, but there
+		// is no way to stop garbage collection from hapenning
+		// on linearizations during a get(), or put(), so we
+		// must check this is not null.
+		return false;
+	    }
+	    else {
+		LinearizationKey other = (LinearizationKey)o;
+		return type.equals(other.type) &&
+		    directSuperclasses.equals(other.directSuperclasses);
+	    }
 	}
 
 	public int hashCode()
@@ -40,7 +49,8 @@ public class JavaC3
 	}
     }
 
-    private static Map linearizations = new WeakHashMap();
+    private static Map linearizations = 
+	Collections.synchronizedMap(new WeakHashMap());
 
     /**
      * Thrown when its not possible to linearize
