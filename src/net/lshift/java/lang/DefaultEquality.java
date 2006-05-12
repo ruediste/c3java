@@ -33,7 +33,7 @@ public class DefaultEquality
 
     public void setDelegate(Equality equality)
     {
-        this.delegate = delegate;
+        this.delegate = equality;
     }
 
     public boolean equals(Object a, Object b)
