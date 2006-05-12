@@ -1,9 +1,7 @@
 
 package net.lshift.java.dispatch;
 
-import java.lang.reflect.Array;
 import java.util.*;
-import java.io.Serializable;
 
 /**
  * Implementation of direct superclasses with 'implements' before

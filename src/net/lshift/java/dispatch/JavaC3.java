@@ -2,7 +2,6 @@
 package net.lshift.java.dispatch;
 
 
-import java.io.Serializable;
 import java.util.*;
 
 public class JavaC3
