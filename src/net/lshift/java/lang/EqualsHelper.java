@@ -8,14 +8,16 @@ import java.lang.reflect.AccessibleObject;
 import java.util.*;
 
 import net.lshift.java.util.Bag;
-import net.lshift.java.dispatch.DynamicDispatch;
 
 public class EqualsHelper
 {
     public static class EqualsHelperError
 	extends Error
     {
-	public EqualsHelperError(Throwable cause)
+
+        private static final long serialVersionUID = 1L;
+
+        public EqualsHelperError(Throwable cause)
 	{
 	    super(cause);
 	}
