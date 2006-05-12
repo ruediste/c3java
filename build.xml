@@ -24,7 +24,7 @@
   <property name="config" value="debug"/>
   <property name="cm.module" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
-  <property name="cm.version" value="v1_0_7"/>
+  <property name="cm.version" value="v1_0_8"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
