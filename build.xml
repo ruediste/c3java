@@ -142,7 +142,7 @@
     <junit fork="yes">
       <classpath refid="test.classpath"/>
       <formatter type="plain"/>
-      <test name="net.lshift.java.AllTest"/>
+      <test todir="${build.home}" name="net.lshift.java.AllTest"/>
     </junit>
 
   </target>
