@@ -24,7 +24,7 @@
   <property name="config" value="debug"/>
   <property name="cm.module" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
-  <property name="cm.version" value="v1_0_8"/>
+  <property name="cm.version" value="v1_0_9"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -105,8 +105,8 @@
         author="true"
         version="true"
         use="true"
-        windowtitle="LShift - Java Utilities"
-        bottom="Copyright (C) 2002-2003 LShift Ltd."
+        windowtitle="LShift - Java Library"
+        bottom="Copyright (C) 2002-2006 LShift Ltd."
         doctitle="LShift - Java Utilities">
       <classpath refid="compile.classpath"/>
     </javadoc>
