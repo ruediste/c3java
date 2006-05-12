@@ -22,27 +22,30 @@
 
   <!-- ==================================================================== -->
 
-  <target name="use">
+  <!-- if you don't have component manager, you will need to
+       copy sample.build.properties to build.properties and
+       edit it appropriately -->
+
+  <available classname="net.lshift.cm.Use" property="use.available"/>
+
+  <target name="use" if="use.available">
     <taskdef name="use" classname="net.lshift.cm.Use"/>
 
-    <use>
-      <!-- This project should use anything - it should depend solely
+    <use properties="build.properties">
+      <!-- This project should not use anything - it should depend solely
       on things included in java, and should preferable fail gracefully
       with non current versions of java too -->
 
       <!-- exceptions are for unit testing the authored code -->
       <module name="junit" vendor="junit.org" version="3.8.1"/>
-      <module name="template-project-resources" 
-        vendor="lshift.net" version="v1_0_1"/>
     </use>
-
-    <property name="resources.home" 
-      value="${template-project-resources.home}"/>
   </target>
 
   <!-- ==================================================================== -->
 
-  <target name="init" depends="use"/>
+  <target name="init" depends="use">
+    <property file="build.properties"/>
+  </target>
 
   <!-- ==================================================================== -->
 
@@ -85,8 +88,7 @@
         use="true"
         windowtitle="LShift - Java Utilities"
         bottom="Copyright (C) 2002-2003 LShift Ltd."
-        doctitle="LShift - Java Utilities"
-        stylesheetfile="${resources.home}/etc/css/javadoc.css">
+        doctitle="LShift - Java Utilities">
       <classpath refid="compile.classpath"/>
     </javadoc>
 
@@ -152,7 +154,7 @@
       name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
   </target>
 
-  <target name="publish" depends="clean">
+  <target name="publish" depends="clean" if="use.available">
     <cvs>
       <commandline>
         <argument value="tag"/>
