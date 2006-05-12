@@ -1,3 +1,20 @@
+/*
+     This file is part of the LShift Java Library.
+
+    The LShift Java Library is free software; you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    The LShift Java Library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with The LShift Java Library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 package net.lshift.java.dispatch;
 
@@ -10,7 +27,7 @@ import java.io.Serializable;
  * C3 needs an ordering of the direct superclasses. 
  * We can get one using reflection, but there are at least 2 sensible
  * ways to do this. Also, you may not want to rely on the ordering that
- * reflection gives to the set of impemented interfaces. Testing
+ * reflection gives to the set of implemented interfaces. Testing
  * suggests the order is sane - ie. its the order in which they are
  * declared, but I can't find that documented anywhere, and
  * in the case of other peoples classes, that may not be acceptable
