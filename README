@@ -4,12 +4,12 @@ What is it?
 
 Anything useful that depends only on java. So far:
 
- - support for dynamic dispatch
+ - support for dynamic dispatch (see doc/dynamic-dispatch.txt)
  - some equality primitives that might be useful for unit testing
  - a few IO adapters
 
 I suppose all of this might easily end up in various jakarta commons
-projects. From an open source point of view, this is really just a
+projects so from an open source point of view, this is really just a
 staging post.
 
 Licensing

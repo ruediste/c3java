@@ -143,6 +143,7 @@
         <include name="README"/>
         <include name="build.xml"/>
         <include name="sample.build.properties"/>
+        <include name="doc/**/*"/>
       </fileset>
       <fileset dir="${build.home}">
         <include name="doc/**/*"/>
