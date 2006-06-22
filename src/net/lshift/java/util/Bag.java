@@ -6,8 +6,7 @@ import java.util.Collection;
 /**
  * Bags are collections which are explicitely not ordered.
  * They are just a matter of equality semantics
- * @see Bags
- * @see EqualsHelper
+ * @see net.lshift.java.lang.EqualsHelper
  */
 public interface Bag
     extends Collection

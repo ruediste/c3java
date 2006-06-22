@@ -133,6 +133,13 @@ public class EqualsHelper
         return result;
     }
 
+    public static final Equality INDUCTIVE_DEFAULT;
+    static {
+        InductiveEquality ie = new InductiveEquality();
+        ie.setDelegate(DefaultEquality.equality(ie));
+        INDUCTIVE_DEFAULT = ie;
+    }
+
     /**
      * Equality using the following:
      * @return 
@@ -143,13 +150,6 @@ public class EqualsHelper
      *     bug induction and reflection for values.
      *   default: a.class == b.class and fieldEquals(a, b, a.class).
      */
-    public static final Equality INDUCTIVE_DEFAULT;
-    static {
-        InductiveEquality ie = new InductiveEquality();
-        ie.setDelegate(DefaultEquality.equality(ie));
-        INDUCTIVE_DEFAULT = ie;
-    }
-
     public static final boolean equals(Object a, Object b)
     {
 	return INDUCTIVE_DEFAULT.equals(a, b);
