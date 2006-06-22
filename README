@@ -1,9 +1,21 @@
 
+What is it?
+-----------
+
+Anything useful that depends only on java. So far:
+
+ - support for dynamic dispatch
+ - some equality primitives that might be useful for unit testing
+ - a few IO adapters
+
+I suppose all of this might easily end up in various jakarta commons
+projects. From an open source point of view, this is really just a
+staging post.
+
 Licensing
 ---------
 
-Licensed under the LGPL (see license.txt). Contact LShift for other
-licensing terms (query@lshift.net).
+see NOTICE.
 
 To build from source
 --------------------
@@ -32,3 +44,5 @@ Documentation
 -------------
 
 Documentation is exclusively javadoc in doc/api
+
+More information may be available at http://www.lshift.net/opensource.
