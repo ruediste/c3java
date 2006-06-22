@@ -1,0 +1,3 @@
+This file forces NOTICE to be attached to the java source files in the
+distribution. Its not included in the distribution, so that rebuilding
+doesn't result in the NOTICE being attached twice.
