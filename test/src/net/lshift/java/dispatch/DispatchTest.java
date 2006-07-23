@@ -30,6 +30,7 @@ public class DispatchTest
 	suite.addTest(JavaC3Test.suite());
 	// suite.addTest(ImplementsFirstDirectSuperclassesTest.suite());
 	suite.addTest(DynamicDispatchTest.suite());
+        suite.addTest(ExecutionServerTest.suite());
 	return suite;
     }
 }
