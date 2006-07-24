@@ -78,6 +78,8 @@ public class ExecutionServer
             super(STATE_NAMES[state]);
         }
     }
+
+    public static ThreadLocal THREADS = new ThreadLocal();
     
     public int state = STATE_STOPPED;
     public Executable executable = null;
@@ -107,6 +109,8 @@ public class ExecutionServer
     {
         if(this.state != STATE_INITIALIZING)
             throw new ExecutionServerIllegalStateException(this.state);
+        
+        THREADS.set(this);
         
         try {
             this.state = STATE_IDLE;
@@ -152,6 +156,9 @@ public class ExecutionServer
             this.state = STATE_ABORTED;
             this.result = t;
             notify();
+        }
+        finally {
+            THREADS.set(null);
         }
     }
     
@@ -263,5 +270,10 @@ public class ExecutionServer
             }
 
         });
+    }
+    
+    public static ExecutionServer current()
+    {
+        return (ExecutionServer)THREADS.get();
     }
 }
