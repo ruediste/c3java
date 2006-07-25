@@ -82,6 +82,7 @@ public class ExecutionServer
     public static ThreadLocal THREADS = new ThreadLocal();
     
     public int state = STATE_STOPPED;
+    public boolean stop = true;
     public Executable executable = null;
     public Object result = null;
 
@@ -98,6 +99,7 @@ public class ExecutionServer
         if(this.state != STATE_STOPPED)
             throw new IllegalStateException();
         this.state = STATE_INITIALIZING;
+        this.stop = false;
         Thread thread = new Thread(this);
         thread.start();
         
@@ -190,44 +192,55 @@ public class ExecutionServer
         this.state = STATE_EXECUTE;
         notify();
         
-        while(true) {
-            switch(this.state) {
-            case STATE_EXECUTE:
-            case STATE_EXECUTING:
-                wait();
-                continue;
-            case STATE_RETURN:
-                this.state = STATE_IDLE;
-                return result;
-            case STATE_EXCEPTION:
-                this.state = STATE_IDLE;
-                throw (Exception)result;
-            case STATE_ERROR:
-                this.state = STATE_IDLE;
-                throw (Error)result;
-            default:
-                throw new ExecutionServerIllegalStateException(this.state);
+        try {
+            while(true) {
+                switch(this.state) {
+                case STATE_EXECUTE:
+                case STATE_EXECUTING:
+                    wait();
+                    continue;
+                case STATE_RETURN:
+                    this.state = STATE_IDLE;
+                    return result;
+                case STATE_EXCEPTION:
+                    this.state = STATE_IDLE;
+                    throw (Exception)result;
+                case STATE_ERROR:
+                    this.state = STATE_IDLE;
+                    throw (Error)result;
+                default:
+                    throw new ExecutionServerIllegalStateException(this.state);
+                }
             }
+        }
+        finally {
+            if(this.stop)
+                stop();
         }
     }
     
     public synchronized void stop()
         throws InterruptedException
     {
-        idle();
+        if(current() == this) {
+            stop = true;
+        }
+        else {
+            idle();
 
-        this.state = STATE_STOP;
-        notify();
-        
-        while(true) {
-            switch(this.state) {
-            case STATE_STOP:
-                wait();
-                continue;
-            case STATE_STOPPED:
-                return;
-            default:
-                throw new ExecutionServerIllegalStateException(this.state);
+            this.state = STATE_STOP;
+            notify();
+
+            while(true) {
+                switch(this.state) {
+                case STATE_STOP:
+                    wait();
+                    continue;
+                case STATE_STOPPED:
+                    return;
+                default:
+                    throw new ExecutionServerIllegalStateException(this.state);
+                }
             }
         }
     }

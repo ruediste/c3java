@@ -35,6 +35,9 @@ public class ExecutionServerTest
             throws TargetException;
         
         public void error();
+
+        public void stop()
+            throws InterruptedException;
     }
     
     public static class TargetImpl
@@ -62,6 +65,12 @@ public class ExecutionServerTest
         public void error()
         {
             throw new TargetError();
+        }
+        
+        public void stop()
+            throws InterruptedException
+        {
+            ExecutionServer.current().stop();
         }
     }
     
@@ -112,5 +121,15 @@ public class ExecutionServerTest
         }
         
         assertTrue(error);
+    }
+    
+    public void testCurrentStop()
+        throws Exception
+    {
+        ExecutionServer server = new ExecutionServer();
+        Target target = (Target)server.proxy(new TargetImpl(), new Class [] { Target.class });
+        server.start();
+        target.stop();
+        assertEquals(ExecutionServer.STATE_STOPPED, server.state);
     }
 }
