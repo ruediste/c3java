@@ -29,7 +29,9 @@ public abstract class AbstractBag
         extends AbstractBag
 	implements java.io.Serializable
     {
-	private Collection store;
+        private static final long serialVersionUID = 1L;
+
+        private Collection store;
 
 	public BagImpl(Collection c)
 	{
