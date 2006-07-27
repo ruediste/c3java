@@ -1,12 +1,14 @@
 <?xml version='1.0'?>
-
-<project default="compile" basedir=".">
+<project 
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+  default="compile" basedir=".">
 
   <property environment="env"/>
   <property name="config" value="debug"/>
   <property name="cm.module" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
-  <property name="cm.version" value="v1_0_10"/>
+  <property name="cm.version" value="v1_0_14"/>
+  <property name="public.version" value="1.0.14"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -22,28 +24,13 @@
 
   <!-- ==================================================================== -->
 
-  <!-- if you don't have component manager, you will need to
-       copy sample.build.properties to build.properties and
-       edit it appropriately -->
-
-  <available classname="net.lshift.cm.Use" property="use.available"/>
-
-  <target name="use" if="use.available">
-    <taskdef name="use" classname="net.lshift.cm.Use"/>
-
-    <use properties="build.properties">
-      <!-- This project should not use anything - it should depend solely
-      on things included in java, and should preferable fail gracefully
-      with non current versions of java too -->
-
-      <!-- exceptions are for unit testing the authored code -->
-      <module name="junit" vendor="junit.org" version="3.8.1"/>
-    </use>
-  </target>
+  <artifact:dependencies pathId="test.compile.classpath" useScope="test">
+    <artifact:pom id="maven.project" file="pom.xml"/>
+  </artifact:dependencies>
 
   <!-- ==================================================================== -->
 
-  <target name="init" depends="use">
+  <target name="init">
     <property file="build.properties"/>
   </target>
 
@@ -57,10 +44,10 @@
     <property file="config/${config}/build.properties"/>
 
     <mkdir dir="${build.home}"/>
-
     <mkdir dir="${compile.out}"/>
-
-    <path id="compile.classpath"/>
+    <path id="compile.classpath">
+      <pathelement path="${ant.home}/lib/ant.jar"/>
+    </path>
 
     <javac
       srcdir="${src.home}"
@@ -72,6 +59,27 @@
 
       <classpath refid="compile.classpath"/>
     </javac>
+
+    <rmic base="${compile.out}">
+      <classpath>
+        <path refid="compile.classpath"/>
+        <pathelement path="${compile.out}"/>
+      </classpath>
+      <include name="net/lshift/java/rmi/server/*Server.class"/>
+    </rmic>
+
+    <!-- class loaders don't generally allow you to get .class files
+         as resources, and Linker needs this file at run time,
+         so it gets renamed.
+         -->
+    <copy file="${compile.out}/net/lshift/java/linker/Loader.class"
+      tofile="${compile.out}/net/lshift/java/linker/Loader.bin"/>
+
+    <copy todir="${compile.out}">
+      <fileset dir="${src.home}">
+        <include name="**/antlib.xml"/>
+      </fileset>
+    </copy>
 
   </target>
 
@@ -95,14 +103,8 @@
 
   <!-- ==================================================================== -->
 
-  <target name="test" depends="build,use">
+  <target name="test" depends="build">
     <mkdir dir="${test.compile.out}"/>
-
-    <path id="test.compile.classpath">
-      <path refid="compile.classpath"/>
-      <pathelement path="${compile.out}"/>
-      <pathelement path="${junit.home}/junit.jar"/>
-    </path>
 
     <javac
       srcdir="${test.src.home}"
@@ -110,11 +112,14 @@
       debug="true"
       target="${javac.target}">
 
-      <classpath refid="test.compile.classpath"/>
+      <classpath>
+        <path refid="test.compile.classpath"/>
+        <pathelement path="${compile.out}"/>
+      </classpath>
     </javac>
 
     <path id="test.classpath">
-      <path refid="compile.classpath"/>
+      <path refid="test.compile.classpath"/>
       <pathelement path="${compile.out}"/>
       <pathelement path="${test.compile.out}"/>
     </path>
@@ -125,6 +130,18 @@
       <test todir="${build.home}" name="net.lshift.java.AllTest"/>
     </junit>
 
+  </target>
+
+  <target name="test-linker" depends="build">
+    <taskdef name="linker" className="net.lshift.java.linker.Linker">
+      <classpath>
+        <pathelement path="${compile.out}"/>
+      </classpath>
+    </taskdef>
+
+    <linker mainClass="foo" dest="build/linked.jar">
+      <jars dir="dist" includes="*.jar"/>
+    </linker>
   </target>
 
   <!-- ==================================================================== -->
@@ -182,7 +199,7 @@
       name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
   </target>
 
-  <target name="publish" depends="clean" if="use.available">
+  <target name="tag" depends="clean" if="use.available">
     <cvs>
       <commandline>
         <argument value="tag"/>
@@ -190,10 +207,22 @@
       </commandline>
     </cvs>
 
+    <!--
     <taskdef name="publish" classname="net.lshift.cm.Publish"
       classpath="${dist.home}/bin/use.jar"/>
 
     <publish name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
+    -->
+  </target>
+
+  <!-- ==================================================================== -->
+
+  <target name="package" depends="dist">
+    <tar compression="gzip" destfile="lshift-java-${public.version}.tar.gz">
+      <tarfileset prefix="lshift-java-${public.version}/" dir="${dist.home}">
+        <include name="**/*"/>
+      </tarfileset>
+    </tar>
   </target>
 
   <!-- ==================================================================== -->
