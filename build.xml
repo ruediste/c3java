@@ -1,6 +1,7 @@
 <?xml version='1.0'?>
 <project 
   xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+  xmlns:cm="antlib:net.lshift.cm"
   default="compile" basedir=".">
 
   <property environment="env"/>
@@ -8,7 +9,7 @@
   <property name="cm.module" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
   <property name="cm.version" value="v1_0_14"/>
-  <property name="public.version" value="1.0.14"/>
+  <property name="public.version" value="1.0.17"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -22,17 +23,26 @@
   <property name="test.src.home" value="test/src"/>
   <property name="test.compile.out" value="${build.home}/test/classes"/>
 
-  <!-- ==================================================================== -->
+  <available resource="org/apache/maven/artifact/ant/antlib.xml" property="maven.available"/>
 
-  <artifact:dependencies pathId="test.compile.classpath" useScope="test">
-    <artifact:pom id="maven.project" file="pom.xml"/>
-  </artifact:dependencies>
-
-  <!-- ==================================================================== -->
-
-  <target name="init">
-    <property file="build.properties"/>
+  <target name="maven" if="maven.available">
+    <artifact:dependencies pathId="test.compile.classpath" useScope="test">
+      <artifact:pom id="maven.project" file="pom.xml"/>
+    </artifact:dependencies>
   </target>
+
+  <target name="build.properties" unless="maven.available">
+    <ant antfile="use.xml"/>
+    <property file="build.properties"/>
+    <path id="test.compile.classpath">
+      <pathelement path="${junit.home}/junit.jar"/>
+    </path>
+  </target>
+
+
+  <!-- ==================================================================== -->
+
+  <target name="init" depends="maven,build.properties"/>
 
   <!-- ==================================================================== -->
 
@@ -45,9 +55,7 @@
 
     <mkdir dir="${build.home}"/>
     <mkdir dir="${compile.out}"/>
-    <path id="compile.classpath">
-      <pathelement path="${ant.home}/lib/ant.jar"/>
-    </path>
+    <path id="compile.classpath"/>
 
     <javac
       srcdir="${src.home}"

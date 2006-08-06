@@ -1,0 +1,28 @@
+<?xml version='1.0'?>
+<project 
+  xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+  xmlns:cm="antlib:net.lshift.cm"
+  default="build.properties" basedir=".">
+
+  <!-- ==================================================================== -->
+  <!-- if you don't have component manager, or maven you will need to
+       copy sample.build.properties to build.properties and
+       edit it appropriately -->
+
+  <available classname="net.lshift.cm.Use" property="use.available"/>
+
+  <target name="use" if="use.available">
+
+    <cm:use properties="build.properties">
+      <!-- This project should not use anything - it should depend solely
+      on things included in java, and should preferable fail gracefully
+      with non current versions of java too -->
+
+      <!-- exceptions are for unit testing the authored code -->
+      <cm:module name="junit" vendor="junit.org" version="3.8.1"/>
+    </cm:use>
+  </target>
+
+  <target name="build.properties" depends="use"/>
+
+</project>
