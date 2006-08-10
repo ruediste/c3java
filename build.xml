@@ -8,8 +8,9 @@
   <property name="config" value="debug"/>
   <property name="cm.module" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
-  <property name="cm.version" value="v1_0_14"/>
-  <property name="public.version" value="1.0.17"/>
+
+  <property name="cm.version" value="v1_0_18"/>
+  <property name="public.version" value="1.0.18"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -23,15 +24,7 @@
   <property name="test.src.home" value="test/src"/>
   <property name="test.compile.out" value="${build.home}/test/classes"/>
 
-  <available resource="org/apache/maven/artifact/ant/antlib.xml" property="maven.available"/>
-
-  <target name="maven" if="maven.available">
-    <artifact:dependencies pathId="test.compile.classpath" useScope="test">
-      <artifact:pom id="maven.project" file="pom.xml"/>
-    </artifact:dependencies>
-  </target>
-
-  <target name="build.properties" unless="maven.available">
+  <target name="build.properties">
     <ant antfile="use.xml"/>
     <property file="build.properties"/>
     <path id="test.compile.classpath">
@@ -42,7 +35,7 @@
 
   <!-- ==================================================================== -->
 
-  <target name="init" depends="maven,build.properties"/>
+  <target name="init" depends="build.properties"/>
 
   <!-- ==================================================================== -->
 
@@ -207,7 +200,7 @@
       name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
   </target>
 
-  <target name="tag" depends="clean" if="use.available">
+  <target name="publish">
     <cvs>
       <commandline>
         <argument value="tag"/>
@@ -215,12 +208,11 @@
       </commandline>
     </cvs>
 
-    <!--
-    <taskdef name="publish" classname="net.lshift.cm.Publish"
-      classpath="${dist.home}/bin/use.jar"/>
-
-    <publish name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
-    -->
+    <cm:publish-modules>
+      <moduleset>
+        <module name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
+      </moduleset>
+    </cm:publish-modules>
   </target>
 
   <!-- ==================================================================== -->
