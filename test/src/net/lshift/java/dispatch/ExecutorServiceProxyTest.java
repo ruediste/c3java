@@ -1,14 +1,16 @@
 package net.lshift.java.dispatch;
 
+import java.util.concurrent.Executors;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-public class ExecutionServerTest
+public class ExecutorServiceProxyTest
     extends TestCase
 {
     public static TestSuite suite()
     {
-        return new TestSuite(ExecutionServerTest.class);
+        return new TestSuite(ExecutorServiceProxyTest.class);
     }
 
     public static class TargetException
@@ -70,19 +72,18 @@ public class ExecutionServerTest
         public void stop()
             throws InterruptedException
         {
-            ExecutionServer.current().stop();
+            ExecutorServiceProxy.current().stop();
         }
     }
     
-    ExecutionServer server;
+    ExecutorServiceProxy server;
     Target target;
     
     public void setUp() 
         throws InterruptedException
     {
-        server = new ExecutionServer();
+        server = new ExecutorServiceProxy(Executors.newSingleThreadExecutor());
         target = (Target)server.proxy(new TargetImpl(), new Class [] { Target.class });
-        server.start();
     }
     
     public void tearDown() 
@@ -126,10 +127,9 @@ public class ExecutionServerTest
     public void testCurrentStop()
         throws Exception
     {
-        ExecutionServer server = new ExecutionServer();
+        ExecutorServiceProxy server = new ExecutorServiceProxy(Executors.newSingleThreadExecutor());
         Target target = (Target)server.proxy(new TargetImpl(), new Class [] { Target.class });
-        server.start();
         target.stop();
-        assertEquals(ExecutionServer.STATE_STOPPED, server.state);
+        assertTrue(server.executor.isTerminated());
     }
 }
