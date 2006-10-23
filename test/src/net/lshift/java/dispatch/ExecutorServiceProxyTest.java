@@ -114,6 +114,7 @@ public class ExecutorServiceProxyTest
             target.exception();
         }
         catch(TargetException e) {
+            e.printStackTrace();
             exception = true;
         }
         

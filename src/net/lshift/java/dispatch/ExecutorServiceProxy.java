@@ -35,6 +35,25 @@ public class ExecutorServiceProxy
 
     private static final long DEFAULT_TIMEOUT = 30; // 30 seconds
     
+    private interface StackDepthTest
+    {
+        int getStackDepth();
+    }
+    
+    private int proxyStackDepth()
+    {
+        return ((StackDepthTest)proxy(new StackDepthTest() {
+                public int getStackDepth() {
+                    try {
+                        throw new Exception();
+                    }
+                    catch(Exception e) {
+                        return e.getStackTrace().length;
+                    }
+                }
+            }, new Class[] { StackDepthTest.class })).getStackDepth() - 1;
+    }
+    
     public interface ThreadProperty<T>
     {
         /**
@@ -99,6 +118,23 @@ public class ExecutorServiceProxy
         this.properties = properties;
     }
     
+    private StackTraceElement [] mergeStack(Throwable cause, Throwable ref)
+    {
+        StackTraceElement [] catchStack = ref.getStackTrace();
+        StackTraceElement [] causeStack = cause.getStackTrace();
+        int proxyStackDepth = causeStack.length - proxyStackDepth();
+        if(proxyStackDepth < 0)
+            throw new IllegalArgumentException
+                ("cause stack too shalow: cause.length = " + causeStack.length +
+                 " proxy.length = " + proxyStackDepth());
+        StackTraceElement [] stack = new StackTraceElement
+            [proxyStackDepth  + catchStack.length - 1];
+        
+        System.arraycopy(causeStack, 0, stack, 0, proxyStackDepth);
+        System.arraycopy(catchStack, 1, stack, proxyStackDepth, catchStack.length - 1);
+        return stack;
+    }
+    
     /**
      * Construct a proxy, for which each method is
      * invoked by the execution server.
@@ -155,7 +191,15 @@ public class ExecutorServiceProxy
                     return future.get();
                 }
                 catch(ExecutionException e) {
-                    throw e.getCause();
+                    Throwable cause = e.getCause();
+                    try {
+                        throw new Exception();
+                    }
+                    catch(Exception current) {
+                        cause.setStackTrace(mergeStack(cause, current));
+                    }
+                    
+                    throw cause;
                 }
                 finally {
                     // if the executor is shutting down, wait for it to finish
