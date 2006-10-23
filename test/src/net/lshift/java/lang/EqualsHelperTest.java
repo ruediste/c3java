@@ -70,9 +70,10 @@ public class EqualsHelperTest
         return c;
     }
 
-    public List list(Object a, Object b, Object c)
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> list(E a, E b, E c)
     {
-        return Arrays.asList(new Object[] { a, b, c });
+        return Arrays.asList((E[])new Object[] { a, b, c });
     }
 
     public void testObjects()

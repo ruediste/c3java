@@ -8,8 +8,8 @@ import java.util.Collection;
  * They are just a matter of equality semantics
  * @see net.lshift.java.lang.EqualsHelper
  */
-public interface Bag
-    extends Collection
+public interface Bag<E>
+    extends Collection<E>
 {
     /**
      * Equality

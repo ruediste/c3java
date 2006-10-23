@@ -3,9 +3,9 @@ package net.lshift.java.util;
 
 import java.util.*;
 
-public abstract class AbstractBag
-    extends AbstractCollection
-    implements Bag
+public abstract class AbstractBag<E>
+    extends AbstractCollection<E>
+    implements Bag<E>
 {
     public boolean equals(Object o)
     {
@@ -13,7 +13,7 @@ public abstract class AbstractBag
             Bag other = (Bag)o;
             boolean result = (other.size() == size());
             if(result) {
-                Collection copy = new ArrayList(this);
+                Collection<E> copy = new ArrayList<E>(this);
                 for(Iterator i = other.iterator(); result && i.hasNext();)
                     result = copy.remove(i.next());
             }
@@ -25,25 +25,25 @@ public abstract class AbstractBag
         }
     }
 
-    private static class BagImpl
-        extends AbstractBag
+    private static class BagImpl<E>
+        extends AbstractBag<E>
 	implements java.io.Serializable
     {
         private static final long serialVersionUID = 1L;
 
-        private Collection store;
+        private Collection<E> store;
 
-	public BagImpl(Collection c)
+	public BagImpl(Collection<E> c)
 	{
 	    store = c;
 	}
 
-	public boolean add(Object o)
+	public boolean add(E o)
 	{
 	    return store.add(o);
 	}
 
-	public boolean addAll(Collection c)
+	public boolean addAll(Collection<? extends E> c)
 	{
 	    return store.addAll(c);
 	}
@@ -68,7 +68,7 @@ public abstract class AbstractBag
 	    return store.isEmpty();
 	}
 
-	public Iterator iterator()
+	public Iterator<E> iterator()
 	{
 	    return store.iterator();
 	}
@@ -98,9 +98,9 @@ public abstract class AbstractBag
 	    return store.toArray();
 	}
 
-	public Object [] toArray(Object [] a)
+	public <U> U[] toArray(U [] a)
 	{
-	    return store.toArray(a);
+	    return store.<U>toArray(a);
 	}
 
 	public int hashCode()
@@ -117,13 +117,13 @@ public abstract class AbstractBag
 	}
     }
 
-    public static Bag wrap(List list)
+    public static <U> Bag<U> wrap(List<U> list)
     {
-	return new BagImpl(list);
+	return new BagImpl<U>(list);
     }
 
-    public static Bag newBag()
+    public static <U> Bag<U> newBag()
     {
-        return wrap(new ArrayList());
+        return wrap(new ArrayList<U>());
     }
 }
