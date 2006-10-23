@@ -40,13 +40,15 @@ public class ExecutorServiceProxyTest
 
         public void stop()
             throws InterruptedException;
+        
+        public void remove();
     }
     
     public static class TargetImpl
         implements Target
     {
         private final Object magic = new Object();
-        private final ThreadLocal local = new ThreadLocal();
+        public final ThreadLocal<Object> local = new ThreadLocal<Object>();
         
         public void set()
         {
@@ -74,16 +76,23 @@ public class ExecutorServiceProxyTest
         {
             ExecutorServiceProxy.current().stop();
         }
+
+        public void remove()
+        {
+            local.remove();
+        }
     }
     
     ExecutorServiceProxy server;
+    TargetImpl impl;
     Target target;
     
     public void setUp() 
         throws InterruptedException
     {
         server = new ExecutorServiceProxy(Executors.newSingleThreadExecutor());
-        target = (Target)server.proxy(new TargetImpl(), new Class [] { Target.class });
+        impl = new TargetImpl();
+        target = (Target)server.proxy(impl, new Class [] { Target.class });
     }
     
     public void tearDown() 
@@ -131,5 +140,20 @@ public class ExecutorServiceProxyTest
         Target target = (Target)server.proxy(new TargetImpl(), new Class [] { Target.class });
         target.stop();
         assertTrue(server.executor.isTerminated());
+    }
+    
+    public void testProperties()
+    {
+        server.properties.add(ExecutorServiceProxy.threadProperty(impl.local));
+
+        try {
+            impl.set();
+            assertTrue(target.test());
+        }
+        finally {
+            impl.remove();
+        }
+        
+        assertFalse(target.test());
     }
 }

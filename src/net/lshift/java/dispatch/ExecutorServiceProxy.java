@@ -52,7 +52,29 @@ public class ExecutorServiceProxy
         /**
          * Clear the value of this property for the current thread
          */
-        public void clear();
+        public void remove();
+    }
+    
+    public static <T> ThreadProperty<T> threadProperty(final ThreadLocal<T> tl)
+    {
+        return new ThreadProperty<T>() {
+
+            public void remove()
+            {
+                tl.remove();
+            }
+
+            public T get()
+            {
+                return tl.get();
+            }
+
+            public void set(T value)
+            {
+                tl.set(value);
+            }
+            
+        };
     }
     
     public final ExecutorService executor;
@@ -62,11 +84,19 @@ public class ExecutorServiceProxy
      * to the execution service while it executes the requested method.
      * Its probably most useful for logging purposes. 
      */
-    public final Set<ThreadProperty> properties = new HashSet<ThreadProperty>();
+    public final Set<ThreadProperty> properties;
     
     public ExecutorServiceProxy(ExecutorService executor)
     {
+        this(executor, new HashSet<ThreadProperty>());
+    }
+
+    public ExecutorServiceProxy
+        (ExecutorService executor, 
+         Set<ThreadProperty> properties)
+    {
         this.executor = executor;
+        this.properties = properties;
     }
     
     /**
@@ -115,7 +145,7 @@ public class ExecutorServiceProxy
                         finally {
                             PROXY.remove();
                             for(ThreadProperty property: propertyValues.keySet())
-                                property.clear();
+                                property.remove();
                         }
                     }
 
