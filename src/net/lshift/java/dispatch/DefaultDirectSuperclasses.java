@@ -21,21 +21,21 @@ import java.io.Serializable;
 public class DefaultDirectSuperclasses
     implements JavaC3.DirectSuperclasses
 {
-    private static final Map PRIMITIVE_SUPERCLASSES;
+    private static final Map<Class,List<Class>> PRIMITIVE_SUPERCLASSES;
 
     static {
-	Map superclasses = new HashMap();
-	final List none =  Collections.EMPTY_LIST;
+	Map<Class,List<Class>> superclasses = new HashMap<Class,List<Class>>();
+	final List<Class> none =  Collections.emptyList();
 	// does this make any sense? It does from a 'widening conversion'
 	// point of view in java. 
 	superclasses.put(Void.TYPE, none);
 	superclasses.put(Boolean.TYPE, none);
-	superclasses.put(Double.TYPE, Collections.singletonList(Float.TYPE));
-	superclasses.put(Float.TYPE, Collections.singletonList(Long.TYPE));
-	superclasses.put(Long.TYPE, Collections.singletonList(Integer.TYPE));
+	superclasses.put(Double.TYPE, Collections.singletonList((Class)Float.TYPE));
+	superclasses.put(Float.TYPE, Collections.singletonList((Class)Long.TYPE));
+	superclasses.put(Long.TYPE, Collections.singletonList((Class)Integer.TYPE));
 	superclasses.put
 	    (Integer.TYPE, Arrays.asList(new Class [] { Short.TYPE, Character.TYPE }));
-	superclasses.put(Short.TYPE, Collections.singletonList(Byte.TYPE));
+	superclasses.put(Short.TYPE, Collections.singletonList((Class)Byte.TYPE));
 	superclasses.put(Byte.TYPE, none);
 	superclasses.put(Character.TYPE, none);
 	PRIMITIVE_SUPERCLASSES = Collections.unmodifiableMap(superclasses);
@@ -56,7 +56,7 @@ public class DefaultDirectSuperclasses
      * This seems a bit arbitrary, but works, and gives sensible
      * results in most cases.
      */
-    public List directSuperclasses(Class c)
+    public List<Class> directSuperclasses(Class c)
     {
 	if(c.isPrimitive()) {
 	    return primitiveSuperclasses(c);
@@ -68,7 +68,7 @@ public class DefaultDirectSuperclasses
 	    Class [] interfaces = c.getInterfaces();
 	    Class superclass = c.getSuperclass();
 
-	    List classes = new LinkedList();
+	    List<Class> classes = new LinkedList<Class>();
 	    if(superclass == Object.class) {
 		classes.addAll(Arrays.asList(interfaces));
 		classes.add(Object.class);
@@ -87,20 +87,20 @@ public class DefaultDirectSuperclasses
 	}
     }
 
-    public List primitiveSuperclasses(Class c)
+    public List<Class> primitiveSuperclasses(Class c)
     {
-	    return new LinkedList((List)PRIMITIVE_SUPERCLASSES.get(c));
+	    return PRIMITIVE_SUPERCLASSES.get(c);
     }
 
     /* the following is translated from sisc 1.8.5 s2j/reflection.scm
        java-array-superclasses. */
 
-    protected static List ARRAY_SUPERCLASSES = Arrays.asList
+    protected static List<Class> ARRAY_SUPERCLASSES = Arrays.asList
 	(new Class [] { Serializable.class, Cloneable.class, Object.class });
 
-    public List arrayDirectSuperclasses(int level, Class c)
+    public List<Class> arrayDirectSuperclasses(int level, Class c)
     {
-	List classes;
+	List<Class> classes;
 
 	if(c.isArray()) {
 	    classes = arrayDirectSuperclasses(level + 1, c.getComponentType());
@@ -108,7 +108,7 @@ public class DefaultDirectSuperclasses
 	else {
 	    List componentSuperclasses = directSuperclasses(c);
 	    if(componentSuperclasses.isEmpty() && !c.isInterface()) {
-		classes = (level == 1) ? new LinkedList(ARRAY_SUPERCLASSES) :
+		classes = (level == 1) ? new LinkedList<Class>(ARRAY_SUPERCLASSES) :
 		    makeArrayClasses(ARRAY_SUPERCLASSES, level - 1);
 	    }
 	    else {
@@ -120,10 +120,10 @@ public class DefaultDirectSuperclasses
     }
 
     // this compensates for the lack of map
-    public static List makeArrayClasses(List classes, int dims)
+    public static List<Class> makeArrayClasses(List classes, int dims)
     {
 	Iterator i = classes.iterator();
-	LinkedList arrayClasses = new LinkedList();
+	LinkedList<Class> arrayClasses = new LinkedList<Class>();
 	while(i.hasNext())
 	    arrayClasses.add(makeArrayClass((Class)i.next(), dims));
 	return arrayClasses;

@@ -20,11 +20,12 @@ import java.util.*;
  */
 public class DynamicDispatch
 {
-    private static Map dispatchers = Collections.synchronizedMap(new HashMap());
+    private static Map<DispatcherType,MultiClass> dispatchers = 
+        Collections.synchronizedMap(new HashMap<DispatcherType,MultiClass>());
 
-    private static final Map PRIMITIVES;
+    private static final Map<Class,Class> PRIMITIVES;
     static {
-	Map primitives = new HashMap();
+	Map<Class,Class> primitives = new HashMap<Class, Class>();
 	primitives.put(Void.class, Void.TYPE);
 	primitives.put(Boolean.class, Boolean.TYPE);
 	primitives.put(Double.class, Double.TYPE);
@@ -46,7 +47,7 @@ public class DynamicDispatch
 	    // procedure if the argument should be a primitive, and
 	    // then convert the type appropriately.
 	    if(parameterTypes[i].isPrimitive())
-		types[i] = (Class)PRIMITIVES.get(args[i].getClass());
+		types[i] = PRIMITIVES.get(args[i].getClass());
 	    else
 		types[i] = args[i].getClass();
 	}
@@ -69,7 +70,9 @@ public class DynamicDispatch
     public static class IllegalAccessException
 	extends RuntimeException
     {
-	public IllegalAccessException(String message)
+        private static final long serialVersionUID = 1L;
+
+        public IllegalAccessException(String message)
 	{
 	    super(message);
 	}
@@ -78,7 +81,9 @@ public class DynamicDispatch
     public static class AmbiguousMethodException
 	extends RuntimeException
     {
-	public AmbiguousMethodException(String message)
+        private static final long serialVersionUID = 1L;
+
+        public AmbiguousMethodException(String message)
 	{
 	    super(message);
 	}
@@ -103,7 +108,7 @@ public class DynamicDispatch
 	throws NoSuchMethodException, java.lang.IllegalAccessException,
 	       InvocationTargetException
     {
-	final DynamicDispatchClass genclass = 
+	final MultiClass genclass = 
 	    dispatcher(constraint, closure.getClass());
 
 	Method template = constraint.getMethod(methodName, parameterTypes);
@@ -122,7 +127,7 @@ public class DynamicDispatch
 			       final Object closure,
 			       final InvocationHandler fallback)
     {
-	final DynamicDispatchClass genclass = 
+	final MultiClass genclass = 
 	    dispatcher(constraint, closure.getClass());
 	    
 	return Proxy.newProxyInstance
@@ -160,14 +165,14 @@ public class DynamicDispatch
 	     });
     }
 
-    private static DynamicDispatchClass dispatcher(Class constraint, Class closure)
+    private static MultiClass dispatcher(Class constraint, Class<? extends Object> closure)
     {
 	DispatcherType key = new DispatcherType(constraint, closure);
-	DynamicDispatchClass dispatcher = 
-	    (DynamicDispatchClass)dispatchers.get(key);
+	MultiClass dispatcher = 
+	    dispatchers.get(key);
 
 	if(dispatcher == null) {
-	    dispatcher = new DynamicDispatchClass(constraint, closure);
+	    dispatcher = new MultiClass(constraint, closure);
 	    dispatchers.put(key, dispatcher);
 	}
 
@@ -180,9 +185,9 @@ public class DynamicDispatch
     private static class DispatcherType
     {
 	private Class constraint;
-	private Class closure;
+	private Class<? extends Object> closure;
 
-	public DispatcherType(Class constraint, Class closure)
+	public DispatcherType(Class constraint, Class<? extends Object> closure)
 	{
 	    this.constraint = constraint;
 	    this.closure = closure;
@@ -208,13 +213,13 @@ public class DynamicDispatch
     {
 	// Each Map in this array is for a parameter. It Maps from a type
 	// to a set of methods with that parameter type at that position.
-	private Map [] indexes;
+	private Map<Class,Set<Method>> [] indexes;
 
 	public Procedure(Method procedure, Method [] methods)
 	{
 	    indexes = new Map[procedure.getParameterTypes().length];
 	    for(int i = 0; i != indexes.length; ++i)
-		indexes[i] = new HashMap();
+		indexes[i] = new HashMap<Class,Set<Method>>();
 
 	    Set pmethods = procedureMethods(procedure, methods);
 	    Iterator pmi = pmethods.iterator();
@@ -223,9 +228,9 @@ public class DynamicDispatch
 		Method method = (Method)pmi.next();
 		Class [] parameters = method.getParameterTypes();
 		for(int i = 0; i != parameters.length; ++i) {
-		    Set s = (Set)indexes[i].get(parameters[i]);
+		    Set<Method> s = indexes[i].get(parameters[i]);
 		    if(s == null) {
-			s = new HashSet();
+			s = new HashSet<Method>();
 			indexes[i].put(parameters[i], s);
 		    }
 		    s.add(method);
@@ -239,13 +244,13 @@ public class DynamicDispatch
 	    throws JavaC3.JavaC3Exception
 	{
 	    Class paramterType = parameterTypes[position];
-	    List linearization = JavaC3.allSuperclasses(paramterType);
-	    Map index = indexes[position];
-	    Iterator i = linearization.iterator();
+	    List<Class> linearization = JavaC3.allSuperclasses(paramterType);
+	    Map<Class, Set<Method>> index = indexes[position];
+	    Iterator<Class> i = linearization.iterator();
 	    while(i.hasNext()) {
-		Set methods = (Set)index.get(i.next());
+		Set<Method> methods = index.get(i.next());
 		if(methods != null) {
-		    methods = new HashSet(methods);
+		    methods = new HashSet<Method>(methods);
 		    if(parameterTypes.length != position + 1)
 			methods.retainAll(methods(position + 1, parameterTypes));
 		    if(!methods.isEmpty())
@@ -278,7 +283,7 @@ public class DynamicDispatch
 
     protected static boolean appliesTo(Method constraint, Class [] params)
     {
-	Class[]  cparams = constraint.getParameterTypes();
+	Class [] cparams = constraint.getParameterTypes();
 	boolean result = (params.length == cparams.length);
 	for(int i = 0; result && i != params.length; ++i)
 	    result = (cparams[i].isAssignableFrom(params[i]));
@@ -301,9 +306,9 @@ public class DynamicDispatch
     /**
      * Get the set of methods applicable to this procedure
      */
-    protected static Set procedureMethods(Method constraint, Method [] methods)
+    protected static Set<Method> procedureMethods(Method constraint, Method [] methods)
     {
-	Set cmethods = new HashSet();
+	Set<Method> cmethods = new HashSet<Method>();
 	for(int i = 0; i != methods.length; ++i) {
 	    if(appliesTo(constraint, methods[i]))
 		cmethods.add(methods[i]);
@@ -314,36 +319,43 @@ public class DynamicDispatch
 
     // ------------------------------------------------------------------------
 
-    private static class DynamicDispatchClass
+    public static class MultiClass
     {
-	Map shortcuts = new HashMap();
-	Map procedures = new HashMap();
+	Map<Signature, Method> shortcuts = new HashMap<Signature, Method>();
+	Map<Method, Procedure> procedures = new HashMap<Method, Procedure>();
 
-	protected DynamicDispatchClass(Class constraint, Class closure)
-	{
-	    Method [] procedures = constraint.getDeclaredMethods();
-	    Method [] methods = closure.getDeclaredMethods();
-	    for(int p = 0; p != procedures.length; ++p) {
-		this.procedures.put
-		    (procedures[p], new Procedure(procedures[p], methods));
-	    }
-	}
+        protected MultiClass(Class constraint, Class<? extends Object> implementation)
+        {
+            Method [] procedures = constraint.getDeclaredMethods();
+            Method [] methods = implementation.getDeclaredMethods();
+            for(int p = 0; p != procedures.length; ++p) {
+                this.procedures.put
+                    (procedures[p], new Procedure(procedures[p], methods));
+            }
+        }
 
 	protected final Method method(Method procedureMethod, Object [] args)
 	{
 	    Signature signature = new Signature
 		(procedureMethod, types(procedureMethod, args));
 	    if(shortcuts.containsKey(signature)) {
-		return (Method)shortcuts.get(signature);
+		return shortcuts.get(signature);
 	    }
 	    else {
-		Procedure procedure = (Procedure)procedures.get(procedureMethod);
+		Procedure procedure = procedures.get(procedureMethod);
 		Method method = procedure.lookup(signature);
 		AccessibleObject.setAccessible(new AccessibleObject[] { method }, true);
 		shortcuts.put(signature, method);
 		return method;
 	    }
 	}
+
+        public Object invoke(Object proxy, Method method, Object[] args)
+            throws Throwable
+        {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
 }

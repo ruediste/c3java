@@ -28,7 +28,8 @@ public class AllTest
     {
 	TestSuite suite = new TestSuite("all");
 	suite.addTest(net.lshift.java.dispatch.DispatchTest.suite());
-	suite.addTest(net.lshift.java.lang.LangTest.suite());
+        suite.addTest(net.lshift.java.lang.LangTest.suite());
+        suite.addTest(net.lshift.java.util.UtilTest.suite());
 	return suite;
     }
 }

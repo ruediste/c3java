@@ -2,7 +2,16 @@
 package net.lshift.java.dispatch;
 
 
-import java.util.*;
+
+
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+
+import net.lshift.java.util.Collections;
+import net.lshift.java.util.Lists;
+import net.lshift.java.util.Predicate;
+import net.lshift.java.util.Transform;
 
 /**
  * Implement C3 Linearization
@@ -11,6 +20,7 @@ import java.util.*;
  */
 public class JavaC3
 {
+
     /*
      * This is a translation of the dylan example at the end of the above paper,
      * although its pretty hard to recognise: it doesn't translate readily
@@ -23,7 +33,7 @@ public class JavaC3
 	 * Get the super classes.
 	 * @param type the type to get the superclasses of.
 	 */
-	public List directSuperclasses(Class type);
+	public List<Class> directSuperclasses(Class type);
     }
 
     private static class LinearizationKey
@@ -59,17 +69,19 @@ public class JavaC3
 	}
     }
 
-    private static Map linearizations = 
-	Collections.synchronizedMap(new WeakHashMap());
+    private static Map<LinearizationKey, List<Class>> linearizations = 
+	java.util.Collections.synchronizedMap
+            (new WeakHashMap<LinearizationKey, List<Class>>());
 
     /**
      * Thrown when its not possible to linearize
      * all superclasses.
      */
     public static class JavaC3Exception
-	extends Exception
+	extends Error
     { 
-	private List reversedPartialResult;
+        private static final long serialVersionUID = 1L;
+        private List reversedPartialResult;
 	private List remainingInputs;
 
 	protected JavaC3Exception
@@ -112,113 +124,112 @@ public class JavaC3
     }
 
 
-    private static class MergeLists
+
+    protected static List<Class> mergeLists
+        (List<Class> partialResult,
+         final List<List<Class>> remainingInputs,
+         final DirectSuperclasses dsc) 
+        throws JavaC3Exception
     {
-	private LinkedList reversedPartialResult;
-	private List remainingInputs;
+        /*
+             The main difference between this and the Dylan version is
+             that the partial order is not reversed. Thats because its cheaper
+             to append to the list in java than to prepend.
+         */
+        
+        Predicate<List<Class>> empty = Collections.Procedures.isEmpty();
+        if(Lists.all(empty, remainingInputs)) {
+            return partialResult;
+        }
+        else {
+            // start of selection rule
+            final Predicate<Class> isCandidate = new Predicate<Class>() {
 
-	public MergeLists(Class c, List inputs)
-	    throws JavaC3Exception
-	{
-	    reversedPartialResult = new LinkedList();
-	    this.reversedPartialResult.add(c);
-	    remainingInputs = inputs;
-	    mergeLists();
-	}
+                public Boolean apply(final Class c) {
 
-	private Class candidate(Class c)
-	{
-	    Iterator inputs = remainingInputs.iterator();
-	    boolean anyTail = false;
-	    while(!anyTail && inputs.hasNext())
-		anyTail = ((List)inputs.next()).lastIndexOf(c) > 0;
-	    return anyTail ? null : c;
-	}
+                    
+                    Predicate<List<Class>> isHead = new Predicate<List<Class>>() {
+                        public Boolean apply(List<Class> l) {
+                            return l.isEmpty() ? false : c.equals(Lists.head(l));
+                        }
+                    };
 
-	private Class candidateAtHead(List l)
-	{
-	    return l.isEmpty() ? null : candidate((Class)l.get(0));
-	}
+                    Predicate<List<Class>> isTail = new Predicate<List<Class>>() {
+                        public Boolean apply(List<Class> l) {
+                            return l.indexOf(c) > 0;
+                        }
+                    };
+                    
+                    boolean result = (Lists.find(isHead, remainingInputs) != null)
+                        && (Lists.find(isTail, remainingInputs) == null);
+                    return result;
+                }
+            };
+            
+            Transform<Class,Class> candidateDirectSuperclass = new Transform<Class,Class>() {
+                public Class apply(final Class c) {
+                    return Lists.find(isCandidate, dsc.directSuperclasses(c));
+                }
+            };
+            
+            final Class next = Lists.anyLast(candidateDirectSuperclass, partialResult);
+            
+            // end of selection rule
+            
+            if(next != null) {
+                
+                Transform<List<Class>, List<Class>> removeNext =
+                    new Transform<List<Class>, List<Class>>() {
+                        public List<Class> apply(List<Class> l) {
+                            return (!l.isEmpty() && Lists.head(l).equals(next)) 
+                                ? Lists.tail(l) : l;
+                        }
+                };
 
-	private Class anyCandidateAtHead()
-	{
-	    Iterator i = remainingInputs.iterator();
-	    Class any = null;
-	    while(any == null && i.hasNext())
-		any = candidateAtHead((List)i.next());
-	    return any;
-	}
-
-	private boolean remainingInputs()
-	{
-	    Iterator inputs = remainingInputs.iterator();
-	    boolean remaining = false;
-	    while(!remaining && inputs.hasNext())
-		remaining = !((List)inputs.next()).isEmpty();
-	    return remaining;
-	}
-
-	private void mergeLists()
-	    throws JavaC3Exception
-	{
-	    while(remainingInputs()) {
-
-		Class next = anyCandidateAtHead();
-
-		if(next != null) {
-		    Iterator i = remainingInputs.iterator();
-		    while(i.hasNext()) {
-			List list = (List)i.next();
-			if(list.indexOf(next) == 0) list.remove(0);
-		    }
-
-		    reversedPartialResult.addFirst(next);
-		}
-		else {
-		    throw new JavaC3Exception(reversedPartialResult, remainingInputs);
-		}
-	    }
-
-	    Collections.reverse(reversedPartialResult);
-	}
-
-	public List getLinearization()
-	{
-	    return reversedPartialResult;
-	}
+                // we certainly don't need partialResult again, so it should
+                // be fine to append to it here
+                partialResult.add(next);
+                return mergeLists(partialResult, Lists.map(removeNext, remainingInputs), dsc);
+            }
+            else {
+                throw new JavaC3Exception(partialResult, remainingInputs);
+            }
+        }
     }
-
-
-    protected static List computeClassLinearization(Class c, DirectSuperclasses dsc)
+    
+    protected static List<Class> computeClassLinearization
+        (Class c, 
+         final DirectSuperclasses dsc)
 	throws JavaC3Exception
     {
-	List cDirectSuperclasses = dsc.directSuperclasses(c);
-	List inputs = new ArrayList(cDirectSuperclasses.size()+1);
-	Iterator i = cDirectSuperclasses.iterator();
-	// the lists in input are consumed, so they must be cloned
-	while(i.hasNext()) {
-	    List allSuperclasses = new LinkedList();
-	    allSuperclasses.addAll(allSuperclasses((Class)i.next()));
-	    inputs.add(allSuperclasses);
-	}
-
-	inputs.add(cDirectSuperclasses);
-
-	MergeLists ml = new MergeLists(c, inputs);
-	return Collections.unmodifiableList(ml.getLinearization());
+	List<Class> cDirectSuperclasses = dsc.directSuperclasses(c);
+        
+        Transform<Class,List<Class>> cplList = new Transform<Class,List<Class>>() {
+            public List<Class> apply(Class c) {
+                return allSuperclasses(c, dsc);
+            }
+        };
+        
+        return mergeLists
+            (Lists.list(c), 
+             Lists.concatenate
+             (Lists.map(cplList, cDirectSuperclasses), 
+              Lists.list(cDirectSuperclasses)),
+             dsc);
+        
     }
 
-    public static List allSuperclasses(Class c)
+    public static List<Class> allSuperclasses(Class c)
 	throws JavaC3Exception
     {
 	return allSuperclasses(c, DefaultDirectSuperclasses.SUPERCLASSES);
     }
 
-    public static List allSuperclasses(Class c, DirectSuperclasses dsc)
+    public static List<Class> allSuperclasses(Class c, DirectSuperclasses dsc)
 	throws JavaC3Exception
     {
 	LinearizationKey key = new LinearizationKey(dsc, c);
-	List linearization = (List)linearizations.get(key);
+	List<Class> linearization = linearizations.get(key);
 	if(linearization == null) {
 	    linearization = computeClassLinearization(c, dsc);
 	    linearizations.put(key, linearization);

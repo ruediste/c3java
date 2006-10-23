@@ -20,7 +20,7 @@ public class ImplementsFirstDirectSuperclasses
      * Interfaces, followed by the superclasses. Interfaces with
      * no super interfaces extend Object.
      */
-    public List directSuperclasses(Class c)
+    public List<Class> directSuperclasses(Class c)
     {
 	if(c.isPrimitive()) {
 	    return primitiveSuperclasses(c);
@@ -32,7 +32,7 @@ public class ImplementsFirstDirectSuperclasses
 	    Class [] interfaces = c.getInterfaces();
 	    Class superclass = c.getSuperclass();
 
-	    List classes = new LinkedList();
+	    List<Class> classes = new LinkedList<Class>();
 	    classes.addAll(Arrays.asList(interfaces));
 	    if(superclass == null) {
 		if(interfaces.length == 0 && 
