@@ -35,12 +35,14 @@ public class ExecutorServiceProxy
 
     private static final long DEFAULT_TIMEOUT = 30; // 30 seconds
     
+    private final int baseProxyStackDepth;
+    
     private interface StackDepthTest
     {
         int getStackDepth();
     }
     
-    private int proxyStackDepth()
+    private int calculateProxyStackDepth()
     {
         return ((StackDepthTest)proxy(new StackDepthTest() {
                 public int getStackDepth() {
@@ -116,17 +118,18 @@ public class ExecutorServiceProxy
     {
         this.executor = executor;
         this.properties = properties;
+        this.baseProxyStackDepth = this.calculateProxyStackDepth();
     }
     
     private StackTraceElement [] mergeStack(Throwable cause, Throwable ref)
     {
         StackTraceElement [] catchStack = ref.getStackTrace();
         StackTraceElement [] causeStack = cause.getStackTrace();
-        int proxyStackDepth = causeStack.length - proxyStackDepth();
+        int proxyStackDepth = causeStack.length - baseProxyStackDepth;
         if(proxyStackDepth < 0)
             throw new IllegalArgumentException
                 ("cause stack too shalow: cause.length = " + causeStack.length +
-                 " proxy.length = " + proxyStackDepth());
+                 " proxy.length = " + proxyStackDepth);
         StackTraceElement [] stack = new StackTraceElement
             [proxyStackDepth  + catchStack.length - 1];
         

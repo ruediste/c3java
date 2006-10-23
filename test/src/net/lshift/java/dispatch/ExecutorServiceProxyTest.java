@@ -42,6 +42,9 @@ public class ExecutorServiceProxyTest
             throws InterruptedException;
         
         public void remove();
+
+        public void stopException()
+            throws TargetException, InterruptedException;
     }
     
     public static class TargetImpl
@@ -63,6 +66,13 @@ public class ExecutorServiceProxyTest
         public void exception()
             throws TargetException
         {
+            throw new TargetException();
+        }
+        
+        public void stopException()
+            throws TargetException, InterruptedException
+        {
+            stop();
             throw new TargetException();
         }
         
@@ -156,5 +166,21 @@ public class ExecutorServiceProxyTest
         }
         
         assertFalse(target.test());
+    }
+    
+    public void testStopException() 
+        throws InterruptedException
+    {
+        boolean exception = false;
+        try {
+            target.stopException();
+        }
+        catch(TargetException e) {
+            e.printStackTrace();
+            exception = true;
+        }
+
+        assertTrue(exception);
+          
     }
 }
