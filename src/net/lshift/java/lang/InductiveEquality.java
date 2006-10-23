@@ -9,7 +9,8 @@ import java.util.HashSet;
 public class InductiveEquality
     implements Equality
 {
-    private static final Map ASSUMPTIONS = new HashMap();
+    private static final Map<Thread, Set<Equals>> ASSUMPTIONS 
+        = new HashMap<Thread, Set<Equals>>();
     private Equality delegate;
 
     public Equality getDelegate()
@@ -61,10 +62,10 @@ public class InductiveEquality
     {
 	Thread thread = Thread.currentThread();
 	if(ASSUMPTIONS.containsKey(thread)) {
-	    return equals((Set)ASSUMPTIONS.get(thread), a, b);
+	    return equals(ASSUMPTIONS.get(thread), a, b);
 	}
 	else {
-	    Set assumptions = new HashSet();
+	    Set<Equals> assumptions = new HashSet<Equals>();
 	    ASSUMPTIONS.put(thread, assumptions);
 
 	    try {
@@ -76,7 +77,7 @@ public class InductiveEquality
 	}
     }
 
-    private boolean equals(Set assumptions, Object a, Object b)
+    private boolean equals(Set<Equals> assumptions, Object a, Object b)
     {
 	if(a == null || b == null) {
 	    return a == b;
