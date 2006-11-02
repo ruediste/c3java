@@ -9,7 +9,7 @@
   <property name="cm.module" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
 
-  <property name="cm.version" value="v2_0_2"/>
+  <property name="cm.version" value="v2_0_3"/>
   <property name="public.version" value="1.0.18"/>
 
   <property name="build.home" value="build"/>

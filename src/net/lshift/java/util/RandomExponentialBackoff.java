@@ -91,6 +91,50 @@ public class RandomExponentialBackoff
         }
     }
     
+    public class RetriesExceededException
+        extends Exception
+    {
+        private static final long serialVersionUID = 1L;
+
+        public RetriesExceededException(Exception cause)
+        {
+            super(cause);
+        }
+    }
+
+    /**
+     * Retry an operation up to retries times.
+     * @param <R> The return type of the operation
+     * @param operation The operation to perform
+     * @param retries The maximum number of times to attempt the operation,
+     *   greater than zero
+     * @return the result of the first successful attempt
+     * @throws RetriesExceededException if the retries attempts were made
+     *     without success. The cause will be the exception thrown by
+     *     the last attempt.
+     * @throws InterruptedException
+     */
+    public <R> R execute(Operation<R> operation, int retries)
+        throws RetriesExceededException, InterruptedException
+    {
+        if(retries <= 0)
+            throw new IllegalArgumentException("retries = " + retries);
+        Session session = newSession();
+        
+        for(int i = 1; ; ++i) {
+            try {
+                R result = operation.apply();
+                session.complete();
+                return result;
+            }
+            catch(Exception e) {
+                if(i == retries)
+                    throw new RetriesExceededException(e);
+                session.backoff();
+            }
+        }
+    }
+    
     /**
      * Get a new session
      * Begin your first attempt immediately after calling this.
