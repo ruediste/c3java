@@ -40,6 +40,7 @@ public class Loader
                      as convenient as you would expect.
                  */
                 File tmp = File.createTempFile("linker", ".jar");
+                tmp.deleteOnExit();
                 OutputStream out = new FileOutputStream(tmp);
                 try {
                     byte [] buffer = new byte[1024]; 
