@@ -82,6 +82,7 @@ public class EqualsHelperTest
         assertFalse(EqualsHelper.equals(exampleC1("a"), exampleC1("b")));
     }
 
+    @SuppressWarnings("unchecked")
     public void testSets()
     {
         assertTrue
@@ -94,6 +95,7 @@ public class EqualsHelperTest
               new HashSet(list("1", "2", "4"))));
     }
 
+    @SuppressWarnings("unchecked")
     public void testLists()
     {
         assertTrue

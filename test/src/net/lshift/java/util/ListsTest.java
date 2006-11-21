@@ -49,6 +49,7 @@ public class ListsTest
             (l, Lists.foldRight(INSERT_FIRST , Lists.list(new Integer[0]), l));
     }
     
+    @SuppressWarnings("unchecked")
     public void testConcatenate()
     {
         assertEquals(Lists.list(1, 2, 3), 

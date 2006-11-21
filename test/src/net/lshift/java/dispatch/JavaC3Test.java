@@ -47,7 +47,8 @@ public class JavaC3Test
 	i = c;
 	long l =  i;
 	float f = l;
-	double d = f;
+	@SuppressWarnings("unused")
+        double d = f;
     }
 
     public void testDirectSuperClasses()
