@@ -4,8 +4,11 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -32,30 +35,11 @@ public class ExecutorServiceProxy
 {
     private static final ThreadLocal<ExecutorServiceProxy> PROXY =
         new ThreadLocal<ExecutorServiceProxy>();
+    private static final String CLASSNAME = ExecutorServiceProxy.class.getName();
 
     private static final long DEFAULT_TIMEOUT = 30; // 30 seconds
     
-    private final int baseProxyStackDepth;
-    
-    private interface StackDepthTest
-    {
-        int getStackDepth();
-    }
-    
-    private int calculateProxyStackDepth()
-    {
-        return ((StackDepthTest)proxy(new StackDepthTest() {
-                public int getStackDepth() {
-                    try {
-                        throw new Exception();
-                    }
-                    catch(Exception e) {
-                        return e.getStackTrace().length;
-                    }
-                }
-            }, new Class[] { StackDepthTest.class })).getStackDepth() - 1;
-    }
-    
+
     public interface ThreadProperty<T>
     {
         /**
@@ -118,24 +102,53 @@ public class ExecutorServiceProxy
     {
         this.executor = executor;
         this.properties = properties;
-        this.baseProxyStackDepth = this.calculateProxyStackDepth();
     }
     
-    private StackTraceElement [] mergeStack(Throwable cause, Throwable ref)
+    private StackTraceElement [] truncateStack
+        (Throwable cause, Class delegate)
+    {
+        try {
+            throw new Exception();
+        }
+        catch(Exception reference) {
+            StackTraceElement [] full = cause.getStackTrace();
+            int last = full.length - reference.getStackTrace().length + 1;
+            for( ; !full[last].getClassName().equals(delegate.getName()); --last);
+            StackTraceElement [] truncated = new StackTraceElement[last + 1];
+            System.arraycopy(full, 0, truncated, 0, truncated.length);
+            return truncated;
+        }
+    }
+    
+    private StackTraceElement [] mergeStack
+        (Throwable cause, 
+         Throwable ref,
+         Class proxy)
     {
         StackTraceElement [] catchStack = ref.getStackTrace();
         StackTraceElement [] causeStack = cause.getStackTrace();
-        int proxyStackDepth = causeStack.length - baseProxyStackDepth;
-        if(proxyStackDepth < 0)
-            throw new IllegalArgumentException
-                ("cause stack too shalow: cause.length = " + causeStack.length +
-                 " proxy.length = " + proxyStackDepth);
-        StackTraceElement [] stack = new StackTraceElement
-            [proxyStackDepth  + catchStack.length - 1];
-        
-        System.arraycopy(causeStack, 0, stack, 0, proxyStackDepth);
-        System.arraycopy(catchStack, 1, stack, proxyStackDepth, catchStack.length - 1);
-        return stack;
+        List<StackTraceElement> merged = 
+            new ArrayList<StackTraceElement>(catchStack.length + causeStack.length);
+        String proxyName = proxy.getName();
+        for(StackTraceElement element: causeStack) {
+            merged.add(element);
+            if(element.getClassName().equals(proxyName))
+                break;
+        }
+
+        merged.add(new StackTraceElement
+                   (ExecutorServiceProxy.class.getName(), 
+                    "invoke", "Generated Source", -1));
+
+        int index = 0;
+        for(; (index != catchStack.length 
+               && !catchStack[index].getClassName().equals(proxyName)); ++index);
+        for(; index != catchStack.length; ++index)
+            if(!catchStack[index].getClassName().equals(proxyName))
+                merged.add(catchStack[index]);
+
+
+        return merged.toArray(new StackTraceElement[merged.size()]);
     }
     
     /**
@@ -176,6 +189,8 @@ public class ExecutorServiceProxy
                         }
                         catch(InvocationTargetException e) {
                             Throwable cause = e.getTargetException();
+                            cause.setStackTrace
+                                (truncateStack(cause, delegate.getClass()));
                             if(cause instanceof Exception)
                                 throw (Exception)cause;
                             else
@@ -199,7 +214,8 @@ public class ExecutorServiceProxy
                         throw new Exception();
                     }
                     catch(Exception current) {
-                        cause.setStackTrace(mergeStack(cause, current));
+                        cause.setStackTrace
+                            (mergeStack(cause, current, proxy.getClass()));
                     }
                     
                     throw cause;
