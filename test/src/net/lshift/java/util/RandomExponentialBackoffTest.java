@@ -38,7 +38,7 @@ public class RandomExponentialBackoffTest
         // is O(exp(sum(n))
         testBackoff(1);
         testBackoff(2);
-        testBackoff(3);
+        // testBackoff(3);
         testBackoff(1);
         testBackoff(1);
         testBackoff(1);
