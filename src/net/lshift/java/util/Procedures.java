@@ -35,4 +35,14 @@ public class Procedures
             
         };
     }
+    
+    public static <V> Predicate<V> not(final Predicate<V> proc)
+    {
+        return new Predicate<V>() {
+            public Boolean apply(V x)
+            {
+                 return !proc.apply(x);
+            }
+        };
+    }
 }

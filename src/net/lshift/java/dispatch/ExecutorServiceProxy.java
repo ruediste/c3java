@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import net.lshift.java.util.Collections;
+import net.lshift.java.util.Lists;
+import net.lshift.java.util.Predicate;
 
 /**
  * Execute methods in a thread.
@@ -35,7 +40,6 @@ public class ExecutorServiceProxy
 {
     private static final ThreadLocal<ExecutorServiceProxy> PROXY =
         new ThreadLocal<ExecutorServiceProxy>();
-    private static final String CLASSNAME = ExecutorServiceProxy.class.getName();
 
     private static final long DEFAULT_TIMEOUT = 30; // 30 seconds
     
@@ -110,13 +114,10 @@ public class ExecutorServiceProxy
         try {
             throw new Exception();
         }
-        catch(Exception reference) {
-            StackTraceElement [] full = cause.getStackTrace();
-            int last = full.length - reference.getStackTrace().length + 1;
-            for( ; !full[last].getClassName().equals(delegate.getName()); --last);
-            StackTraceElement [] truncated = new StackTraceElement[last + 1];
-            System.arraycopy(full, 0, truncated, 0, truncated.length);
-            return truncated;
+        catch(Exception e) {
+            return Lists.difference
+                (cause.getStackTrace(),
+                 e.getStackTrace()).toArray(new StackTraceElement[0]);
         }
     }
     
@@ -171,7 +172,7 @@ public class ExecutorServiceProxy
                 final Map<ThreadProperty<Object>,Object> propertyValues = 
                         new HashMap<ThreadProperty<Object>,Object>();
                 
-                for(ThreadProperty property: properties) {
+                for(ThreadProperty<Object> property: properties) {
                     propertyValues.put(property, property.get());
                 }
                 

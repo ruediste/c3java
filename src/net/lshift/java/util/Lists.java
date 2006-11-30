@@ -115,6 +115,83 @@ public class Lists
 	return result;
     }
 
+    /**
+     * LISP like filter
+     * @param <E>
+     * @param proc the predicate to filter with
+     * @param c the collection to filter
+     * @return a new list containing only those elements of c for
+     *   which proc.apply() returns true, in the order c.iterator() returns them
+     */
+    public static <E> List<E> filter(Predicate<E> proc, Collection<E> c)
+    {
+        ArrayList<E> result = new ArrayList<E>();
+        for(E e: c)
+            if(proc.apply(e)) result.add(e);
+        return result;
+    }
+    
+    /**
+     * LISP like filter with array argument
+     * @see filter(Predicate<E>, Collection<E>)
+     */
+    public static <E> List<E> filter(Predicate<E> proc, E[] c)
+    {
+        ArrayList<E> result = new ArrayList<E>();
+        for(E e: c)
+            if(proc.apply(e)) result.add(e);
+        return result;
+    }
+    
+    /**
+     * SRFI-1 like lset-intersection
+     * this is O(N*cn.contains(E)) - ie runs contains on each cn 
+     * for every element in c. You should sometimes consider.
+     * @param <E>
+     * @param c the collection to filter
+     * @param cn
+     * @return the elements of c which are contained in any of cn,
+     *    filter(Collections.Procedures.contains(cn), c)
+     */
+    public static <E> List<E> intersection(Collection<E> c, Collection<E> ... cn)
+    {
+        return filter(Collections.Procedures.contains(cn), c);
+    }
+
+    public static <E> List<E> intersection(E [] c1, E [] c2)
+    {
+        return filter(Collections.Procedures.contains(Arrays.asList(c2)), c1);
+    }
+  
+    /**
+     * SRFI-1 like lset-difference
+     * this can be O(N^2)) - ie it runs contains on each cn 
+     * for every element in c. You should sometimes consider
+     * difference(c, Sets.union(cn)).
+     * @param <E>
+     * @param c the collection to filter
+     * @param cn collections containing the elements to be excluded
+     * @return the elemements of c1 which are not in any of cn, in the order
+     *   c1.iterator() returns them, 
+     *   filter(Procedures.not(Collections.Procedures.contains(cn)), c)
+     */
+    public static <E> List<E> difference(Collection<E> c, Collection<E> ... cn)
+    {
+        return filter(Procedures.not(Collections.Procedures.contains(cn)), c);
+    }
+    
+    /**
+     * SRFI-1 like lset-difference with array arguments
+     * @see difference(Collection<E>, Collection<E> ...)
+     */   
+    public static <E> List<E> difference(E [] c1, E [] c2)
+    {
+        return filter
+            (Procedures.not
+             (Collections.Procedures.contains(Arrays.asList(c2))), c1);
+    }
+ 
+    
     // Searching
     
     /**

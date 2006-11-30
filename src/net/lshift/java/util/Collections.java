@@ -96,5 +96,31 @@ public class Collections
 	{
 	    return (Predicate<C>)IS_EMPTY;
 	}
+        
+        public static <E> Predicate<E> contains(final Collection<E> c)
+        {
+            return new Predicate<E>() {
+
+                public Boolean apply(E x)
+                {
+                    return c.contains(x);
+                }
+                
+            };
+        }
+        
+        public static <E> Predicate<E> contains(final Collection<E> ... cn)
+        {
+            return new Predicate<E>() {
+
+                public Boolean apply(E x)
+                {
+                    for(Collection<E> c: cn)
+                        if(c.contains(x))
+                            return true;
+                    return false;
+                }
+            };
+        }
     }
 }
