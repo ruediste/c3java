@@ -145,11 +145,12 @@ public class Lists
     
     /**
      * SRFI-1 like lset-intersection
-     * this is O(N*cn.contains(E)) - ie runs contains on each cn 
-     * for every element in c. You should sometimes consider.
+     * this can be O(N^2)) - ie it runs contains on each cn 
+     * for every element in c. You should sometimes consider
+     * intersection(c, Sets.union(cn)).
      * @param <E>
      * @param c the collection to filter
-     * @param cn
+     * @param cn collections containing the elements which can be included
      * @return the elements of c which are contained in any of cn,
      *    filter(Collections.Procedures.contains(cn), c)
      */
