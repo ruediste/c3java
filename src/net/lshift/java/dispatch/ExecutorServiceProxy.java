@@ -5,10 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import net.lshift.java.util.Collections;
 import net.lshift.java.util.Lists;
-import net.lshift.java.util.Predicate;
 
 /**
  * Execute methods in a thread.
@@ -152,6 +148,81 @@ public class ExecutorServiceProxy
         return merged.toArray(new StackTraceElement[merged.size()]);
     }
     
+    private class ProxyInvocationHandler
+        implements InvocationHandler
+    {
+        final Object delegate;
+        
+        public ProxyInvocationHandler(Object delegate)
+        {
+            this.delegate = delegate;
+        }
+        
+        public Object invoke(Object proxy, final Method method, final Object[] args) 
+            throws Throwable
+        {
+            final Map<ThreadProperty<Object>,Object> propertyValues = 
+                new HashMap<ThreadProperty<Object>,Object>();
+        
+            for(ThreadProperty<Object> property: properties) {
+                propertyValues.put(property, property.get());
+            }
+
+            Future future = executor.submit(new Callable<Object>() {
+
+                public Object call()
+                throws Exception
+                {
+                    PROXY.set(ExecutorServiceProxy.this);
+                    for(Map.Entry<ThreadProperty<Object>,Object> entry: propertyValues.entrySet())
+                        entry.getKey().set(entry.getValue());
+
+                    try {
+                        return method.invoke(delegate, args);
+                    }
+                    catch(InvocationTargetException e) {
+                        Throwable cause = e.getTargetException();
+                        cause.setStackTrace
+                        (truncateStack(cause, delegate.getClass()));
+                        if(cause instanceof Exception)
+                            throw (Exception)cause;
+                        else
+                            throw (Error)cause;
+                    }
+                    finally {
+                        PROXY.remove();
+                        for(ThreadProperty property: propertyValues.keySet())
+                            property.remove();
+                    }
+                }
+
+            });
+
+            try {
+                return future.get();
+            }
+            catch(ExecutionException e) {
+                Throwable cause = e.getCause();
+                try {
+                    throw new Exception();
+                }
+                catch(Exception current) {
+                    cause.setStackTrace
+                    (mergeStack(cause, current, proxy.getClass()));
+                }
+
+                throw cause;
+            }
+            finally {
+                // if the executor is shutting down, wait for it to finish
+                // this gives the expected behaviour when stop is called
+                // from within a proxy method
+                if(executor.isShutdown())
+                    executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+            }
+        }
+    }
+    
     /**
      * Construct a proxy, for which each method is
      * invoked by the execution server.
@@ -159,78 +230,13 @@ public class ExecutorServiceProxy
      *   the worker thread.
      * @return a proxy implementing the interfaces
      */
-    public Object proxy(final Object delegate, Class [] interfaces)
+    @SuppressWarnings("unchecked")
+    public <T> T proxy(final Object delegate, Class [] interfaces)
     {
-        return Proxy.newProxyInstance
+        return (T)Proxy.newProxyInstance
             (delegate.getClass().getClassLoader(),
              interfaces,
-             new InvocationHandler() {
-
-            public Object invoke(Object proxy, final Method method, final Object[] args)
-                throws Throwable
-            {
-                final Map<ThreadProperty<Object>,Object> propertyValues = 
-                        new HashMap<ThreadProperty<Object>,Object>();
-                
-                for(ThreadProperty<Object> property: properties) {
-                    propertyValues.put(property, property.get());
-                }
-                
-                Future future = executor.submit(new Callable<Object>() {
-
-                    public Object call()
-                        throws Exception
-                    {
-                        PROXY.set(ExecutorServiceProxy.this);
-                        for(Map.Entry<ThreadProperty<Object>,Object> entry: propertyValues.entrySet())
-                            entry.getKey().set(entry.getValue());
-
-                        try {
-                            return method.invoke(delegate, args);
-                        }
-                        catch(InvocationTargetException e) {
-                            Throwable cause = e.getTargetException();
-                            cause.setStackTrace
-                                (truncateStack(cause, delegate.getClass()));
-                            if(cause instanceof Exception)
-                                throw (Exception)cause;
-                            else
-                                throw (Error)cause;
-                        }
-                        finally {
-                            PROXY.remove();
-                            for(ThreadProperty property: propertyValues.keySet())
-                                property.remove();
-                        }
-                    }
-
-                });
-        
-                try {
-                    return future.get();
-                }
-                catch(ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    try {
-                        throw new Exception();
-                    }
-                    catch(Exception current) {
-                        cause.setStackTrace
-                            (mergeStack(cause, current, proxy.getClass()));
-                    }
-                    
-                    throw cause;
-                }
-                finally {
-                    // if the executor is shutting down, wait for it to finish
-                    // this gives the expected behaviour when stop is called
-                    // from within a proxy method
-                    if(executor.isShutdown())
-                        executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
-                }
-            }
-
-        });
+             new ProxyInvocationHandler(delegate));
     }
     
     public void stop() 
