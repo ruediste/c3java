@@ -9,25 +9,33 @@ import java.util.Collection;
 import net.lshift.java.rmi.RemoteCollection;
 import net.lshift.java.rmi.RemoteIterator;
 
-public class RemoteCollectionServer
-    implements RemoteCollection, Unreferenced
+public class RemoteCollectionServer<T>
+    implements RemoteCollection<T>, Unreferenced
 {
     private static final long serialVersionUID = 1L;
 
-    private final Collection collection;
+    private final Collection<T> collection;
+    private final StubFactory factory;
     
-    public RemoteCollectionServer(Collection collection)
+    public RemoteCollectionServer(Collection<T> collection)
+        throws RemoteException
+    {
+        this(RMIStubFactory.INSTANCE, collection);
+    }
+    
+    public RemoteCollectionServer(StubFactory factory, Collection<T> collection)
         throws RemoteException
     {
         this.collection = collection;
+        this.factory = factory;
     }
 
-    public boolean add(Object o)
+    public boolean add(T o)
     {
         return collection.add(o);
     }
 
-    public boolean addAll(Collection c)
+    public boolean addAll(Collection<? extends T> c)
     {
         return collection.addAll(c);
     }
@@ -62,10 +70,10 @@ public class RemoteCollectionServer
         return collection.isEmpty();
     }
 
-    public RemoteIterator iterator()
+    public RemoteIterator<T> iterator()
         throws RemoteException
     {
-        return new RemoteIteratorServer(collection.iterator());
+        return factory.export(new RemoteIteratorServer<T>(collection.iterator()));
     }
 
     public boolean remove(Object o)

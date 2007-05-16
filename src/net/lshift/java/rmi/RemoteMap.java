@@ -4,7 +4,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Map;
 
-public interface RemoteMap
+public interface RemoteMap<K,V>
     extends Remote
 {
     public void clear()
@@ -16,22 +16,22 @@ public interface RemoteMap
     public boolean containsValue(Object value)
         throws RemoteException;
 
-    public RemoteCollection entrySet()
+    public RemoteCollection<Map.Entry<K, V>> entrySet()
         throws RemoteException;
 
-    public Object get(Object key)
+    public V get(Object key)
         throws RemoteException;
 
     public boolean isEmpty()
         throws RemoteException;
 
-    public RemoteCollection keySet()
+    public RemoteCollection<K> keySet()
         throws RemoteException;
 
-    public Object put(Object key, Object value)
+    public Object put(K key, V value)
         throws RemoteException;
 
-    public void putAll(Map t)
+    public void putAll(Map<? extends K, ? extends V> t)
         throws RemoteException;
 
     public Object remove(Object key)
@@ -40,6 +40,6 @@ public interface RemoteMap
     public int size()
         throws RemoteException;
 
-    public RemoteCollection values()
+    public RemoteCollection<V> values()
         throws RemoteException;
 }

@@ -9,14 +9,21 @@ import java.util.Map;
 import net.lshift.java.rmi.RemoteCollection;
 import net.lshift.java.rmi.RemoteMap;
 
-public class RemoteMapSever
-    implements RemoteMap, Unreferenced
+public class RemoteMapSever<K,V>
+    implements RemoteMap<K,V>, Unreferenced
 {
-    private final Map map;
+    private final Map<K,V> map;
+    private final StubFactory factory;
 
-    public RemoteMapSever(Map map)
+    public RemoteMapSever(Map<K,V> map)
+    {
+        this(RMIStubFactory.INSTANCE, map);
+    }
+    
+    public RemoteMapSever(StubFactory factory, Map<K,V> map)
     {
         this.map = map;
+        this.factory = factory;
     }
     
     public void clear()
@@ -34,10 +41,10 @@ public class RemoteMapSever
         return map.containsValue(value);
     }
 
-    public RemoteCollection entrySet()
+    public RemoteCollection<Map.Entry<K, V>> entrySet()
         throws RemoteException
     {
-        return new RemoteCollectionServer(map.entrySet());
+        return factory.export(new RemoteCollectionServer<Map.Entry<K, V>>(factory, map.entrySet()));
     }
 
     public boolean equals(Object o)
@@ -45,7 +52,7 @@ public class RemoteMapSever
         return map.equals(o);
     }
 
-    public Object get(Object key)
+    public V get(Object key)
     {
         return map.get(key);
     }
@@ -60,18 +67,18 @@ public class RemoteMapSever
         return map.isEmpty();
     }
 
-    public RemoteCollection keySet() 
+    public RemoteCollection<K> keySet() 
         throws RemoteException
     {
-        return new RemoteCollectionServer(map.keySet());
+        return factory.export(new RemoteCollectionServer<K>(factory, map.keySet()));
     }
 
-    public Object put(Object key, Object value)
+    public Object put(K key, V value)
     {
         return map.put(key, value);
     }
 
-    public void putAll(Map t)
+    public void putAll(Map<? extends K, ? extends V> t)
     {
         map.putAll(t);
     }
@@ -86,10 +93,10 @@ public class RemoteMapSever
         return map.size();
     }
 
-    public RemoteCollection values() 
+    public RemoteCollection<V> values() 
         throws RemoteException
     {
-        return new RemoteCollectionServer(map.values());
+        return factory.export(new RemoteCollectionServer<V>(factory, map.values()));
     }
 
     public void unreferenced()

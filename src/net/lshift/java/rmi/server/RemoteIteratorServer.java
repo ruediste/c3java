@@ -8,14 +8,14 @@ import java.util.Iterator;
 
 import net.lshift.java.rmi.RemoteIterator;
 
-public class RemoteIteratorServer
-    implements RemoteIterator, Unreferenced
+public class RemoteIteratorServer<E>
+    implements RemoteIterator<E>, Unreferenced
 {
     private static final long serialVersionUID = 1L;
 
-    private final Iterator iterator;
+    private final Iterator<E> iterator;
     
-    public RemoteIteratorServer(Iterator iterator)
+    public RemoteIteratorServer(Iterator<E> iterator)
         throws RemoteException
     {
         this.iterator = iterator;
@@ -26,7 +26,7 @@ public class RemoteIteratorServer
         return iterator.hasNext();
     }
 
-    public Object next()
+    public E next()
     {
         return iterator.next();
     }

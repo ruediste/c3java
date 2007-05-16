@@ -4,7 +4,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
-public interface RemoteCollection
+public interface RemoteCollection<E>
     extends Remote
 {
     public int size()
@@ -16,28 +16,28 @@ public interface RemoteCollection
     public boolean contains(Object o)
         throws RemoteException;
 
-    public RemoteIterator iterator()
+    public RemoteIterator<E> iterator()
         throws RemoteException;
 
     public Object[] toArray()
         throws RemoteException;
 
-    public boolean add(Object o)
+    public boolean add(E o)
         throws RemoteException;
     
     public boolean remove(Object o)
         throws RemoteException;
 
-    public boolean containsAll(Collection c)
+    public boolean containsAll(Collection<?> c)
         throws RemoteException;
 
-    public boolean addAll(Collection c)
+    public boolean addAll(Collection<? extends E> c)
         throws RemoteException;
 
-    public boolean removeAll(Collection c)
+    public boolean removeAll(Collection<?> c)
         throws RemoteException;
 
-    public boolean retainAll(Collection c)
+    public boolean retainAll(Collection<?> c)
         throws RemoteException;
 
     public void clear()

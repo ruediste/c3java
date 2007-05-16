@@ -3,13 +3,13 @@ package net.lshift.java.rmi;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface RemoteIterator
+public interface RemoteIterator<T>
     extends Remote
 {
     public boolean hasNext()
         throws RemoteException;
 
-    public Object next()
+    public T next()
         throws RemoteException;
 
     public void remove()
