@@ -10,7 +10,6 @@ import net.lshift.java.rmi.RemoteCollection;
 import net.lshift.java.rmi.RemoteIterator;
 
 public class RemoteCollectionServer
-    extends UnicastRemoteObject
     implements RemoteCollection, Unreferenced
 {
     private static final long serialVersionUID = 1L;

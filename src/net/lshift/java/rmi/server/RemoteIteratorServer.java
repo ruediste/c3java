@@ -9,7 +9,6 @@ import java.util.Iterator;
 import net.lshift.java.rmi.RemoteIterator;
 
 public class RemoteIteratorServer
-    extends UnicastRemoteObject
     implements RemoteIterator, Unreferenced
 {
     private static final long serialVersionUID = 1L;
