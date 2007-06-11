@@ -3,12 +3,12 @@ package net.lshift.java.rmi;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 
-public class RemoteIteratorAdaptor
-    implements Iterator
+public class RemoteIteratorAdaptor<E>
+    implements Iterator<E>
 {
-    private final RemoteIterator iterator;
+    private final RemoteIterator<E> iterator;
     
-    public RemoteIteratorAdaptor(RemoteIterator iterator)
+    public RemoteIteratorAdaptor(RemoteIterator<E> iterator)
     {
         this.iterator = iterator;
     }
@@ -23,7 +23,7 @@ public class RemoteIteratorAdaptor
         }
     }
 
-    public Object next()
+    public E next()
     {
         try {
             return iterator.next();

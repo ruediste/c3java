@@ -5,17 +5,17 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class RemoteCollectionAdaptor
-    implements Collection
+public class RemoteCollectionAdaptor<E>
+    implements Collection<E>
 {
-    private final RemoteCollection collection;
+    private final RemoteCollection<E> collection;
 
-    public RemoteCollectionAdaptor(RemoteCollection collection)
+    public RemoteCollectionAdaptor(RemoteCollection<E> collection)
     {
         this.collection = collection;
     }
     
-    public boolean add(Object o)
+    public boolean add(E o)
     {
         try {
             return collection.add(o);
@@ -25,7 +25,7 @@ public class RemoteCollectionAdaptor
         }
     }
 
-    public boolean addAll(Collection c)
+    public boolean addAll(Collection<? extends E> c)
     {
         try {
             return collection.addAll(c);
@@ -75,10 +75,10 @@ public class RemoteCollectionAdaptor
         }
     }
 
-    public Iterator iterator()
+    public Iterator<E> iterator()
     {
         try {
-            return new RemoteIteratorAdaptor(collection.iterator());
+            return new RemoteIteratorAdaptor<E>(collection.iterator());
         }
         catch (RemoteException e) {
             throw new RemoteExceptionWrapper(e);
@@ -135,11 +135,12 @@ public class RemoteCollectionAdaptor
         }
     }
     
-    public Object[] toArray(Object [] array)
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T [] array)
     {
         Object [] untyped = toArray();
         if(untyped.length > array.length)
-            array = (Object [])Array.newInstance
+            array = (T [])Array.newInstance
                 (array.getClass().getComponentType(), untyped.length);
         System.arraycopy(untyped, 0, array, 0, untyped.length);
         return array;
