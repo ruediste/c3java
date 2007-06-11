@@ -22,9 +22,9 @@ public class JavaC3
 {
 
     /*
-     * This is a translation of the dylan example at the end of the above paper,
-     * although its pretty hard to recognise: it doesn't translate readily
-     * into java.
+     * This is a translation of the dylan example at the end of the above paper.
+     * Its the driver behind the generic list processing library in
+     * net.lshift.util.
      */
     
     public interface DirectSuperclasses

@@ -23,7 +23,7 @@ public class DynamicDispatch
     private static Map<DispatcherType,MultiClass> dispatchers = 
         Collections.synchronizedMap(new HashMap<DispatcherType,MultiClass>());
 
-    private static final Map<Class,Class> PRIMITIVES;
+    public static final Map<Class,Class> PRIMITIVES;
     static {
 	Map<Class,Class> primitives = new HashMap<Class, Class>();
 	primitives.put(Void.class, Void.TYPE);
@@ -89,7 +89,7 @@ public class DynamicDispatch
 	}
     }
 
-    public static Object proxy(Class constraint, Object closure)
+    public static <T> T proxy(Class<? extends T> constraint, Object closure)
     {
 	return proxy(constraint, closure, null);
     }
@@ -123,14 +123,15 @@ public class DynamicDispatch
      * the closest matching method in closure given the types
      * of the arguments actually passed.
      */
-    public static Object proxy(final Class constraint,
+    @SuppressWarnings("unchecked")
+    public static <T> T proxy(final Class<? extends T> constraint,
 			       final Object closure,
 			       final InvocationHandler fallback)
     {
 	final MultiClass genclass = 
 	    dispatcher(constraint, closure.getClass());
-	    
-	return Proxy.newProxyInstance
+
+	return (T)Proxy.newProxyInstance
 	    (closure.getClass().getClassLoader(),
 	     new Class [] { constraint },
 	     new InvocationHandler() {
@@ -213,13 +214,14 @@ public class DynamicDispatch
     {
 	// Each Map in this array is for a parameter. It Maps from a type
 	// to a set of methods with that parameter type at that position.
-	private Map<Class,Set<Method>> [] indexes;
+	private List<Map<Class,Set<Method>>> indexes;
 
 	public Procedure(Method procedure, Method [] methods)
 	{
-	    indexes = new Map[procedure.getParameterTypes().length];
-	    for(int i = 0; i != indexes.length; ++i)
-		indexes[i] = new HashMap<Class,Set<Method>>();
+	    indexes = new ArrayList<Map<Class, Set<Method>>>();
+	    for(@SuppressWarnings("unused")
+	        Class type: procedure.getParameterTypes())
+	        indexes.add(new HashMap<Class,Set<Method>>());
 
 	    Set pmethods = procedureMethods(procedure, methods);
 	    Iterator pmi = pmethods.iterator();
@@ -228,10 +230,10 @@ public class DynamicDispatch
 		Method method = (Method)pmi.next();
 		Class [] parameters = method.getParameterTypes();
 		for(int i = 0; i != parameters.length; ++i) {
-		    Set<Method> s = indexes[i].get(parameters[i]);
+		    Set<Method> s = indexes.get(i).get(parameters[i]);
 		    if(s == null) {
 			s = new HashSet<Method>();
-			indexes[i].put(parameters[i], s);
+			indexes.get(i).put(parameters[i], s);
 		    }
 		    s.add(method);
 		}
@@ -245,7 +247,7 @@ public class DynamicDispatch
 	{
 	    Class paramterType = parameterTypes[position];
 	    List<Class> linearization = JavaC3.allSuperclasses(paramterType);
-	    Map<Class, Set<Method>> index = indexes[position];
+	    Map<Class, Set<Method>> index = indexes.get(position);
 	    Iterator<Class> i = linearization.iterator();
 	    while(i.hasNext()) {
 		Set<Method> methods = index.get(i.next());
@@ -266,8 +268,8 @@ public class DynamicDispatch
 	    try {
 		Set methods = methods(0, signature.parameterTypes);
 		if(methods.isEmpty()) {
-		    for(int i = 0; i != indexes.length; ++i)
-			System.err.println(i + ": " + indexes[i]);
+		    for(int i = 0; i != indexes.size(); ++i)
+			System.err.println(i + ": " + indexes.get(i));
 		    throw new NoSuchMethodError(signature.toString());
 		}
 		return (Method)methods.iterator().next();
@@ -281,9 +283,9 @@ public class DynamicDispatch
 
     // ------------------------------------------------------------------------
 
-    protected static boolean appliesTo(Method constraint, Class [] params)
+    protected static boolean appliesTo(Method constraint, Class<?> [] params)
     {
-	Class [] cparams = constraint.getParameterTypes();
+	Class<?> [] cparams = constraint.getParameterTypes();
 	boolean result = (params.length == cparams.length);
 	for(int i = 0; result && i != params.length; ++i)
 	    result = (cparams[i].isAssignableFrom(params[i]));

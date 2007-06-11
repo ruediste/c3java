@@ -25,8 +25,6 @@ public class ExecutorServiceProxyTest
         private static final long serialVersionUID = 1L;
     }
     
-    
-    
     public interface Target
     {
         public void set();
@@ -45,6 +43,8 @@ public class ExecutorServiceProxyTest
 
         public void stopException()
             throws TargetException, InterruptedException;
+        
+        public void illegalArgumentException();
     }
     
     public static class TargetImpl
@@ -80,6 +80,8 @@ public class ExecutorServiceProxyTest
         {
             throw new TargetError();
         }
+
+        
         
         public void stop()
             throws InterruptedException
@@ -90,6 +92,11 @@ public class ExecutorServiceProxyTest
         public void remove()
         {
             local.remove();
+        }
+
+        public void illegalArgumentException()
+        {
+            throw new IllegalArgumentException();
         }
     }
     
@@ -111,7 +118,8 @@ public class ExecutorServiceProxyTest
         server.stop();
     }
     
-    public void testMagic()
+    public void testMagic() 
+        throws InterruptedException
     {
         target.set();
         assertTrue(target.test());
@@ -119,6 +127,7 @@ public class ExecutorServiceProxyTest
     
     public void testException()
     {
+        target.set();
         boolean exception = false;
         try {
             target.exception();
@@ -129,10 +138,12 @@ public class ExecutorServiceProxyTest
         }
         
         assertTrue(exception);
+        assertTrue(target.test());
     }
     
     public void testError()
     {
+        target.set();
         boolean error = false;
         try {
             target.error();
@@ -142,6 +153,22 @@ public class ExecutorServiceProxyTest
         }
         
         assertTrue(error);
+        assertTrue(target.test());
+    }
+    
+    public void illegalArgumentException()
+    {
+        target.set();
+        boolean error = false;
+        try {
+            target.illegalArgumentException();
+        }
+        catch(IllegalArgumentException e) {
+            error = true;
+        }
+        
+        assertTrue(error);
+        assertTrue(target.test());
     }
     
     public void testCurrentStop()

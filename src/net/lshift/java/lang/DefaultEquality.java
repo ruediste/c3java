@@ -46,12 +46,12 @@ public class DefaultEquality
         return a.equals(b);
     }
 
-    public boolean equals(Bag a, Bag b)
+    public boolean equals(Bag<Object> a, Bag<Object> b)
     {
         return EqualsHelper.equals(a, b, delegate);
     }
 
-    public boolean equals(Set a, Set b)
+    public boolean equals(Set<Object> a, Set<Object> b)
     {
         return EqualsHelper.equals(a, b, delegate);
     }

@@ -154,6 +154,7 @@ public class DynamicDispatchTest
 	assertEquals("A1", x.toString(new A(), 1));
     }
 
+    @SuppressWarnings("serial")
     public static class TestException
 	extends Exception
     {
@@ -209,26 +210,30 @@ public class DynamicDispatchTest
 	throws Exception
     {
 	Object adder = new Object() {
-		public int add(Object a, Object b)
-		{
-		    return 0;
-		}
+	    @SuppressWarnings("unused")
+            public int add(Object a, Object b)
+	    {
+	        return 0;
+	    }
 
-		public int add(int a, int b)
-		{
-		    return a + b;
-		}
+	    @SuppressWarnings("unused")
+            public int add(int a, int b)
+            {
+	        return a + b;
+            }
 
-		public long add(long a, long b)
-		{
-		    return a + b;
-		}
-
-		public boolean add(boolean a, boolean b)
-		{
-		    return a && b;
-		}
-	    };
+	    @SuppressWarnings("unused")
+            public long add(long a, long b)
+	    {
+	        return a + b;
+	    }
+            
+            @SuppressWarnings("unused")
+            public boolean add(boolean a, boolean b)
+            {
+                return a && b;
+            }
+	};
 
 	assertEquals
 	    (new Integer(2), 

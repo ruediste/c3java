@@ -90,10 +90,13 @@ public class EqualsHelper
      * The order of the items in the collection is not important.
      * This operation is O(N^2)
      */
-    private static boolean unorderedEquals(Collection a, Collection b, Equality e)
+    private static boolean unorderedEquals
+        (Collection<Object> a, 
+         Collection<Object> b, 
+         Equality e)
     {
 	if(a.size() == b.size()) {
-	    Collection copy = new LinkedList(b);
+	    Collection copy = new LinkedList<Object>(b);
 	    boolean result = true;
 	    for(Iterator ai = a.iterator(); result && ai.hasNext();) {
 		result = false;
@@ -111,12 +114,12 @@ public class EqualsHelper
 	}
     }
 
-    public static boolean equals(Set a, Set b, Equality e)
+    public static boolean equals(Set<Object> a, Set<Object> b, Equality e)
     {
         return unorderedEquals(a, b, e);
     }
 
-    public static boolean equals(Bag a, Bag b, Equality e)
+    public static boolean equals(Bag<Object> a, Bag<Object> b, Equality e)
     {
         return unorderedEquals(a, b, e);
     }
