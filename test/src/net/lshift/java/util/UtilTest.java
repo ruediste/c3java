@@ -13,6 +13,7 @@ public class UtilTest
         suite.addTest(new TestSuite(ListsTest.class));
         suite.addTest(new TestSuite(CollectionsTest.class));
         suite.addTest(new TestSuite(RandomExponentialBackoffTest.class));
+        suite.addTest(new TestSuite(LiteralTest.class));
         return suite;
     }
 }
