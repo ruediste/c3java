@@ -197,6 +197,7 @@ public class JavaC3
         }
     }
     
+    @SuppressWarnings("unchecked")
     protected static List<Class> computeClassLinearization
         (Class c, 
          final DirectSuperclasses dsc)

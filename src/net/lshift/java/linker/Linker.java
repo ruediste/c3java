@@ -28,7 +28,7 @@ public class Linker
     
     private String mainClass;
     private File dest;
-    private List jars = new ArrayList();
+    private List<FileSet> jars = new ArrayList<FileSet>();
     
     public FileSet createJars()
     {
