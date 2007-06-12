@@ -37,12 +37,12 @@ public class AnnotationHelper
                     Method smethod = c.getDeclaredMethod(name, signature);
                     return smethod.getAnnotation(annotationClass);
                 }
-                catch(NoSuchMethodError e) {
+                catch(NoSuchMethodException e) {
                     return null;
                 }
             }
             
-        }, JavaC3.allSuperclasses(method.getDeclaringClass(), superclasses);
+        }, JavaC3.allSuperclasses(method.getDeclaringClass(), superclasses));
     }
     
     public static <T extends Annotation> T getAnnotation

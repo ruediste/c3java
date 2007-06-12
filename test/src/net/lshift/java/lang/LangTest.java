@@ -27,7 +27,8 @@ public class LangTest
     public static TestSuite suite()
     {
 	TestSuite suite = new TestSuite("lang");
-	suite.addTest(new TestSuite(EqualsHelperTest.class));
+        suite.addTest(new TestSuite(EqualsHelperTest.class));
+        suite.addTest(new TestSuite(AnnotationHelperTest.class));
 	return suite;
     }
 }
