@@ -5,17 +5,17 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-public class RemoteMapAdaptor
-    implements Map
+public class RemoteMapAdaptor<K,V>
+    implements Map<K,V>
 {
-    private final RemoteMap map;
+    private final RemoteMap<K,V> map;
     
     // These _could_ be weak references, but it doesn't seem very important
-    private Set keySet = null;
-    private Set entrySet = null;
-    private Collection values = null;
+    private Set<K> keySet = null;
+    private Set<Entry<K,V>> entrySet = null;
+    private Collection<V> values = null;
 
-    public RemoteMapAdaptor(RemoteMap map)
+    public RemoteMapAdaptor(RemoteMap<K,V> map)
     {
         this.map = map;
     }
@@ -50,11 +50,11 @@ public class RemoteMapAdaptor
         }
     }
 
-    public Set entrySet()
+    public Set<Entry<K,V>> entrySet()
     {
         if(entrySet == null) {
             try {
-                entrySet = new RemoteSetAdaptor(map.entrySet());
+                entrySet = new RemoteSetAdaptor<Entry<K,V>>(map.entrySet());
             }
             catch(RemoteException e) {
                 throw  new RemoteExceptionWrapper(e);
@@ -64,7 +64,7 @@ public class RemoteMapAdaptor
         return entrySet;
     }
 
-    public Object get(Object key)
+    public V get(Object key)
     {
         try {
             return map.get(key);
@@ -84,11 +84,11 @@ public class RemoteMapAdaptor
         }
     }
 
-    public Set keySet()
+    public Set<K> keySet()
     {
         if(keySet == null) {
             try {
-                keySet = new RemoteSetAdaptor(map.keySet());
+                keySet = new RemoteSetAdaptor<K>(map.keySet());
             }
             catch(RemoteException e) {
                 throw  new RemoteExceptionWrapper(e);
@@ -98,7 +98,7 @@ public class RemoteMapAdaptor
         return keySet;
     }
 
-    public Object put(Object key, Object value)
+    public V put(K key, V value)
     {
         try {
             return map.put(key, value);
@@ -108,7 +108,7 @@ public class RemoteMapAdaptor
         }
     }
 
-    public void putAll(Map t)
+    public void putAll(Map<? extends K,? extends V> t)
     {
         try {
             map.putAll(t);
@@ -118,7 +118,7 @@ public class RemoteMapAdaptor
         }
     }
 
-    public Object remove(Object key)
+    public V remove(Object key)
     {
         try {
             return map.remove(key);
@@ -139,11 +139,11 @@ public class RemoteMapAdaptor
 
     }
 
-    public Collection values()
+    public Collection<V> values()
     {
         if(values == null) {
             try {
-                values =  new RemoteCollectionAdaptor(map.values());
+                values =  new RemoteCollectionAdaptor<V>(map.values());
             }
             catch(RemoteException e) {
                 throw  new RemoteExceptionWrapper(e);

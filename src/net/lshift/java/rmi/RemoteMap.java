@@ -28,13 +28,13 @@ public interface RemoteMap<K,V>
     public RemoteCollection<K> keySet()
         throws RemoteException;
 
-    public Object put(K key, V value)
+    public V put(K key, V value)
         throws RemoteException;
 
     public void putAll(Map<? extends K, ? extends V> t)
         throws RemoteException;
 
-    public Object remove(Object key)
+    public V remove(Object key)
         throws RemoteException;
 
     public int size()

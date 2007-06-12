@@ -3,9 +3,9 @@ package net.lshift.java.rmi;
 import java.rmi.RemoteException;
 import java.util.Set;
 
-public class RemoteSetAdaptor
-    extends RemoteCollectionAdaptor
-    implements Set
+public class RemoteSetAdaptor<E>
+    extends RemoteCollectionAdaptor<E>
+    implements Set<E>
 {
     /**
      * Get Set adaptor for a remote collection.
@@ -15,7 +15,7 @@ public class RemoteSetAdaptor
      * @param collection
      * @throws RemoteException
      */
-    public RemoteSetAdaptor(RemoteCollection collection)
+    public RemoteSetAdaptor(RemoteCollection<E> collection)
         throws RemoteException
     {
         super(collection);

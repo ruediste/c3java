@@ -73,7 +73,7 @@ public class RemoteMapSever<K,V>
         return factory.export(new RemoteCollectionServer<K>(factory, map.keySet()));
     }
 
-    public Object put(K key, V value)
+    public V put(K key, V value)
     {
         return map.put(key, value);
     }
@@ -83,7 +83,7 @@ public class RemoteMapSever<K,V>
         map.putAll(t);
     }
 
-    public Object remove(Object key)
+    public V remove(Object key)
     {
         return map.remove(key);
     }
