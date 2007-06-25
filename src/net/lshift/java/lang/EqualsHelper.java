@@ -1,6 +1,7 @@
 
 package net.lshift.java.lang;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.AccessibleObject;
@@ -24,7 +25,7 @@ public class EqualsHelper
     }
 
     /**
-     * Comapre two objects field by field.
+     * Comapre two objects field by field, element by element (if is array).
      * @param a first object to compare
      * @param b the second object to compare
      * @param c We will test the fields defined in this class
@@ -35,6 +36,13 @@ public class EqualsHelper
 	if(c == Object.class) {
 	    return true;
 	}
+        else if(c.isArray()) {
+            int length = Array.getLength(a);
+            boolean equals = length == Array.getLength(b);
+            for(int index = 0; equals && index != length; ++index)
+                equals = equality.equals(Array.get(a, index), Array.get(b, index));
+            return equals;
+        }
 	else {
 	    Field [] fields = c.getDeclaredFields();
 	    boolean result = true;
@@ -66,6 +74,7 @@ public class EqualsHelper
 
     public static boolean equals(Object a, Object b, Equality e)
     {
+        
         return (a == b) || (a != null && b != null 
                             && a.getClass() == b.getClass() 
                             && equals(a, b, a.getClass(), e));

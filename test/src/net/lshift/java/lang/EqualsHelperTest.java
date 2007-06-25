@@ -76,6 +76,18 @@ public class EqualsHelperTest
         return Arrays.asList((E[])new Object[] { a, b, c });
     }
 
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> list(E a, E b)
+    {
+        return Arrays.asList((E[])new Object[] { a, b });
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> list(E a)
+    {
+        return Arrays.asList((E[])new Object[] { a });
+    }
+
     public void testObjects()
     {
         assertTrue(EqualsHelper.equals(exampleC1("a"), exampleC1("a")));
@@ -126,6 +138,12 @@ public class EqualsHelperTest
 
     public void testBags()
     {
+        assertFalse(EqualsHelper.equals
+                    (AbstractBag.wrap(list("1")),
+                     AbstractBag.wrap(list("1", "2"))));
+        assertFalse(EqualsHelper.equals
+                    (AbstractBag.wrap(list("1", "3")),
+                     AbstractBag.wrap(list("1", "2"))));
         assertTrue(EqualsHelper.equals
                    (AbstractBag.wrap(list("1", "2", "3")),
                     AbstractBag.wrap(list("3", "2", "1"))));
@@ -150,5 +168,30 @@ public class EqualsHelperTest
               AbstractBag.wrap(list(exampleC1("3"), 
                                     exampleC1("2"), 
                                     exampleC1("1")))));
+    }
+    
+    public void testArrays()
+    {
+        assertFalse(EqualsHelper.equals
+                        (new String [] { "x" },
+                         new String [] { "y" }));
+        assertFalse(EqualsHelper.equals
+                        (new String [] {},
+                         new String [] { "x" }));
+        assertTrue(EqualsHelper.equals
+                        (new String [] {},
+                         new String [] {}));
+        assertTrue(EqualsHelper.equals
+                        (new String [] { "x" },
+                         new String [] { "x" }));
+        assertTrue(EqualsHelper.equals
+                        (new String [] { "1", "2", "3" },
+                         new String [] { "1", "2", "3" }));
+        assertFalse(EqualsHelper.equals
+                        (new Integer [] { 1, 2, 3 },
+                         new int [] { 1, 2, 3 }));
+        assertTrue(EqualsHelper.equals
+                        (new int [] { 1, 2, 3 },
+                         new int [] { 1, 2, 3 }));
     }
 }
