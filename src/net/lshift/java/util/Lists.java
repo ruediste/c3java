@@ -22,7 +22,7 @@ public class Lists
     /*
       Note that although Pair is provided, the aim here is not to use it:
       wherever possible, we return ArrayLists, because thats what java
-      programmers will be expecting in general: Pair has performance 
+      programmers will be expecting in general.
      */
     
     public static <E> void forEach(Procedure<E> proc, Collection<? extends E> list)
@@ -54,7 +54,7 @@ public class Lists
     public static <E,S> S foldLeft
         (FoldProcedure<E,S> proc, 
          S seed, 
-         Collection<? extends E> c)
+         Iterable<? extends E> c)
     {
 	for(Iterator<? extends E> i = c.iterator(); i.hasNext();) {
 	    FoldState<S> state = proc.apply(i.next(), seed);
@@ -75,9 +75,19 @@ public class Lists
     // I can't figure out a way to get rid of this warning, so I've
     // put this in its own method, and supressed the warnings
     @SuppressWarnings("unchecked")
-    private static <E> List<E> asList(Collection<? extends E> c)
+    private static <E> List<E> asList(Iterable<? extends E> c)
     {
-        return (c instanceof List) ? (List<E>)c : new ArrayList<E>(c);
+        if(c instanceof List) {
+            return (List<E>)c;
+        }
+        else if(c instanceof Collection) {
+            return new ArrayList<E>((Collection<E>)c);
+        }
+        else {
+            List<E> list = new ArrayList<E>();
+            for(E e: c) list.add(e);
+            return list;
+        }
     }
 
     /**
@@ -86,7 +96,7 @@ public class Lists
     public static <E,S> S foldRight
         (FoldProcedure<E,S> proc, 
          S seed, 
-         Collection<? extends E> c)
+         Iterable<? extends E> c)
     {
 	List<E> l = asList(c);
 	for(ListIterator<E> i = l.listIterator(l.size()); i.hasPrevious();) {
@@ -105,11 +115,13 @@ public class Lists
      *   applying proc to each element in c. The collection wont neccessarily
      *   have the same implementation as c (for now, its always an ArrayList).
      */
-    public static <E,S> List<S> map(final Transform<E,S> proc, Collection<E> c)
+    public static <E,S> List<S> map(final Transform<E,S> proc, Iterable<E> c)
     {
 	// because we know the size of the collection in advance
 	// may as well construct an array list
-	ArrayList<S> result = new ArrayList<S>(c.size());
+	ArrayList<S> result = (c instanceof Collection) 
+            ? new ArrayList<S>(((Collection<E>)c).size())
+            : new ArrayList<S>();
 	for(E item: c)
 	    result.add(proc.apply(item));
 	return result;
@@ -123,7 +135,7 @@ public class Lists
      * @return a new list containing only those elements of c for
      *   which proc.apply() returns true, in the order c.iterator() returns them
      */
-    public static <E> List<E> filter(Predicate<E> proc, Collection<E> c)
+    public static <E> List<E> filter(Predicate<E> proc, Iterable<E> c)
     {
         ArrayList<E> result = new ArrayList<E>();
         for(E e: c)
@@ -204,7 +216,7 @@ public class Lists
      * @return the first element statisfying proc, or null, if no element
      *   satisfies proc.
      */
-    public static <E> E find(final Predicate<E> proc, Collection<? extends E> c)
+    public static <E> E find(final Predicate<E> proc, Iterable<? extends E> c)
     {
 	return foldLeft
 	    (new FoldProcedure<E, E>() {
@@ -221,7 +233,7 @@ public class Lists
      * Return the first non-null value returned by proc.
      * See any in SRFI-1
      */
-    public static <R,E> R any(final Transform<E,R> proc, Collection<? extends E> c)
+    public static <R,E> R any(final Transform<E,R> proc, Iterable<? extends E> c)
     {
         return foldLeft
             (new FoldProcedure<E, R>() {
@@ -235,7 +247,7 @@ public class Lists
             }, null, c);
     }
     
-    public static <E> E findLast(final Predicate<E> proc, Collection<? extends E> c)
+    public static <E> E findLast(final Predicate<E> proc, Iterable<? extends E> c)
     {
         return foldRight
             (new FoldProcedure<E, E>() {
@@ -246,7 +258,7 @@ public class Lists
             }, null, c);
     }
 
-    public static <R, E> R anyLast(final Transform<E,R> proc, Collection<? extends E> c)
+    public static <R, E> R anyLast(final Transform<E,R> proc, Iterable<? extends E> c)
     {
         return foldRight
             (new FoldProcedure<E, R>() {
@@ -267,7 +279,7 @@ public class Lists
      */
     public static <E> boolean all
         (final Predicate<E> proc, 
-         Collection<? extends E> c)
+         Iterable<? extends E> c)
     {
 	return foldRight
 	    (new FoldProcedure<E,Boolean>() {
@@ -288,7 +300,7 @@ public class Lists
         return list.subList(1, list.size());
     }
     
-    public static <E> Collection<Collection<E>> zip(Collection<E>... c)
+    public static <E> Collection<Collection<E>> zip(Iterable<E>... c)
     {
 	Collection<Iterator<E>> iterators = 
 	    map(Collections.Procedures.<E>iterator(), Arrays.asList(c));
@@ -303,8 +315,9 @@ public class Lists
 	return result;
     }
     
-    public static <E> boolean equal(final Collection<E> control,
-				    Collection<E>... tests)
+    public static <E> boolean equal
+        (final Collection<E> control,
+	 Collection<E>... tests)
     {
 	Predicate<Collection<E>> sameLength = new Predicate<Collection<E>>() {
 	    public Boolean apply(Collection<E> x)
@@ -316,6 +329,7 @@ public class Lists
 	if (!all(sameLength, Arrays.asList(tests)))
 	    return false;
 	
+        // If some knows what to do with this warning please tell me!
 	Collection<Collection<E>> zipped = zip(tests);
 	
 	Iterator<E> controlIt = control.iterator();
