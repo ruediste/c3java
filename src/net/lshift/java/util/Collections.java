@@ -44,24 +44,14 @@ public class Collections
 	    return (NextTransform<T>)NEXT;
 	}
 
-	public static interface IteratorTransform<T>
-	    extends Transform<Collection<T>,Iterator<T>> { }
 
-	
-	public static final IteratorTransform<Object> ITERATOR =
-	    new IteratorTransform<Object>() {
-	    public Iterator<Object> apply(Collection<Object> c) {
-		return c.iterator();
-	    }
-	};
-
-        // I _could_ return something not a singleton here
-        // to avoid a warning, and implement equals in a
-        // sensible way, but I'd rather suppress warnings
-        @SuppressWarnings("unchecked")
-	public static <T> IteratorTransform<T> iterator()
+	public static <E> Transform<Iterable<E>,Iterator<E>> iterator()
 	{
-	    return (IteratorTransform<T>)ITERATOR;
+	    return new Transform<Iterable<E>,Iterator<E>>() {
+	        public Iterator<E> apply(Iterable<E> c) {
+	            return c.iterator();
+	        }
+            };
 	}
 
 	public static final Transform<Collection, Integer> SIZE =

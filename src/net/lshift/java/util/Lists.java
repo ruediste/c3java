@@ -302,17 +302,22 @@ public class Lists
     
     public static <E> Collection<Collection<E>> zip(Iterable<E>... c)
     {
-	Collection<Iterator<E>> iterators = 
-	    map(Collections.Procedures.<E>iterator(), Arrays.asList(c));
+        return zip(Arrays.asList(c));
+    }
+    
+    public static <E> Collection<Collection<E>> zip(List<Iterable<E>> l)
+    {
+        Collection<Iterator<E>> iterators = 
+            Lists.map(Collections.Procedures.<E>iterator(), l);
 
-	Collection<Collection<E>> result = new ArrayList<Collection<E>>();
-	while (all(Collections.Procedures.<E>hasNext(), iterators))
-	{
-	    Collection<E> slice = map(Collections.Procedures.<E>next(), iterators);
-	    result.add(slice);
-	}
+        Collection<Collection<E>> result = new ArrayList<Collection<E>>();
+        while (all(Collections.Procedures.<E>hasNext(), iterators))
+        {
+            Collection<E> slice = map(Collections.Procedures.<E>next(), iterators);
+            result.add(slice);
+        }
 
-	return result;
+        return result;
     }
     
     public static <E> boolean equal
