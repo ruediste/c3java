@@ -1,7 +1,5 @@
 build
 dist
 .classpath
-.project
 build.properties
-
 cachedir
