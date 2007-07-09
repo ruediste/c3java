@@ -24,5 +24,4 @@
   </target>
 
   <target name="build.properties" depends="use"/>
-
 </project>

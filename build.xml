@@ -232,4 +232,14 @@
     <delete dir="${dist.home}"/>
   </target>
 
+  <target name="eclipse-classpath" depends="build.properties">
+    <cm:eclipse-classpath>
+      <cm:path kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+      <cm:path refid="test.compile.classpath" kind="lib"/>
+      <cm:path kind="src" path="src"/>
+      <cm:path kind="src" path="test/src" output="build/test/classes"/>
+      <cm:path kind="output" path="build/classes"/>
+    </cm:eclipse-classpath>
+ </target>
+
 </project>
