@@ -66,11 +66,11 @@ public class ImplementsFirstDirectSuperclassesTest
 	
     }
 
-    public void testHashSet()
-	throws Exception
-    {
-	List linearization = JavaC3.allSuperclasses
-	    (HashSet.class, ImplementsFirstDirectSuperclasses.SUPERCLASSES);
-	System.out.println("HashSet: " + linearization);
-    }
+//    public void testHashSet()
+//	throws Exception
+//    {
+//	List linearization = JavaC3.allSuperclasses
+//	    (HashSet.class, ImplementsFirstDirectSuperclasses.SUPERCLASSES);
+//	System.out.println("HashSet: " + linearization);
+//    }
 }
