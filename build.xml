@@ -179,7 +179,7 @@
       name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
   </target>
 
-  <target name="publish">
+  <target name="cm-publish">
     <cvs>
       <commandline>
         <argument value="tag"/>
