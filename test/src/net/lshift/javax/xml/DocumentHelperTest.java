@@ -13,7 +13,7 @@ public class DocumentHelperTest extends TestCase {
     public static void testXmlCopy()
         throws ParserConfigurationException, TransformerException
     {
-        String expected = "notthesame";
+        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><foo/>";
         Element root = DocumentHelper.newDocumentRoot("foo");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DocumentHelper.xmlCopy(root.getOwnerDocument(), baos);
