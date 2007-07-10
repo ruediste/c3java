@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<antlib>
-  <taskdef name="link" classname="net.lshift.java.linker.Linker"/>
-</antlib>
