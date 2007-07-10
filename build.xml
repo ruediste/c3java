@@ -69,19 +69,6 @@
       <include name="net/lshift/java/rmi/server/*Server.class"/>
     </rmic>
 
-    <!-- class loaders don't generally allow you to get .class files
-         as resources, and Linker needs this file at run time,
-         so it gets renamed.
-         -->
-    <copy file="${compile.out}/net/lshift/java/linker/Loader.class"
-      tofile="${compile.out}/net/lshift/java/linker/Loader.bin"/>
-
-    <copy todir="${compile.out}">
-      <fileset dir="${src.home}">
-        <include name="**/antlib.xml"/>
-      </fileset>
-    </copy>
-
   </target>
 
   <!-- ==================================================================== -->
@@ -128,21 +115,13 @@
     <junit fork="yes">
       <classpath refid="test.classpath"/>
       <formatter type="plain"/>
-      <test todir="${build.home}" name="net.lshift.java.AllTest"/>
+      <batchtest todir="${build.home}">
+      	<fileset dir="${test.src.home}">
+      	  <include name="**/*.java"/>
+        </fileset>
+      </batchtest>
     </junit>
 
-  </target>
-
-  <target name="test-linker" depends="build">
-    <taskdef name="linker" className="net.lshift.java.linker.Linker">
-      <classpath>
-        <pathelement path="${compile.out}"/>
-      </classpath>
-    </taskdef>
-
-    <linker mainClass="foo" dest="build/linked.jar">
-      <jars dir="dist" includes="*.jar"/>
-    </linker>
   </target>
 
   <!-- ==================================================================== -->
