@@ -75,7 +75,7 @@ public class Lists
     // I can't figure out a way to get rid of this warning, so I've
     // put this in its own method, and supressed the warnings
     @SuppressWarnings("unchecked")
-    private static <E> List<E> asList(Iterable<? extends E> c)
+    public static <E> List<E> asList(Iterable<? extends E> c)
     {
         if(c instanceof List) {
             return (List<E>)c;

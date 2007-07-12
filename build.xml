@@ -9,9 +9,9 @@
 
   <property name="cm.component" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
-  <property name="cm.version" value="v2_1_8"/>
+  <property name="cm.version" value="v2_1_9"/>
 
-  <property name="public.version" value="2.1.8"/>
+  <property name="public.version" value="2.1.9"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
