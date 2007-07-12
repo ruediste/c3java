@@ -6,11 +6,12 @@
 
   <property environment="env"/>
   <property name="config" value="debug"/>
-  <property name="cm.module" value="java"/>
-  <property name="cm.vendor" value="lshift.net"/>
 
-  <property name="cm.version" value="v2_1_6"/>
-  <property name="public.version" value="2.1.6"/>
+  <property name="cm.component" value="java"/>
+  <property name="cm.vendor" value="lshift.net"/>
+  <property name="cm.version" value="v2_1_7"/>
+
+  <property name="public.version" value="2.1.7"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -24,18 +25,16 @@
   <property name="test.src.home" value="test/src"/>
   <property name="test.compile.out" value="${build.home}/test/classes"/>
 
-  <target name="build.properties">
-    <ant antfile="use.xml"/>
+  <import file="use.xml"/>
+
+  <!-- ==================================================================== -->
+
+  <target name="init">
     <property file="build.properties"/>
     <path id="test.compile.classpath">
       <pathelement path="${junit.home}/junit.jar"/>
     </path>
   </target>
-
-
-  <!-- ==================================================================== -->
-
-  <target name="init" depends="build.properties"/>
 
   <!-- ==================================================================== -->
 
@@ -169,30 +168,6 @@
 
   <target name="dist" depends="licensed-src-dist,unlicensed-src-dist,binary-dist"/>
 
-  <!-- ==================================================================== -->
-
-  <target name="install" depends="dist">
-    <taskdef name="install" classname="net.lshift.cm.Install"
-      classpath="${dist.home}/bin/use.jar"/>
-
-    <install dist="${dist.home}"
-      name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
-  </target>
-
-  <target name="cm-publish">
-    <cvs>
-      <commandline>
-        <argument value="tag"/>
-        <argument value="${cm.version}"/>
-      </commandline>
-    </cvs>
-
-    <cm:publish-modules>
-      <moduleset>
-        <module name="${cm.module}" vendor="${cm.vendor}" version="${cm.version}" />
-      </moduleset>
-    </cm:publish-modules>
-  </target>
 	
   <!-- ==================================================================== -->
 

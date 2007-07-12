@@ -15,13 +15,27 @@
 
     <cm:use properties="build.properties">
       <!-- This project should not use anything - it should depend solely
-      on things included in java, and should preferable fail gracefully
+      on things included in java, and should preferably fail gracefully
       with non current versions of java too -->
 
       <!-- exceptions are for unit testing the authored code -->
       <cm:module name="junit" vendor="junit.org" version="3.8.1"/>
+      <cm:module name="cm.resources" vendor="lshift.net" version="v1_1_6"/>
     </cm:use>
+
   </target>
 
   <target name="build.properties" depends="use"/>
+  
+  <target name="cm-register" if="use.available" depends="use">
+    <ant antfile="${cm.resources.home}/ant/cm.xml" 
+      target="cm-register" 
+      inheritall="true"/>
+  </target>
+
+  <target name="cm-publish" if="use.available" depends="use">
+    <ant antfile="${cm.resources.home}/ant/cm.xml" 
+      target="cm-register"
+      inheritall="true"/>
+  </target>
 </project>
