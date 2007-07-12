@@ -35,7 +35,7 @@
 
   <target name="cm-publish" if="use.available" depends="use">
     <ant antfile="${cm.resources.home}/ant/cm.xml" 
-      target="cm-register"
+      target="cm-publish"
       inheritall="true"/>
   </target>
 </project>
