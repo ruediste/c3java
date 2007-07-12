@@ -9,9 +9,9 @@
 
   <property name="cm.component" value="java"/>
   <property name="cm.vendor" value="lshift.net"/>
-  <property name="cm.version" value="v2_1_7"/>
+  <property name="cm.version" value="v2_1_8"/>
 
-  <property name="public.version" value="2.1.7"/>
+  <property name="public.version" value="2.1.8"/>
 
   <property name="build.home" value="build"/>
   <property name="doc.home" value="${build.home}/doc"/>
@@ -29,7 +29,8 @@
 
   <!-- ==================================================================== -->
 
-  <target name="init">
+  <target name="init" depends="build.properties">
+    <property file="config/${config}/build.properties"/>
     <property file="build.properties"/>
     <path id="test.compile.classpath">
       <pathelement path="${junit.home}/junit.jar"/>
@@ -43,8 +44,6 @@
   <!-- ==================================================================== -->
 
   <target name="build" depends="init">
-    <property file="config/${config}/build.properties"/>
-
     <mkdir dir="${build.home}"/>
     <mkdir dir="${compile.out}"/>
     <path id="compile.classpath"/>
