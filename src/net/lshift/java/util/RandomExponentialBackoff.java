@@ -4,8 +4,6 @@ package net.lshift.java.util;
  * Self adjusting random exponential backoff.
  * This assumes that a suitable backoff time is a function of load on some
  * resource (like processor time, or disk access, for example).
- * @author david
- *
  */
 public class RandomExponentialBackoff
 {
@@ -53,6 +51,16 @@ public class RandomExponentialBackoff
             // this assumes a uniform distribution
             nextWaitFor = averageSuccessTime*2;
         }
+
+        public long nextWait() {
+            return (long)(nextWaitFor*Math.random());
+        }
+        
+        public void newAttempt()
+        {
+            attemptStartTime = System.currentTimeMillis();
+            nextWaitFor = nextWaitFor*backoffFactor;
+        }
         
         /**
          * Call after each failed attempt. This makes the current
@@ -62,9 +70,8 @@ public class RandomExponentialBackoff
         public void backoff()
             throws InterruptedException
         {
-            Thread.sleep((long)(nextWaitFor*Math.random()));
-            attemptStartTime = System.currentTimeMillis();
-            nextWaitFor = nextWaitFor*backoffFactor;
+            Thread.sleep(nextWait());
+            newAttempt();
         }
 
         /**
