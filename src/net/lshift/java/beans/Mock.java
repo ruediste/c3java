@@ -7,21 +7,26 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
  * Implement a 'bean' for a given interface by storing the
- * properties in a map.
- * @author david
- *
+ * properties in a map, or Store.
  */
 public class Mock
 {
+    // TODO: add support for add and remove listeners
+    // TODO: add support for property change events
+    // TODO: add support for indexed and mapped properties
+
+    /**
+     * Generic supporting for storing of bean properties.
+     * You may limit the set of properties supported by throwing
+     * UnsupportedOperationException, or in the case of set, simply
+     * ignoring the value.
+     */
     public interface Store
     {
         public Object get(String name);
@@ -33,6 +38,9 @@ public class Mock
     private static void addMethods(Map <Method,String> methods, Class<?> bean) 
         throws IntrospectionException
     {
+        // TODO: this should really map from a method to an invocation handler,
+        // so we can handle methods other than getters and setters
+        
         if(!bean.isInterface())
             throw new IllegalArgumentException("Not an interface");
         
@@ -68,6 +76,16 @@ public class Mock
     }
     
 
+    /**
+     * Return a bean implementation using a property store
+     * @param <T> the beans type.
+     * @param iface the interface to implement. Introspection on interfaces
+     *   works but does not look at super interfaces. We traverse the super
+     *   interface tree, introspecting on all the interfaces.
+     * @param store handles storing properties
+     * @return
+     * @throws IntrospectionException
+     */
     @SuppressWarnings("unchecked")
     public static <T> T bean(Class<T> iface, final Store store) 
         throws IntrospectionException
