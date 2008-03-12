@@ -5,6 +5,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ public class Mock
     // TODO: add support for property change events
     // TODO: add support for indexed and mapped properties
 
+    
     /**
      * Generic supporting for storing of bean properties.
      * You may limit the set of properties supported by throwing
@@ -35,12 +37,29 @@ public class Mock
     
     public interface BeanInvocationHandler
     {
-        public Object invoke(Store store, Object[] args)
+        public Object invoke(Store store, Method method, Object[] args)
             throws Throwable;
     }
     
     private static Map<Class<?>,Map<Method,BeanInvocationHandler>> cache = 
         new WeakHashMap<Class<?>, Map<Method,BeanInvocationHandler>>();
+    
+    private static final Method [] STORE_DELEGATE_METHODS = Object.class.getMethods();
+    private static final BeanInvocationHandler STORE_DELEGATE =
+        new BeanInvocationHandler() {
+
+            public Object invoke(Store store, Method method, Object[] args)
+                throws Throwable
+            {
+                try {
+                    return method.invoke(store, args);
+                }
+                catch(InvocationTargetException e) {
+                    throw e.getCause();
+                }
+            }
+        
+    };
     
     private static void addMethods(Map <Method,BeanInvocationHandler> methods, Class<?> bean) 
         throws IntrospectionException
@@ -57,7 +76,7 @@ public class Mock
             if(pinfo.getReadMethod() != null)
                 methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
 
-                    public Object invoke(Store store, Object[] args)
+                    public Object invoke(Store store, Method method, Object[] args)
                         throws Throwable
                     {
                         return store.getProperty(name);
@@ -67,7 +86,7 @@ public class Mock
             if(pinfo.getWriteMethod() != null)
                 methods.put(pinfo.getWriteMethod(), new BeanInvocationHandler() {
 
-                    public Object invoke(Store store, Object[] args)
+                    public Object invoke(Store store, Method method, Object[] args)
                         throws Throwable
                     {
                         store.setProperty(name, args[0]);
@@ -94,6 +113,8 @@ public class Mock
         if(methods == null) {
             methods = new HashMap<Method,BeanInvocationHandler>();
             addMethods(methods, bean);
+            for(Method method: STORE_DELEGATE_METHODS)
+                methods.put(method, STORE_DELEGATE);
             cache.put(bean, methods);
         }
         
@@ -126,7 +147,7 @@ public class Mock
                 throws Throwable
                 {
                     BeanInvocationHandler handler = methods.get(method);
-                    return handler.invoke(store, args);
+                    return handler.invoke(store, method, args);
                 }
                             
             });
@@ -146,6 +167,10 @@ public class Mock
                 map.put(name, value);
             }
             
+            public String toString()
+            {
+                return map.toString();
+            }
         };
     }
     

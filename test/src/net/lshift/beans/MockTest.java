@@ -35,6 +35,7 @@ public class MockTest
         instance.setString1("foo");
         assertEquals("foo", instance.getString1());
         assertEquals("foo", store.get("string1"));
+        assertEquals(store.toString(), instance.toString());
     }
     
     public void testSubclassMap()
