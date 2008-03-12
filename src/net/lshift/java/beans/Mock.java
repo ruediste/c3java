@@ -29,13 +29,20 @@ public class Mock
      */
     public interface Store
     {
-        public Object get(String name);
-        public void set(String name, Object value);
+        public Object getProperty(String name);
+        public void setProperty(String name, Object value);
     }
     
-    private static Map<Class<?>,Map<Method,String>> cache = new WeakHashMap<Class<?>, Map<Method,String>>();
+    public interface BeanInvocationHandler
+    {
+        public Object invoke(Store store, Object[] args)
+            throws Throwable;
+    }
     
-    private static void addMethods(Map <Method,String> methods, Class<?> bean) 
+    private static Map<Class<?>,Map<Method,BeanInvocationHandler>> cache = 
+        new WeakHashMap<Class<?>, Map<Method,BeanInvocationHandler>>();
+    
+    private static void addMethods(Map <Method,BeanInvocationHandler> methods, Class<?> bean) 
         throws IntrospectionException
     {
         // TODO: this should really map from a method to an invocation handler,
@@ -46,28 +53,46 @@ public class Mock
         
         BeanInfo info = Introspector.getBeanInfo(bean);
         for(PropertyDescriptor pinfo: info.getPropertyDescriptors()) {
+            final String name = pinfo.getName();
             if(pinfo.getReadMethod() != null)
-                methods.put(pinfo.getReadMethod(), pinfo.getName());
+                methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
+
+                    public Object invoke(Store store, Object[] args)
+                        throws Throwable
+                    {
+                        return store.getProperty(name);
+                    }
+                });
+            
             if(pinfo.getWriteMethod() != null)
-                methods.put(pinfo.getWriteMethod(), pinfo.getName());
+                methods.put(pinfo.getWriteMethod(), new BeanInvocationHandler() {
+
+                    public Object invoke(Store store, Object[] args)
+                        throws Throwable
+                    {
+                        store.setProperty(name, args[0]);
+                        return null;
+                    }
+                    
+                });
         }
 
-        for(Method method: bean.getMethods())
+        for(Method method: bean.getDeclaredMethods())
             if(!methods.containsKey(method))
                 throw new IllegalArgumentException(
-                                "Method " + method.getName() + " on " + bean.getName()
-                                + " is not a getter or setter");
+                   "Method " + method.getName() + " on " + bean.getName()
+                   + " is not a getter or setter");
 
         for(Class<?> superinterface: bean.getInterfaces())
             addMethods(methods, superinterface);
     }
     
-    private static synchronized Map<Method,String> methods(Class<?> bean) 
+    private static synchronized Map<Method,BeanInvocationHandler> methods(Class<?> bean) 
         throws IntrospectionException
     {
-        Map<Method,String> methods = cache.get(bean);
+        Map<Method,BeanInvocationHandler> methods = cache.get(bean);
         if(methods == null) {
-            methods = new HashMap<Method,String>();
+            methods = new HashMap<Method,BeanInvocationHandler>();
             addMethods(methods, bean);
             cache.put(bean, methods);
         }
@@ -90,7 +115,7 @@ public class Mock
     public static <T> T bean(Class<T> iface, final Store store) 
         throws IntrospectionException
     {
-        final Map<Method,String> methods = methods(iface);
+        final Map<Method,BeanInvocationHandler> methods = methods(iface);
         
         return (T)Proxy.newProxyInstance(
             iface.getClassLoader(), 
@@ -100,18 +125,8 @@ public class Mock
                 public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable
                 {
-                    String name = methods.get(method);
-                    switch(args == null ? 0 : args.length) {
-                    case 0:
-                        return store.get(name);
-                    case 1:
-                        store.set(name, args[0]);
-                        return null;
-                    default:
-                        throw new UnsupportedOperationException(
-                            "Unexpected number of arguments for " 
-                            + method.getName() + ": " + args.length);
-                    }
+                    BeanInvocationHandler handler = methods.get(method);
+                    return handler.invoke(store, args);
                 }
                             
             });
@@ -121,12 +136,12 @@ public class Mock
     {
         return new Store() {
 
-            public Object get(String name)
+            public Object getProperty(String name)
             {
                 return map.get(name);
             }
 
-            public void set(String name, Object value)
+            public void setProperty(String name, Object value)
             {
                 map.put(name, value);
             }
