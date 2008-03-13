@@ -6,14 +6,14 @@ import java.lang.reflect.Method;
 class Signature
 {
     public Method procedure;
-    public Class [] parameterTypes;
+    public Class<?> [] parameterTypes;
 
     public Signature(Method procedure)
     {
 	this(procedure, procedure.getParameterTypes());
     }
 
-    public Signature(Method procedure, Class [] types)
+    public Signature(Method procedure, Class<?> [] types)
     {
 	this.procedure = procedure;
 	this.parameterTypes = types;

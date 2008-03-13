@@ -1,9 +1,6 @@
 
 package net.lshift.java.dispatch;
 
-
-
-
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -33,15 +30,18 @@ public class JavaC3
 	 * Get the super classes.
 	 * @param type the type to get the superclasses of.
 	 */
-	public List<Class> directSuperclasses(Class type);
+	public List<Class<?>> directSuperclasses
+	    (Class<?> type);
     }
 
     private static class LinearizationKey
     {
 	public DirectSuperclasses directSuperclasses;
-	public Class type;
+	public Class<?> type;
 
-	public  LinearizationKey(DirectSuperclasses directSuperclasses, Class type)
+	public  LinearizationKey
+	    (DirectSuperclasses directSuperclasses, 
+	     Class<?> type)
 	{
 	    this.directSuperclasses = directSuperclasses;
 	    this.type = type;
@@ -69,9 +69,9 @@ public class JavaC3
 	}
     }
 
-    private static Map<LinearizationKey, List<Class>> linearizations = 
+    private static Map<LinearizationKey, List<Class<?>>> linearizations = 
 	java.util.Collections.synchronizedMap
-            (new WeakHashMap<LinearizationKey, List<Class>>());
+            (new WeakHashMap<LinearizationKey, List<Class<?>>>());
 
     /**
      * Thrown when its not possible to linearize
@@ -81,11 +81,12 @@ public class JavaC3
 	extends Error
     { 
         private static final long serialVersionUID = 1L;
-        private List reversedPartialResult;
-	private List remainingInputs;
+        private List<Class<?>> reversedPartialResult;
+	private List<List<Class<?>>> remainingInputs;
 
 	protected JavaC3Exception
-	    (List reversedPartialResult, List remainingInputs)
+	    (List<Class<?>> reversedPartialResult, 
+	     List<List<Class<?>>> remainingInputs)
 	{
 	    super("inconsistent precedence");
 	    this.reversedPartialResult = reversedPartialResult;
@@ -100,7 +101,7 @@ public class JavaC3
 	 * point the linearization failed.
 	 * @return the value of reversedPartialResult
 	 */
-	public List getReversedPartialResult()  {
+	public List<Class<?>> getReversedPartialResult()  {
 	    return this.reversedPartialResult;
 	}
 
@@ -111,7 +112,7 @@ public class JavaC3
 	 * the linearization failed.
 	 * @return the value of remainingInputs
 	 */
-	public List getRemainingInputs()  {
+	public List<List<Class<?>>> getRemainingInputs()  {
 	    return this.remainingInputs;
 	}
 
@@ -125,9 +126,9 @@ public class JavaC3
 
 
 
-    protected static List<Class> mergeLists
-        (List<Class> partialResult,
-         final List<List<Class>> remainingInputs,
+    protected static List<Class<?>> mergeLists
+        (List<Class<?>> partialResult,
+         final List<List<Class<?>>> remainingInputs,
          final DirectSuperclasses dsc) 
         throws JavaC3Exception
     {
@@ -137,25 +138,25 @@ public class JavaC3
              to append to the list in java than to prepend.
          */
         
-        Predicate<List<Class>> empty = Collections.Procedures.isEmpty();
+        Predicate<List<Class<?>>> empty = Collections.Procedures.isEmpty();
         if(Lists.all(empty, remainingInputs)) {
             return partialResult;
         }
         else {
             // start of selection rule
-            final Predicate<Class> isCandidate = new Predicate<Class>() {
+            final Predicate<Class<?>> isCandidate = new Predicate<Class<?>>() {
 
-                public Boolean apply(final Class c) {
+                public Boolean apply(final Class<?> c) {
 
                     
-                    Predicate<List<Class>> isHead = new Predicate<List<Class>>() {
-                        public Boolean apply(List<Class> l) {
+                    Predicate<List<Class<?>>> isHead = new Predicate<List<Class<?>>>() {
+                        public Boolean apply(List<Class<?>> l) {
                             return l.isEmpty() ? false : c.equals(Lists.head(l));
                         }
                     };
 
-                    Predicate<List<Class>> isTail = new Predicate<List<Class>>() {
-                        public Boolean apply(List<Class> l) {
+                    Predicate<List<Class<?>>> isTail = new Predicate<List<Class<?>>>() {
+                        public Boolean apply(List<Class<?>> l) {
                             return l.indexOf(c) > 0;
                         }
                     };
@@ -166,21 +167,22 @@ public class JavaC3
                 }
             };
             
-            Transform<Class,Class> candidateDirectSuperclass = new Transform<Class,Class>() {
-                public Class apply(final Class c) {
+            Transform<Class<?>,Class<?>> candidateDirectSuperclass = 
+                new Transform<Class<?>,Class<?>>() {
+                public Class<?> apply(final Class<?> c) {
                     return Lists.find(isCandidate, dsc.directSuperclasses(c));
                 }
             };
             
-            final Class next = Lists.anyLast(candidateDirectSuperclass, partialResult);
+            final Class<?> next = Lists.anyLast(candidateDirectSuperclass, partialResult);
             
             // end of selection rule
             
             if(next != null) {
                 
-                Transform<List<Class>, List<Class>> removeNext =
-                    new Transform<List<Class>, List<Class>>() {
-                        public List<Class> apply(List<Class> l) {
+                Transform<List<Class<?>>, List<Class<?>>> removeNext =
+                    new Transform<List<Class<?>>, List<Class<?>>>() {
+                        public List<Class<?>> apply(List<Class<?>> l) {
                             return (!l.isEmpty() && Lists.head(l).equals(next)) 
                                 ? Lists.tail(l) : l;
                         }
@@ -198,21 +200,22 @@ public class JavaC3
     }
     
     @SuppressWarnings("unchecked")
-    protected static List<Class> computeClassLinearization
-        (Class c, 
+    protected static List<Class<?>> computeClassLinearization
+        (Class<?> c, 
          final DirectSuperclasses dsc)
 	throws JavaC3Exception
     {
-	List<Class> cDirectSuperclasses = dsc.directSuperclasses(c);
+	List<Class<?>> cDirectSuperclasses = dsc.directSuperclasses(c);
         
-        Transform<Class,List<Class>> cplList = new Transform<Class,List<Class>>() {
-            public List<Class> apply(Class c) {
+        Transform<Class<?>,List<Class<?>>> cplList = 
+            new Transform<Class<?>,List<Class<?>>>() {
+            public List<Class<?>> apply(Class<?> c) {
                 return allSuperclasses(c, dsc);
             }
         };
         
         return mergeLists
-            (Lists.list(c), 
+            (Lists.<Class<?>>list(c), 
              Lists.concatenate
              (Lists.map(cplList, cDirectSuperclasses), 
               Lists.list(cDirectSuperclasses)),
@@ -220,17 +223,17 @@ public class JavaC3
         
     }
 
-    public static List<Class> allSuperclasses(Class c)
+    public static List<Class<?>> allSuperclasses(Class<?> c)
 	throws JavaC3Exception
     {
 	return allSuperclasses(c, DefaultDirectSuperclasses.SUPERCLASSES);
     }
 
-    public static List<Class> allSuperclasses(Class c, DirectSuperclasses dsc)
+    public static List<Class<?>> allSuperclasses(Class<?> c, DirectSuperclasses dsc)
 	throws JavaC3Exception
     {
 	LinearizationKey key = new LinearizationKey(dsc, c);
-	List<Class> linearization = linearizations.get(key);
+	List<Class<?>> linearization = linearizations.get(key);
 	if(linearization == null) {
 	    linearization = computeClassLinearization(c, dsc);
 	    linearizations.put(key, linearization);

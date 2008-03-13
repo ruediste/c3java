@@ -89,23 +89,23 @@ public class ExecutorServiceProxy
      * to the execution service while it executes the requested method.
      * Its probably most useful for logging purposes. 
      */
-    public final Set<ThreadProperty> properties;
+    public final Set<ThreadProperty<Object>> properties;
     
     public ExecutorServiceProxy(ExecutorService executor)
     {
-        this(executor, new HashSet<ThreadProperty>());
+        this(executor, new HashSet<ThreadProperty<Object>>());
     }
 
     public ExecutorServiceProxy
         (ExecutorService executor, 
-         Set<ThreadProperty> properties)
+         Set<ThreadProperty<Object>> properties)
     {
         this.executor = executor;
         this.properties = properties;
     }
     
     private StackTraceElement [] truncateStack
-        (Throwable cause, Class delegate)
+        (Throwable cause, Class<?> delegate)
     {
         try {
             throw new Exception();
@@ -120,7 +120,7 @@ public class ExecutorServiceProxy
     private StackTraceElement [] mergeStack
         (Throwable cause, 
          Throwable ref,
-         Class proxy)
+         Class<?> proxy)
     {
         StackTraceElement [] catchStack = ref.getStackTrace();
         StackTraceElement [] causeStack = cause.getStackTrace();
@@ -168,7 +168,7 @@ public class ExecutorServiceProxy
                 propertyValues.put(property, property.get());
             }
 
-            Future future = executor.submit(new Callable<Object>() {
+            Future<Object> future = executor.submit(new Callable<Object>() {
 
                 public Object call()
                 throws Exception
@@ -191,7 +191,7 @@ public class ExecutorServiceProxy
                     }
                     finally {
                         PROXY.remove();
-                        for(ThreadProperty property: propertyValues.keySet())
+                        for(ThreadProperty<Object> property: propertyValues.keySet())
                             property.remove();
                     }
                 }

@@ -23,9 +23,9 @@ public class DynamicDispatch
     private static Map<DispatcherType,MultiClass> dispatchers = 
         Collections.synchronizedMap(new HashMap<DispatcherType,MultiClass>());
 
-    public static final Map<Class,Class> PRIMITIVES;
+    public static final Map<Class<?>,Class<?>> PRIMITIVES;
     static {
-	Map<Class,Class> primitives = new HashMap<Class, Class>();
+	Map<Class<?>,Class<?>> primitives = new HashMap<Class<?>, Class<?>>();
 	primitives.put(Void.class, Void.TYPE);
 	primitives.put(Boolean.class, Boolean.TYPE);
 	primitives.put(Double.class, Double.TYPE);
@@ -38,10 +38,10 @@ public class DynamicDispatch
 	PRIMITIVES = Collections.unmodifiableMap(primitives);
     }
 
-    private static Class [] types(Method procedure, Object [] args)
+    private static Class<?> [] types(Method procedure, Object [] args)
     {
-	Class [] parameterTypes = procedure.getParameterTypes();
-	Class [] types = new Class[args.length];
+	Class<?> [] parameterTypes = procedure.getParameterTypes();
+	Class<?> [] types = new Class[args.length];
 	for(int i = 0; i != args.length; ++i) {
 	    // this is how I handle primitives: I work out from the
 	    // procedure if the argument should be a primitive, and
@@ -100,11 +100,11 @@ public class DynamicDispatch
      * constraint you wish to select. This can be handy when
      * dealing with primitive types dynamically.
      */
-    public static Object invoke(Class constraint,
+    public static Object invoke(Class<?> constraint,
 				Object closure,
 				String methodName,
 				Object [] parameters,
-				Class [] parameterTypes)
+				Class<?> [] parameterTypes)
 	throws NoSuchMethodException, java.lang.IllegalAccessException,
 	       InvocationTargetException
     {
@@ -119,7 +119,7 @@ public class DynamicDispatch
     /**
      * Generate an implementation of constraint, using methods
      * with matching signatures in delegate.
-     * The implemtation of each method in constraint is to call
+     * The implementation of each method in constraint is to call
      * the closest matching method in closure given the types
      * of the arguments actually passed.
      */
@@ -166,7 +166,7 @@ public class DynamicDispatch
 	     });
     }
 
-    private static MultiClass dispatcher(Class constraint, Class<? extends Object> closure)
+    private static MultiClass dispatcher(Class<?> constraint, Class<? extends Object> closure)
     {
 	DispatcherType key = new DispatcherType(constraint, closure);
 	MultiClass dispatcher = 
@@ -185,10 +185,10 @@ public class DynamicDispatch
 
     private static class DispatcherType
     {
-	private Class constraint;
+	private Class<?> constraint;
 	private Class<? extends Object> closure;
 
-	public DispatcherType(Class constraint, Class<? extends Object> closure)
+	public DispatcherType(Class<?> constraint, Class<? extends Object> closure)
 	{
 	    this.constraint = constraint;
 	    this.closure = closure;
@@ -214,21 +214,21 @@ public class DynamicDispatch
     {
 	// Each Map in this array is for a parameter. It Maps from a type
 	// to a set of methods with that parameter type at that position.
-	private List<Map<Class,Set<Method>>> indexes;
+	private List<Map<Class<?>,Set<Method>>> indexes;
 
 	public Procedure(Method procedure, Method [] methods)
 	{
-	    indexes = new ArrayList<Map<Class, Set<Method>>>();
+	    indexes = new ArrayList<Map<Class<?>, Set<Method>>>();
 	    for(@SuppressWarnings("unused")
-	        Class type: procedure.getParameterTypes())
-	        indexes.add(new HashMap<Class,Set<Method>>());
+	        Class<?> type: procedure.getParameterTypes())
+	        indexes.add(new HashMap<Class<?>,Set<Method>>());
 
-	    Set pmethods = procedureMethods(procedure, methods);
-	    Iterator pmi = pmethods.iterator();
+	    Set<Method> pmethods = procedureMethods(procedure, methods);
+	    Iterator<Method> pmi = pmethods.iterator();
 
 	    while(pmi.hasNext()) {
 		Method method = (Method)pmi.next();
-		Class [] parameters = method.getParameterTypes();
+		Class<?> [] parameters = method.getParameterTypes();
 		for(int i = 0; i != parameters.length; ++i) {
 		    Set<Method> s = indexes.get(i).get(parameters[i]);
 		    if(s == null) {
@@ -242,13 +242,13 @@ public class DynamicDispatch
 
 	}
 
-	private Set methods(int position, Class [] parameterTypes)
+	private Set<Method> methods(int position, Class<?> [] parameterTypes)
 	    throws JavaC3.JavaC3Exception
 	{
-	    Class paramterType = parameterTypes[position];
-	    List<Class> linearization = JavaC3.allSuperclasses(paramterType);
-	    Map<Class, Set<Method>> index = indexes.get(position);
-	    Iterator<Class> i = linearization.iterator();
+	    Class<?> paramterType = parameterTypes[position];
+	    List<Class<?>> linearization = JavaC3.allSuperclasses(paramterType);
+	    Map<Class<?>, Set<Method>> index = indexes.get(position);
+	    Iterator<Class<?>> i = linearization.iterator();
 	    while(i.hasNext()) {
 		Set<Method> methods = index.get(i.next());
 		if(methods != null) {
@@ -266,7 +266,7 @@ public class DynamicDispatch
 	private Method lookup(Signature signature)
 	{
 	    try {
-		Set methods = methods(0, signature.parameterTypes);
+		Set<Method> methods = methods(0, signature.parameterTypes);
 		if(methods.isEmpty()) {
 		    for(int i = 0; i != indexes.size(); ++i)
 			System.err.println(i + ": " + indexes.get(i));
@@ -326,7 +326,7 @@ public class DynamicDispatch
 	Map<Signature, Method> shortcuts = new HashMap<Signature, Method>();
 	Map<Method, Procedure> procedures = new HashMap<Method, Procedure>();
 
-        protected MultiClass(Class constraint, Class<? extends Object> implementation)
+        protected MultiClass(Class<?> constraint, Class<? extends Object> implementation)
         {
             Method [] procedures = constraint.getDeclaredMethods();
             Method [] methods = implementation.getDeclaredMethods();
