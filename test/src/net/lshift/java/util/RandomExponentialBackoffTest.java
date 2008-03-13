@@ -42,8 +42,8 @@ public class RandomExponentialBackoffTest
         testBackoff(1);
         testBackoff(1);
         testBackoff(1);
-        testBackoff(1);
-        testBackoff(1);
-        testBackoff(1);
+        // testBackoff(1);
+        // testBackoff(1);
+        // testBackoff(1);
     }
 }

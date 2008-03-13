@@ -28,10 +28,10 @@ public class AnnotationHelper
     {
         // FIXME: cache the result
         final String name = method.getName();
-        final Class [] signature = method.getParameterTypes();
-        return Lists.any(new Transform<Class,T>() {
+        final Class<?> [] signature = method.getParameterTypes();
+        return Lists.any(new Transform<Class<?>,T>() {
 
-            public T apply(Class c)
+            public T apply(Class<?> c)
             {
                 try {
                     Method smethod = c.getDeclaredMethod(name, signature);

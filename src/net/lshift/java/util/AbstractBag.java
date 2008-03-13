@@ -9,12 +9,12 @@ public abstract class AbstractBag<E>
 {
     public boolean equals(Object o)
     {
-        if(o instanceof Bag) {
-            Bag other = (Bag)o;
+        if(o instanceof Bag<?>) {
+            Bag<?> other = (Bag<?>)o;
             boolean result = (other.size() == size());
             if(result) {
                 Collection<E> copy = new ArrayList<E>(this);
-                for(Iterator i = other.iterator(); result && i.hasNext();)
+                for(Iterator<?> i = other.iterator(); result && i.hasNext();)
                     result = copy.remove(i.next());
             }
 
@@ -58,7 +58,7 @@ public abstract class AbstractBag<E>
 	    return store.contains(o);
 	}
 
-	public boolean containsAll(Collection c)
+	public boolean containsAll(Collection<?> c)
 	{
 	    return store.containsAll(c);
 	}
@@ -78,12 +78,12 @@ public abstract class AbstractBag<E>
 	    return store.remove(o);
 	}
 
-	public boolean removeAll(Collection c)
+	public boolean removeAll(Collection<?> c)
 	{
 	    return store.removeAll(c);
 	}
 
-	public boolean retainAll(Collection c)
+	public boolean retainAll(Collection<?> c)
 	{
 	    return store.retainAll(c);
 	}
@@ -106,7 +106,7 @@ public abstract class AbstractBag<E>
 	public int hashCode()
 	{
 	    int sum = 0;
-	    for(Iterator i = iterator(); i.hasNext();)
+	    for(Iterator<E> i = iterator(); i.hasNext();)
 		sum += i.next().hashCode();
 	    return sum;
 	}
