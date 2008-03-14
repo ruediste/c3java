@@ -64,7 +64,7 @@ public class AnnotationHelper
 
             public T apply(Class<?> c)
             {
-                return type.getAnnotation(annotationClass);
+                return c.getAnnotation(annotationClass);
             }
             
         }, JavaC3.allSuperclasses(type, superclasses));

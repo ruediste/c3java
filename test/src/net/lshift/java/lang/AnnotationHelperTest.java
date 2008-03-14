@@ -16,6 +16,13 @@ public class AnnotationHelperTest
         String value();
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE})
+    public @interface TestTypeAnnotation {
+        String value();
+    }
+
+    @TestTypeAnnotation(value="1")
     public interface TestA
     {
         @TestMethodAnnotation(value="1")
@@ -28,6 +35,7 @@ public class AnnotationHelperTest
         public void a() { }
     }
     
+    @TestTypeAnnotation(value="2")
     public class TestAImpl2
         implements TestA
     {
@@ -48,5 +56,14 @@ public class AnnotationHelperTest
                              TestAImpl2.class.getMethod
                                  ("a", new Class [] {})).value(),
                             "2");
+    }
+    
+    public void testTypeAnnotation()
+        throws Exception
+    {
+        assertEquals("1", 
+            AnnotationHelper.getAnnotation(
+                TestTypeAnnotation.class, 
+                TestAImpl1.class).value());
     }
 }
