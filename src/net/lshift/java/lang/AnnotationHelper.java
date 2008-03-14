@@ -44,7 +44,7 @@ public class AnnotationHelper
             
         }, JavaC3.allSuperclasses(method.getDeclaringClass(), superclasses));
     }
-    
+ 
     public static <T extends Annotation> T getAnnotation
         (final Class<T> annotationClass, 
          final Method method)
@@ -53,5 +53,30 @@ public class AnnotationHelper
             (annotationClass, 
              method, 
              DefaultDirectSuperclasses.SUPERCLASSES);
+    }
+    
+    public static <T extends Annotation> T getAnnotation(
+        final Class<T> annotationClass, 
+        final Class<?> type,
+        JavaC3.DirectSuperclasses superclasses)
+    {
+        return Lists.any(new Transform<Class<?>,T>() {
+
+            public T apply(Class<?> c)
+            {
+                return type.getAnnotation(annotationClass);
+            }
+            
+        }, JavaC3.allSuperclasses(type, superclasses));
+    }
+    
+    public static <T extends Annotation> T getAnnotation(
+                    final Class<T> annotationClass, 
+                    final Class<?> type)
+    {
+        return getAnnotation(
+            annotationClass, 
+            type, 
+            DefaultDirectSuperclasses.SUPERCLASSES);
     }
 }
