@@ -179,4 +179,10 @@ public class Mock
     {
         return bean(iface, store(map));
     }
+    
+    public static <T> T bean(Class<T> iface) 
+    throws IntrospectionException
+    {
+        return bean(iface, store(new HashMap<String, Object>()));
+    }
 }
