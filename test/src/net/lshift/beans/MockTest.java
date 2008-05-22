@@ -29,6 +29,7 @@ public class MockTest
     {
         Map<String,Object> store = new HashMap<String,Object>();
         ExampleBean instance = Mock.bean(ExampleBean.class, store);
+        assertEquals(0, instance.getInt1());
         instance.setInt1(55);
         assertEquals(55, instance.getInt1());
         assertEquals(55, store.get("int1"));
