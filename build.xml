@@ -151,7 +151,13 @@
   <target if="unlicensed" name="unlicensed-src-dist">
     <copy todir="${dist.home}/src">
       <fileset dir="src" includes="**/*.java"/>
-      <fileset dir="test" includes="**/*.java"/>
+      <fileset dir="test/src" includes="**/*.java"/>
+      <filterchain>
+        <concatfilter prepend="NOTICE"/>
+      </filterchain>
+    </copy>
+    <copy todir="${dist.home}/test/src">
+      <fileset dir="test/src" includes="**/*.java"/>
       <filterchain>
         <concatfilter prepend="NOTICE"/>
       </filterchain>
@@ -161,7 +167,9 @@
   <target unless="unlicensed" name="licensed-src-dist">
     <copy todir="${dist.home}/src">
       <fileset dir="src" includes="**/*.java"/>
-      <fileset dir="test" includes="**/*.java"/>
+    </copy>
+    <copy todir="${dist.home}/test/src">
+      <fileset dir="test/src" includes="**/*.java"/>
     </copy>
   </target>
 
