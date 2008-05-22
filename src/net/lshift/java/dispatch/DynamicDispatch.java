@@ -4,6 +4,8 @@ package net.lshift.java.dispatch;
 import java.lang.reflect.*;
 import java.util.*;
 
+import net.lshift.java.lang.Types;
+
 /**
  * Generate an implementation of an interface which uses
  * dynamic dispatch to call the closest matching method
@@ -23,21 +25,6 @@ public class DynamicDispatch
     private static Map<DispatcherType,MultiClass> dispatchers = 
         Collections.synchronizedMap(new HashMap<DispatcherType,MultiClass>());
 
-    public static final Map<Class<?>,Class<?>> PRIMITIVES;
-    static {
-	Map<Class<?>,Class<?>> primitives = new HashMap<Class<?>, Class<?>>();
-	primitives.put(Void.class, Void.TYPE);
-	primitives.put(Boolean.class, Boolean.TYPE);
-	primitives.put(Double.class, Double.TYPE);
-	primitives.put(Float.class, Float.TYPE);
-	primitives.put(Long.class, Long.TYPE);
-	primitives.put(Integer.class, Integer.TYPE);
-	primitives.put(Short.class, Short.TYPE);
-	primitives.put(Byte.class, Byte.TYPE);
-	primitives.put(Character.class, Character.TYPE);
-	PRIMITIVES = Collections.unmodifiableMap(primitives);
-    }
-
     private static Class<?> [] types(Method procedure, Object [] args)
     {
 	Class<?> [] parameterTypes = procedure.getParameterTypes();
@@ -47,7 +34,7 @@ public class DynamicDispatch
 	    // procedure if the argument should be a primitive, and
 	    // then convert the type appropriately.
 	    if(parameterTypes[i].isPrimitive())
-		types[i] = PRIMITIVES.get(args[i].getClass());
+		types[i] = Types.PRIMITIVE.get(args[i].getClass());
 	    else
 		types[i] = args[i].getClass();
 	}
@@ -246,11 +233,9 @@ public class DynamicDispatch
 	    throws JavaC3.JavaC3Exception
 	{
 	    Class<?> paramterType = parameterTypes[position];
-	    List<Class<?>> linearization = JavaC3.allSuperclasses(paramterType);
 	    Map<Class<?>, Set<Method>> index = indexes.get(position);
-	    Iterator<Class<?>> i = linearization.iterator();
-	    while(i.hasNext()) {
-		Set<Method> methods = index.get(i.next());
+	    for(Class<?> c: JavaC3.allSuperclasses(paramterType)) {
+		Set<Method> methods = index.get(c);
 		if(methods != null) {
 		    methods = new HashSet<Method>(methods);
 		    if(parameterTypes.length != position + 1)
@@ -352,12 +337,7 @@ public class DynamicDispatch
 	    }
 	}
 
-        public Object invoke(Object proxy, Method method, Object[] args)
-            throws Throwable
-        {
-            // TODO Auto-generated method stub
-            return null;
-        }
+ 
     }
 
 }

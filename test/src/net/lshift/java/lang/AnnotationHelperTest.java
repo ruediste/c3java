@@ -43,6 +43,12 @@ public class AnnotationHelperTest
         public void a() { }
     }
     
+    public class TestAImpl2x
+        extends TestAImpl2
+        {
+        
+        }
+    
     public void testMethodAnnotation()
         throws Exception
     {
@@ -61,9 +67,17 @@ public class AnnotationHelperTest
     public void testTypeAnnotation()
         throws Exception
     {
-        assertEquals("1", 
-            AnnotationHelper.getAnnotation(
-                TestTypeAnnotation.class, 
-                TestAImpl1.class).value());
+            assertEquals("1", 
+                AnnotationHelper.getAnnotation(
+                    TestTypeAnnotation.class, 
+                    TestAImpl1.class).value());
+            assertEquals("2", 
+                AnnotationHelper.getAnnotation(
+                    TestTypeAnnotation.class, 
+                    TestAImpl2.class).value());
+            assertEquals("2", 
+                AnnotationHelper.getAnnotation(
+                    TestTypeAnnotation.class, 
+                    TestAImpl2x.class).value());
     }
 }

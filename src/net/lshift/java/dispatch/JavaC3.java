@@ -20,7 +20,7 @@ public class JavaC3
 
     /*
      * This is a translation of the dylan example at the end of the above paper.
-     * Its the driver behind the generic list processing library in
+     * Its the motivation for the generic list processing library in
      * net.lshift.util.
      */
     
@@ -51,7 +51,7 @@ public class JavaC3
 	{
 	    if(o == null) {
 		// you wouldn't think this could happen, but there
-		// is no way to stop garbage collection from hapenning
+		// is no way to stop garbage collection from happening
 		// on linearizations during a get(), or put(), so we
 		// must check this is not null.
 		return false;

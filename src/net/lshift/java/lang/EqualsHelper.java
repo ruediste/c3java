@@ -1,6 +1,9 @@
 
 package net.lshift.java.lang;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -12,6 +15,11 @@ import net.lshift.java.util.Bag;
 
 public class EqualsHelper
 {
+    private static final Class<?>[] WRITE_OBJECT_SIGNATURE = 
+        new Class [] { ObjectOutputStream.class };
+    private static final Class<?>[] READ_OBJECT_SIGNATURE = 
+        new Class [] { ObjectInputStream.class };
+
     public static class EqualsHelperError
 	extends Error
     {
@@ -23,9 +31,39 @@ public class EqualsHelper
 	    super(cause);
 	}
     }
+    
+    public static class NoNonTransientFieldsException
+    extends RuntimeException
+    {
+        private static final long serialVersionUID = 1L;
+        private final Class<?> type;
+        
+        public NoNonTransientFieldsException(Class<?> type)
+        {
+            super(type.getName() + " has no non-transient fields");
+            this.type = type;
+        }
 
+        public Class<?> getType()
+        {
+            return type;
+        }
+    }
+
+    private static boolean isCustomSerialization(Class<?> c)
+    {
+        try {
+            return (Serializable.class.isAssignableFrom(c) &&
+                    (c.getMethod("readObject", READ_OBJECT_SIGNATURE) != null ||
+                     c.getMethod("writeObject", WRITE_OBJECT_SIGNATURE) != null));
+        }
+        catch (Exception e) {
+            throw new EqualsHelperError(e);
+        }
+    }
+    
     /**
-     * Comapre two objects field by field, element by element (if is array).
+     * Compare two objects field by field, element by element (if is array).
      * @param a first object to compare
      * @param b the second object to compare
      * @param c We will test the fields defined in this class
@@ -46,13 +84,14 @@ public class EqualsHelper
 	else {
 	    Field [] fields = c.getDeclaredFields();
 	    boolean result = true;
+	    int usedFields = 0;
 	    for(int i = 0; i != fields.length && result; ++i) {
 		final Field field = fields[i];
 		AccessibleObject.setAccessible(fields, true);
 		if((field.getModifiers()&
 		    (Modifier.TRANSIENT|Modifier.STATIC)) == 0) {
 		    try {
-			Class type = field.getType();
+			Class<?> type = field.getType();
 			Object fielda = field.get(a);
 			Object fieldb = field.get(b);
 			
@@ -61,10 +100,14 @@ public class EqualsHelper
 			    (type.isPrimitive() 
                              ? fielda.equals(fieldb) 
                              : ((fielda == fieldb) || equality.equals(fielda, fieldb)));
+			usedFields++;
 		    }
 		    catch(Exception e) {
 			throw new EqualsHelperError(e);
 		    }
+		    
+		    if(usedFields == 0)
+		        throw new NoNonTransientFieldsException(c);
 		}
 	    }
 	    
@@ -84,13 +127,14 @@ public class EqualsHelper
      * Check two lists are equal, given the provided
      * equality predicate.
      */
-    public static boolean equals(List a, List b, Equality e)
+    public static boolean equals(List<?> a, List<?> b, Equality e)
     {
 	boolean result = (a.size() == b.size());
-	for(Iterator ai = a.iterator(), bi = b.iterator(); 
-	    ai.hasNext() && bi.hasNext() && result;)
+	Iterator<?> ai = a.iterator();
+	Iterator<?> bi = b.iterator();
+	for(; ai.hasNext() && bi.hasNext() && result;)
 	    result = e.equals(ai.next(), bi.next());
-	return result;
+	return result && !ai.hasNext() && !bi.hasNext();
     }
 
     /**

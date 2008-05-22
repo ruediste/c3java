@@ -26,7 +26,7 @@ public class DefaultEquality
             (Equality.class, new DefaultEquality(delegate));
     }
 
-    public Equality getDeligate()
+    public Equality getDelegate()
     {
         return this.delegate;
     }
@@ -39,11 +39,6 @@ public class DefaultEquality
     public boolean equals(Object a, Object b)
     {
         return EqualsHelper.equals(a, b, delegate);
-    }
-
-    public boolean equals(String a, String b)
-    {
-        return a.equals(b);
     }
 
     public boolean equals(Bag<Object> a, Bag<Object> b)
@@ -66,4 +61,37 @@ public class DefaultEquality
         return EqualsHelper.equals(a, b, delegate);
     }
 
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // The following are for java built in classes for which Object.equals
+    // makes sense, or is the only thing that makes sense.
+    
+    public boolean equals(String a, String b)
+    {
+        return a.equals(b);
+    }
+
+    public boolean equals(Date a, Date b)
+    {
+        return a.equals(b);
+    }
+    
+    public boolean equals(StringBuffer a, StringBuffer b)
+    {
+        return a.equals(b);
+    }
+
+    public boolean equals(StringBuilder a, StringBuilder b)
+    {
+        return a.equals(b);
+    }
+    
+    public boolean equals(Class<?> a, Class<?> b)
+    {
+        return a.equals(b);
+    }
+
+    public boolean equals(Enum<?> a, Enum<?> b)
+    {
+        return a.equals(b);
+    }
 }

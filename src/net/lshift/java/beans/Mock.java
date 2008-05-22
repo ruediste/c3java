@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import net.lshift.java.lang.Types;
+
 /**
  * Implement a 'bean' for a given interface by storing the
  * properties in a map, or Store.
@@ -22,7 +24,7 @@ public class Mock
     // TODO: add support for property change events
     // TODO: add support for indexed and mapped properties
 
-    
+   
     /**
      * Generic supporting for storing of bean properties.
      * You may limit the set of properties supported by throwing
@@ -40,6 +42,8 @@ public class Mock
         public Object invoke(Store store, Method method, Object[] args)
             throws Throwable;
     }
+    
+   
     
     private static Map<Class<?>,Map<Method,BeanInvocationHandler>> cache = 
         new WeakHashMap<Class<?>, Map<Method,BeanInvocationHandler>>();
@@ -74,14 +78,28 @@ public class Mock
         for(PropertyDescriptor pinfo: info.getPropertyDescriptors()) {
             final String name = pinfo.getName();
             if(pinfo.getReadMethod() != null)
-                methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
+                if(pinfo.getPropertyType().isPrimitive()) {
+                    final Object defaultValue = Types.DEFAULT_VALUES.get(pinfo.getPropertyType());
+                    methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
 
-                    public Object invoke(Store store, Method method, Object[] args)
+                        public Object invoke(Store store, Method method, Object[] args)
                         throws Throwable
-                    {
-                        return store.getProperty(name);
-                    }
-                });
+                        {
+                            Object result = store.getProperty(name);
+                            return result == null ? defaultValue : result;
+                        }
+                    });
+                }
+                else {
+                    methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
+
+                        public Object invoke(Store store, Method method, Object[] args)
+                        throws Throwable
+                        {
+                            return store.getProperty(name);
+                        }
+                    });
+                }
             
             if(pinfo.getWriteMethod() != null)
                 methods.put(pinfo.getWriteMethod(), new BeanInvocationHandler() {
@@ -106,7 +124,8 @@ public class Mock
             addMethods(methods, superinterface);
     }
     
-    private static synchronized Map<Method,BeanInvocationHandler> methods(Class<?> bean) 
+    private static synchronized Map<Method,BeanInvocationHandler> methods(
+        Class<?> bean) 
         throws IntrospectionException
     {
         Map<Method,BeanInvocationHandler> methods = cache.get(bean);
