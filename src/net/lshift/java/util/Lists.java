@@ -112,7 +112,7 @@ public class Lists
     /**
      * LISP like map.
      * @return a collection which is the result of
-     *   applying proc to each element in c. The collection wont neccessarily
+     *   applying proc to each element in c. The collection wont necessarily
      *   have the same implementation as c (for now, its always an ArrayList).
      */
     public static <E,S> List<S> map(final Transform<E,S> proc, Iterable<E> c)

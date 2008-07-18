@@ -4,12 +4,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.lshift.java.util.Maps;
+
 public class Types
 {
     public static final Map<Class<?>,Class<?>> PRIMITIVE_WRAPPER;
     static {
         Map<Class<?>,Class<?>> reps = new HashMap<Class<?>,Class<?>>();
-        PRIMITIVE_WRAPPER = Collections.unmodifiableMap(reps);
         addPrimitive(reps, Boolean.class);
         addPrimitive(reps, Byte.class);
         addPrimitive(reps, Character.class);
@@ -18,12 +19,15 @@ public class Types
         addPrimitive(reps, Integer.class);
         addPrimitive(reps, Long.class);
         addPrimitive(reps, Short.class);
+        addPrimitive(reps, Void.class);
+        PRIMITIVE_WRAPPER = Collections.unmodifiableMap(reps);
     }
     
     static void addPrimitive(Map<Class<?>,Class<?>> reps, Class<?> rep)
     {
         try {
             reps.put((Class<?>) rep.getField("TYPE").get(null), rep);
+            
         }
         catch (Exception e) {
             throw new ExceptionInInitializerError(
@@ -31,7 +35,7 @@ public class Types
         }
     }
     
-    static Class<?> getWrapperClass(Class <?> primitive)
+    public static Class<? extends Object> getWrapperClass(Class <?> primitive)
     {
         if(!primitive.isPrimitive())
             throw new IllegalArgumentException(
@@ -42,19 +46,17 @@ public class Types
         return PRIMITIVE_WRAPPER.get(primitive);
     }
 
+    @SuppressWarnings("unchecked")
+    public static Class<? extends Object> asClass(Class<?> type)
+    {
+        return PRIMITIVE_WRAPPER.containsKey(type) 
+            ? PRIMITIVE_WRAPPER.get(type)
+            : (Class<Object>)type;
+    }
+    
     public static final Map<Class<?>,Class<?>> PRIMITIVE;
     static {
-        Map<Class<?>,Class<?>> primitives = new HashMap<Class<?>, Class<?>>();
-        primitives.put(Void.class, Void.TYPE);
-        primitives.put(Boolean.class, Boolean.TYPE);
-        primitives.put(Double.class, Double.TYPE);
-        primitives.put(Float.class, Float.TYPE);
-        primitives.put(Long.class, Long.TYPE);
-        primitives.put(Integer.class, Integer.TYPE);
-        primitives.put(Short.class, Short.TYPE);
-        primitives.put(Byte.class, Byte.TYPE);
-        primitives.put(Character.class, Character.TYPE);
-        PRIMITIVE = Collections.unmodifiableMap(primitives);
+        PRIMITIVE = Collections.unmodifiableMap(Maps.invert(PRIMITIVE_WRAPPER));
     }
  
     public static final Map<Class<?>,Object> DEFAULT_VALUES;

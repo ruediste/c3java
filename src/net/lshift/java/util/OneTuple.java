@@ -54,4 +54,10 @@ implements List<Object>, Serializable
             }
         };
     }
+    
+    public static <T> OneTuple<T> tuple(T a)
+    {
+        return new OneTuple<T>(a);
+    }
+
 }

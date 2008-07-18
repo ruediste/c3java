@@ -1,5 +1,6 @@
 package net.lshift.java.util;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import java.util.Map;
  */
 public class TwoTuple<T,U>
 extends OneTuple<T>
+implements Serializable
 {
     private static final long serialVersionUID = 1L;
 

@@ -12,7 +12,7 @@ public class TupleTest
     extends TestCase
 {
     @SuppressWarnings("unchecked")
-    public void staticInitializersTest()
+    public void testStaticInitializers()
     {
         // This basically shows how when I import ThreeTuple.tuple I
         // also import all the overloaded 'tuple' methods in the super
@@ -20,9 +20,17 @@ public class TupleTest
         Map<Character,Integer> m = map(
                         list(tuple('a', 1),
                              tuple('b', 2)));
+        System.out.println(m);
         List<ThreeTuple<Character,Integer,Integer>> l1 = list(
                         tuple('a', 1, 0),
                         tuple('b', 2, 0));
-        
+        System.out.println(l1);
+    }
+    
+    public void testEquals()
+    {
+        assertEquals(tuple('a'), list('a'));
+        assertEquals(tuple('a', 1), list('a', 1));
+        assertEquals(tuple('a', 1, 0), list('a', 1, 0));
     }
 }

@@ -1,9 +1,12 @@
 package net.lshift.beans;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.lshift.java.beans.Mock;
+import net.lshift.java.util.Lists;
 
 import junit.framework.TestCase;
 
@@ -32,10 +35,19 @@ public class MockTest
         public void setFloat1(float f);
     }
     
+
     interface ExampleSubclassBean
     extends ExampleBean
     {
         
+    }
+    
+    Mock.Factory<ExampleBean> exampleFactory;
+    
+    public void setUp()
+    throws Exception
+    {
+        exampleFactory = Mock.factory(ExampleBean.class);
     }
     
     public void testMap()
@@ -77,5 +89,40 @@ public class MockTest
         assertEquals(new Float(0.0), instance.getFloat1());
         assertEquals(new Double(0.0), instance.getDouble1());
         assertFalse(instance.getBoolean1());
+    }
+    
+    private ExampleBean example()
+    throws Exception
+    {
+        ExampleBean a = exampleFactory.bean();
+        a.setBoolean1(true);
+        a.setByte1((byte)20);
+        a.setChar1('z');
+        a.setDouble1(10.1);
+        a.setFloat1((float)20.5);
+        a.setInt1(56);
+        a.setLong1(597);
+        a.setShort1((short)99);
+        a.setString1("gargle");
+        return a;
+    }
+    
+//    public void testEquals()
+//    throws Exception
+//    {
+//        ExampleBean a = example();
+//        ExampleBean b = example();
+//        assertEquals(a,b);
+//        b.setString1("swallow");
+//        assertFalse(a.equals(b));
+//    }
+    
+    public void testSerializable()
+    throws Exception
+    {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(buffer);
+        System.out.println(Lists.list(example().getClass().getInterfaces()));
+        out.writeObject(example());
     }
 }
