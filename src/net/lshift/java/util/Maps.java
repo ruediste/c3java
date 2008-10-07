@@ -20,4 +20,44 @@ public class Maps
             m.put(e.getKey(), e.getValue());
         return m;
     }
+    
+    /**
+     * Create a map entry
+     * @see #map(java.util.Map.Entry...)
+     * @param <K> key type of returned Map
+     * @param <V> value type of returned type
+     * @param k key for the entry
+     * @param v value for the entry
+     * @return an entry with key k, and value v
+     */
+    public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
+    {
+        return new Map.Entry<K, V>() {
+            public K getKey() {
+                return k;
+            }
+
+            public V getValue() {
+                return v;
+            }
+
+            public V setValue(V value) {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    /**
+     * Create a map.
+     * This is a quick notation for maps:
+     * map(entry("a",1), entry(
+     * @param <K>
+     * @param <V>
+     * @param entries
+     * @return
+     */
+    public static <K,V> Map<K,V> map(Map.Entry<K,V> ... entries)
+    {
+        return map(entries);
+    }
 }
