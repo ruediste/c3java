@@ -245,7 +245,7 @@ public class DynamicDispatch
 		}
 	    }
 
-	    return Collections.EMPTY_SET;
+	    return Collections.emptySet();
 	}
 
 	private Method lookup(Signature signature)

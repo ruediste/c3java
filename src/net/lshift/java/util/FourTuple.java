@@ -1,19 +1,15 @@
 package net.lshift.java.util;
 
-import java.io.Serializable;
-
-public class ThreeTuple<T, U, V>
-    extends TwoTuple<T, U>
-    implements Serializable
+public class FourTuple<T, U, V, W>
+    extends ThreeTuple<T, U, V>
 {
     private static final long serialVersionUID = 1L;
-
-    public V third;
+    public final W fourth;
     
-    public ThreeTuple(T first, U second, V third) 
+    public FourTuple(T first, U second, V third, W fourth) 
     {
-        super(first, second);
-        this.third = third;
+        super(first, second, third);
+        this.fourth = fourth;
     }
 
     @Override
@@ -23,6 +19,7 @@ public class ThreeTuple<T, U, V>
         case 0: return first;
         case 1: return second;
         case 2: return third;
+        case 3: return fourth;
         default: throw new IndexOutOfBoundsException();
         }
     }
@@ -30,11 +27,11 @@ public class ThreeTuple<T, U, V>
     @Override
     public int size()
     {
-        return 3;
+        return 4;
     }
     
-    public static <T,U,V> ThreeTuple<T,U,V> tuple(T a, U b, V c)
+    public static <T,U,V,W> FourTuple<T,U,V,W> tuple(T a, U b, V c, W d)
     {
-        return new ThreeTuple<T,U,V>(a,b,c);
+        return new FourTuple<T,U,V,W>(a,b,c, d);
     }
 }

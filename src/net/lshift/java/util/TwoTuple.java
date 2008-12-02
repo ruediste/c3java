@@ -55,12 +55,35 @@ implements Serializable
             }
         };
     }
-    
+
+    /**
+     * Create a map from an iterable of two tuples.
+     * There's more than one way to do this. Take your pick.
+     * @see Maps#map(Iterable)
+     * @param <K>
+     * @param <V>
+     * @param c
+     * @return
+     */
     public static <K,V> Map<K,V> map(Iterable<TwoTuple<K, V>> c)
     {
         Map<K,V> m = new HashMap<K,V>();
         for(TwoTuple<K, V> e: c)
             m.put(e.first, e.second);
         return m;
+    }
+    
+    /**
+     * Create a map from a list of tuples.
+     * There's more than one way to do this, take your pick.
+     * @see Maps#map(java.util.Map.Entry...)
+     * @param <K>
+     * @param <V>
+     * @param tuples
+     * @return
+     */
+    public static <K,V> Map<K,V> map(TwoTuple<K,V> ... tuples)
+    {
+        return map(tuples);
     }
 }

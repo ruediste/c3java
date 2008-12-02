@@ -7,13 +7,13 @@ package net.lshift.java.util;
  */
 @SuppressWarnings("unchecked")
 public abstract class Tuples
-    // This will extend the largest tuple class I implement, 3-tuple for now
-    extends ThreeTuple
+    // This will extend the largest tuple class I implement, 4-tuple for now
+    extends FourTuple
 {
+    private static final long serialVersionUID = 1L;
 
-    @SuppressWarnings("unchecked")
-    private Tuples(Object first, Object second, Object third) {
-        super(first, second, third);
+    private Tuples(Object first, Object second, Object third, Object fourth) {
+        super(first, second, third, fourth);
     }
 
 }

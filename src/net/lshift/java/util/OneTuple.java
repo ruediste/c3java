@@ -13,7 +13,7 @@ import java.util.List;
  * much of the point. Note that equality only requires the 'other' is a list, 
  * containing one element equal to this member, not that its a OneTuple.
  * this is a degenerative case - its unlikely you will
- * ever use this. 
+ * ever use this, except perhaps as a list of length one. 
  *
  * @param <E> This is the element type of the list, It must be a superclass
  * of T. For other tuples, it must be the superclass of all the fields.

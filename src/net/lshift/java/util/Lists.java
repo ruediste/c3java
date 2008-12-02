@@ -49,7 +49,7 @@ public class Lists
     }
 
     /**
-     * LISP like fold-right.
+     * LISP like fold-left.
      */
     public static <E,S> S foldLeft
         (FoldProcedure<E,S> proc, 
@@ -91,7 +91,7 @@ public class Lists
     }
 
     /**
-     * LISP like fold-left.
+     * LISP like fold-right.
      */ 
     public static <E,S> S foldRight
         (FoldProcedure<E,S> proc, 
@@ -406,5 +406,15 @@ public class Lists
             l[--index] = element;
         
         return Arrays.asList(l);
+    }
+    
+    public static <E> List<E> head(List<E> c, int size)
+    {
+        return c.subList(0, size);
+    }
+    
+    public static <E> List<E> tail(List<E> c, int begin)
+    {
+        return c.subList(begin, c.size());
     }
 }
