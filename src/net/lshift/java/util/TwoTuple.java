@@ -1,6 +1,7 @@
 package net.lshift.java.util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,6 +85,6 @@ implements Serializable
      */
     public static <K,V> Map<K,V> map(TwoTuple<K,V> ... tuples)
     {
-        return map(tuples);
+        return map(Arrays.asList(tuples));
     }
 }
