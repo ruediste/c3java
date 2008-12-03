@@ -26,6 +26,16 @@ public class Mock
     // TODO: add support for property change events
     // TODO: add support for indexed and mapped properties
 
+	public static class MockIntrospectionException
+	extends IllegalArgumentException
+	{
+		private static final long serialVersionUID = 1L;
+
+		public MockIntrospectionException(IntrospectionException e)
+		{
+			super(e);
+		}
+	}
    
     /**
      * Generic supporting for storing of bean properties.
@@ -164,13 +174,12 @@ public class Mock
      * @param <T> the beans type.
      * @param iface the interface to implement. Introspection on interfaces
      *   works but does not look at super interfaces. We traverse the super
-     *   interface tree, introspecting on all the interfaces.
+     *   interface tree, and introspect on all the interfaces.
      * @param store handles storing properties
      * @return
      * @throws IntrospectionException
      */
     public static <T> T bean(Class<T> iface, final Store store) 
-        throws IntrospectionException
     {
         return factory(iface).bean(store);
     }
@@ -202,7 +211,10 @@ public class Mock
                 interfaceClass.getClassLoader(), 
                 new Class [] { interfaceClass }, 
                 new SerializableInvocationHandler() {
-                    public Object invoke(Object proxy, Method method, Object[] args)
+
+					private static final long serialVersionUID = 1L;
+
+					public Object invoke(Object proxy, Method method, Object[] args)
                     throws Throwable
                     {
                         final BeanInvocationHandler handler = methods.get(method);
@@ -240,9 +252,12 @@ public class Mock
     }
     
     public static <T> Factory<T> factory(Class<T> iface)
-    throws IntrospectionException
     {
-        return new FactoryImpl<T>(iface);
+        try {
+			return new FactoryImpl<T>(iface);
+		} catch (IntrospectionException e) {
+			throw new MockIntrospectionException(e);
+		}
     }
     
     public static class MapStore
@@ -296,13 +311,11 @@ public class Mock
     }
     
     public static <T> T bean(Class<T> iface, Map<String,Object> map) 
-    throws IntrospectionException
     {
         return bean(iface, store(map));
     }
     
     public static <T> T bean(Class<T> iface) 
-    throws IntrospectionException
     {
         return bean(iface, store(new HashMap<String, Object>()));
     }

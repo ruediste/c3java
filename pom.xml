@@ -5,7 +5,7 @@
   <groupId>net.lshift</groupId>
   <artifactId>java</artifactId>
   <packaging>jar</packaging>
-  <version>2.2.1</version>
+  <version>2.2.2</version>
   <name>LShift Java library</name>
   <url>http://www.lshift.net</url>
   <dependencies>
