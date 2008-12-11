@@ -26,17 +26,17 @@ public class Mock
     // TODO: add support for property change events
     // TODO: add support for indexed and mapped properties
 
-	public static class MockIntrospectionException
-	extends IllegalArgumentException
-	{
-		private static final long serialVersionUID = 1L;
+    public static class MockIntrospectionException
+    extends IllegalArgumentException
+    {
+        private static final long serialVersionUID = 1L;
 
-		public MockIntrospectionException(IntrospectionException e)
-		{
-			super(e);
-		}
-	}
-   
+        public MockIntrospectionException(IntrospectionException e)
+        {
+            super(e);
+        }
+    }
+
     /**
      * Generic supporting for storing of bean properties.
      * You may limit the set of properties supported by throwing
@@ -68,6 +68,14 @@ public class Mock
         new WeakHashMap<Class<?>, Map<Method,BeanInvocationHandler>>();
     
     private static final Method [] STORE_DELEGATE_METHODS = Object.class.getMethods();
+    private static final Method EQUALS_METHOD;
+    static {
+        try {
+            EQUALS_METHOD = Object.class.getMethod("equals", new Class<?> [] { Object.class });
+        } catch (Exception e) {
+            throw new InstantiationError("Couldn't resolve Object.class.equals(Object)");
+        }
+    }
 
     private static final BeanInvocationHandler STORE_DELEGATE =
         new BeanInvocationHandler() {
@@ -83,11 +91,10 @@ public class Mock
                 catch(InvocationTargetException e) {
                     throw e.getCause();
                 }
-            }
-        
+            }  
     };
     
-    private static void addMethods(Map <Method,BeanInvocationHandler> methods, Class<?> bean) 
+    private static void addMethods(Map <Method,BeanInvocationHandler> methods, final Class<?> bean) 
         throws IntrospectionException
     {
         // TODO: this should really map from a method to an invocation handler,
@@ -113,6 +120,7 @@ public class Mock
                             return result == null ? defaultValue : result;
                         }
                     });
+                    
                 }
                 else {
                     methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
@@ -152,6 +160,18 @@ public class Mock
             addMethods(methods, superinterface);
     }
     
+    private static MockInvocationHandler mockOf(Object instance)
+    {
+        if(Proxy.isProxyClass(instance.getClass())) {
+            InvocationHandler handler = Proxy.getInvocationHandler(instance);
+            if(handler instanceof MockInvocationHandler) {
+                return (MockInvocationHandler)handler;
+            }
+        }
+        
+        return null;
+    }
+    
     private static synchronized Map<Method,BeanInvocationHandler> methods(
         final Class<?> bean) 
         throws IntrospectionException
@@ -163,6 +183,28 @@ public class Mock
             for(Method method: STORE_DELEGATE_METHODS)
                 methods.put(method, STORE_DELEGATE);
             cache.put(bean, methods);
+            methods.put(EQUALS_METHOD, new BeanInvocationHandler() {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public Object invoke(
+                    Store store,
+                    Method method,
+                    Object[] args)
+                    throws Throwable
+                {
+                    MockInvocationHandler mockInvocationHandler = mockOf(args[0]);
+                    if(mockInvocationHandler != null && 
+                       mockInvocationHandler.getInterface() == bean) {
+                        return mockInvocationHandler.getStore().equals(store);
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                
+            });
         }
         
         return methods;
@@ -184,8 +226,13 @@ public class Mock
         return factory(iface).bean(store);
     }
 
-    public interface SerializableInvocationHandler
-    extends InvocationHandler, Serializable { }
+    public interface MockInvocationHandler
+    extends InvocationHandler, Serializable 
+    { 
+        public Class<?> getInterface();
+
+        public Object getStore();
+    }
     
     public static class FactoryImpl<T>
     implements Factory<T>, Serializable
@@ -210,17 +257,29 @@ public class Mock
             T instance = (T)Proxy.newProxyInstance(
                 interfaceClass.getClassLoader(), 
                 new Class [] { interfaceClass }, 
-                new SerializableInvocationHandler() {
+                new MockInvocationHandler() {
 
-					private static final long serialVersionUID = 1L;
+                    private static final long serialVersionUID = 1L;
 
-					public Object invoke(Object proxy, Method method, Object[] args)
+                    public Object invoke(Object proxy, Method method, Object[] args)
                     throws Throwable
                     {
                         final BeanInvocationHandler handler = methods.get(method);
                         return handler.invoke(store, method, args);
                     }
-                                           
+
+                    @Override
+                    public Class<?> getInterface()
+                    {
+                        return interfaceClass;
+                    }
+
+                    @Override
+                    public Object getStore()
+                    {
+                        return store;
+                    }
+
                 });
 
             return instance;
@@ -254,10 +313,10 @@ public class Mock
     public static <T> Factory<T> factory(Class<T> iface)
     {
         try {
-			return new FactoryImpl<T>(iface);
-		} catch (IntrospectionException e) {
-			throw new MockIntrospectionException(e);
-		}
+            return new FactoryImpl<T>(iface);
+        } catch (IntrospectionException e) {
+            throw new MockIntrospectionException(e);
+        }
     }
     
     public static class MapStore

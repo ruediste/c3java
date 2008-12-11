@@ -103,19 +103,19 @@ public class MockTest
         a.setInt1(56);
         a.setLong1(597);
         a.setShort1((short)99);
-        a.setString1("gargle");
+        a.setString1("foo");
         return a;
     }
     
-//    public void testEquals()
-//    throws Exception
-//    {
-//        ExampleBean a = example();
-//        ExampleBean b = example();
-//        assertEquals(a,b);
-//        b.setString1("swallow");
-//        assertFalse(a.equals(b));
-//    }
+    public void testEquals()
+    throws Exception
+    {
+        ExampleBean a = example();
+        ExampleBean b = example();
+        assertEquals(a,b);
+        b.setString1("bar");
+        assertFalse(a.equals(b));
+    }
     
     public void testSerializable()
     throws Exception
