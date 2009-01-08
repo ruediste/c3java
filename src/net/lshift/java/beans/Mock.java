@@ -15,10 +15,14 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import net.lshift.java.lang.Types;
+import net.lshift.java.util.Transform;
 
 /**
  * Implement a 'bean' for a given interface by storing the
- * properties in a map, or Store.
+ * properties in a map, or Store. Unlike normal bean semantics,
+ * the super-interfaces are traversed, and fields added from
+ * them, so methods like describe, copy, and assign work
+ * differently to this you find in commons BeanUtils, for example.
  */
 public class Mock
 {
@@ -38,7 +42,7 @@ public class Mock
     }
 
     /**
-     * Generic supporting for storing of bean properties.
+     * Generic support for storing of bean properties.
      * You may limit the set of properties supported by throwing
      * UnsupportedOperationException, or in the case of set, simply
      * ignoring the value.
@@ -55,6 +59,52 @@ public class Mock
         public T bean(final Store store);
         public T bean(Map<String,Object> map);
         public T bean();
+        
+        /**
+         * Transform which applies copy.
+         * @see #copy(Object)
+         * @param <U>
+         * @return
+         */
+        public <U extends T> Transform<U, T> copy();
+        
+        /**
+         * Create a bean by copying a bean that implements the
+         * interface this factory supports. Equivalent to bean(describe(other)).
+         * @see #bean(Map)
+         * @see #describe(Object)
+         * @param <U> The type of the bean we reflect on. Essentially
+         *   anonymous, but can't be because of the definition of Transform
+         * @param other
+         * @return
+         */
+        public <U extends T> T copy(U other);
+        
+        /**
+         * Describe a bean. Only fields with getters in T
+         * will be included in the description. The bean has already
+         * been validated during the creation of the factory, so
+         * this method throws no exceptions
+         * @param <U> The type of the bean we reflect on. Essentially
+         *   anonymous.
+         * @param bean
+         * @return
+         */
+        public <U extends T> Map<String,Object> describe(U bean);
+        
+        /**
+         * Selectively assign one bean from another. The fields assigned
+         * are those specified in the interface of this factory.
+         * @param <U>
+         * @param <V>
+         * @param assignTo
+         * @param assignFrom
+         */
+        public <U extends T, V extends T> void assign(U assignTo, V assignFrom); 
+    }
+    
+    private enum MethodType {
+        READER, WRITER, OTHER
     }
     
     public interface BeanInvocationHandler
@@ -62,8 +112,173 @@ public class Mock
     {
         public Object invoke(Store store, Method method, Object[] args)
             throws Throwable;
+        
+        /**
+         * Get the name of the relevant property, if applicable.
+         * @return the property name, or null if the method type is
+         *   not GETTER or SETTER.
+         */
+        public String getPropertyName();
+
+        /**
+         * The type of method. We use this to find getters and setters.
+         */
+        public MethodType getMethodType();
+        
+        /**
+         * If this method is a reader, get the writer method
+         */
+        public Method getWriter();
     }
     
+    private static final class EqualsHandler
+    implements BeanInvocationHandler
+    {
+        private final Class<?> bean;
+        private static final long serialVersionUID = 1L;
+
+        private EqualsHandler(Class<?> bean)
+        {
+            this.bean = bean;
+        }
+
+        @Override
+        public Object invoke(Store store, Method method, Object[] args)
+        throws Throwable
+        {
+            MockInvocationHandler mockInvocationHandler = mockOf(args[0]);
+            if(mockInvocationHandler != null && 
+               mockInvocationHandler.getInterface() == bean) {
+                return mockInvocationHandler.getStore().equals(store);
+            }
+            else {
+                return false;
+            }
+        }
+
+        @Override
+        public MethodType getMethodType()
+        {
+            return MethodType.OTHER;
+        }
+
+        @Override
+        public String getPropertyName()
+        {
+            return null;
+        }
+
+        @Override
+        public Method getWriter()
+        {
+            return null;
+        }
+    }
+
+    private static abstract class PropertyHandler
+    implements BeanInvocationHandler
+    {
+        private static final long serialVersionUID = 1L;
+        protected final String name;
+        
+        private PropertyHandler(String name)
+        {
+            this.name = name;
+        }
+        
+        @Override
+        public String getPropertyName()
+        {
+            return name;
+        }
+    }
+    
+    private static class Reader
+    extends PropertyHandler
+    implements BeanInvocationHandler
+    {
+        private static final long serialVersionUID = 1L;
+        private final Method writer;
+
+        private Reader(String name, Method writer)
+        {
+            super(name);
+            this.writer = writer;
+        }
+
+        public Object invoke(Store store, Method method, Object[] args)
+        throws Throwable
+        {
+            return store.getProperty(name);
+        }
+
+        @Override
+        public MethodType getMethodType()
+        {
+            return MethodType.READER;
+        }
+
+        @Override
+        public Method getWriter()
+        {
+            return writer;
+        }
+    }
+    
+    private static final class PrimitiveReader
+    extends Reader
+    implements BeanInvocationHandler
+    {
+        private static final long serialVersionUID = 1L;
+
+        final Object defaultValue;
+    
+        private PrimitiveReader(String name, Method writer, Object defaultValue)
+        {
+            super(name, writer);
+            this.defaultValue = defaultValue;
+        }
+
+        public Object invoke(Store store, Method method, Object[] args)
+        throws Throwable
+        {
+            Object result = store.getProperty(name);
+            return result == null ? defaultValue : result;
+        }
+    }
+
+    private static class Writer
+    extends PropertyHandler
+    implements BeanInvocationHandler
+    {
+        private static final long serialVersionUID = 1L;
+
+        private Writer(String name)
+        {
+            super(name);
+        }
+
+        public Object invoke(Store store, Method method, Object[] args)
+        throws Throwable
+        {
+            store.setProperty(name, args[0]);
+            return null;
+        }
+
+        @Override
+        public MethodType getMethodType()
+        {
+            return MethodType.WRITER;
+        }
+
+        @Override
+        public Method getWriter()
+        {
+            return null;
+        }
+    }
+
+
     private static Map<Class<?>,Map<Method,BeanInvocationHandler>> cache = 
         new WeakHashMap<Class<?>, Map<Method,BeanInvocationHandler>>();
     
@@ -91,63 +306,62 @@ public class Mock
                 catch(InvocationTargetException e) {
                     throw e.getCause();
                 }
+            }
+
+            @Override
+            public MethodType getMethodType()
+            {
+                return MethodType.OTHER;
+            }
+
+            @Override
+            public String getPropertyName()
+            {
+                return null;
+            }
+
+            @Override
+            public Method getWriter()
+            {
+                return null;
             }  
     };
     
-    private static void addMethods(Map <Method,BeanInvocationHandler> methods, final Class<?> bean) 
+    private static boolean addPropertyMethods(
+        Map <Method,BeanInvocationHandler> methods, 
+        final Class<?> bean) 
         throws IntrospectionException
     {
-        // TODO: this should really map from a method to an invocation handler,
-        // so we can handle methods other than getters and setters
-        
+        boolean copyable = true;
+
         if(!bean.isInterface())
             throw new IllegalArgumentException("Not an interface");
         
         BeanInfo info = Introspector.getBeanInfo(bean);
         for(PropertyDescriptor pinfo: info.getPropertyDescriptors()) {
             final String name = pinfo.getName();
-            if(pinfo.getReadMethod() != null)
+            final Method writeMethod = pinfo.getWriteMethod();
+            if(pinfo.getReadMethod() != null) {
+                final Method method = pinfo.getReadMethod();
+                if(!method.isAccessible())
+                    method.setAccessible(true);
                 if(pinfo.getPropertyType().isPrimitive()) {
                     final Object defaultValue = Types.DEFAULT_VALUES.get(pinfo.getPropertyType());
-                    methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
-
-                        private static final long serialVersionUID = 1L;
-
-                        public Object invoke(Store store, Method method, Object[] args)
-                        throws Throwable
-                        {
-                            Object result = store.getProperty(name);
-                            return result == null ? defaultValue : result;
-                        }
-                    });
-                    
+                    methods.put(method, new PrimitiveReader(name, writeMethod, defaultValue));
                 }
                 else {
-                    methods.put(pinfo.getReadMethod(), new BeanInvocationHandler() {
-
-                        private static final long serialVersionUID = 1L;
-
-                        public Object invoke(Store store, Method method, Object[] args)
-                        throws Throwable
-                        {
-                            return store.getProperty(name);
-                        }
-                    });
+                    methods.put(method, new Reader(name, writeMethod));
                 }
+            }
+            else {
+                copyable = false;
+            }
             
-            if(pinfo.getWriteMethod() != null)
-                methods.put(pinfo.getWriteMethod(), new BeanInvocationHandler() {
-
-                    private static final long serialVersionUID = 1L;
-
-                    public Object invoke(Store store, Method method, Object[] args)
-                        throws Throwable
-                    {
-                        store.setProperty(name, args[0]);
-                        return null;
-                    }
-                    
-                });
+            if(writeMethod != null) {
+                if(!writeMethod.isAccessible())
+                    writeMethod.setAccessible(true);
+                methods.put(writeMethod, new Writer(name));
+            }
         }
 
         for(Method method: bean.getDeclaredMethods())
@@ -157,7 +371,9 @@ public class Mock
                    + " is not a getter or setter");
 
         for(Class<?> superinterface: bean.getInterfaces())
-            addMethods(methods, superinterface);
+            copyable &= addPropertyMethods(methods, superinterface);
+        
+        return copyable;
     }
     
     private static MockInvocationHandler mockOf(Object instance)
@@ -179,32 +395,11 @@ public class Mock
         Map<Method,BeanInvocationHandler> methods = cache.get(bean);
         if(methods == null) {
             methods = new HashMap<Method,BeanInvocationHandler>();
-            addMethods(methods, bean);
+            addPropertyMethods(methods, bean);
             for(Method method: STORE_DELEGATE_METHODS)
                 methods.put(method, STORE_DELEGATE);
             cache.put(bean, methods);
-            methods.put(EQUALS_METHOD, new BeanInvocationHandler() {
-
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public Object invoke(
-                    Store store,
-                    Method method,
-                    Object[] args)
-                    throws Throwable
-                {
-                    MockInvocationHandler mockInvocationHandler = mockOf(args[0]);
-                    if(mockInvocationHandler != null && 
-                       mockInvocationHandler.getInterface() == bean) {
-                        return mockInvocationHandler.getStore().equals(store);
-                    }
-                    else {
-                        return false;
-                    }
-                }
-                
-            });
+            methods.put(EQUALS_METHOD, new EqualsHandler(bean));
         }
         
         return methods;
@@ -238,6 +433,8 @@ public class Mock
     implements Factory<T>, Serializable
     {
         private static final long serialVersionUID = 1L;
+
+        private static final Object [] NO_ARGUMENTS = new Object[0];
 
         private transient Class<T> interfaceClass;
         private transient Map<Method,BeanInvocationHandler> methods;
@@ -308,6 +505,108 @@ public class Mock
                 throw new IOException(e);
             }
         }
+
+        @Override
+        public <U extends T> Transform<U, T> copy()
+        {
+            return new Transform<U, T>() {
+                public T apply(U x) {
+                    return copy(x);
+                }
+            };
+        }
+
+        private RuntimeException invalidBeanException(
+            String field, 
+            Object bean,
+            Exception cause)
+        {
+            if(interfaceClass.isInstance(bean)) {
+                return new IllegalArgumentException(
+                    "You seem to have found a bug. The field " + field + " in " +
+                    interfaceClass.getCanonicalName() + " has an invalid getter or setter" +
+                    " and the factory constructor should have detected that", cause);
+            }
+            else {
+                throw new IllegalArgumentException(bean + " does not implement " +
+                    interfaceClass.getCanonicalName() + 
+                    " and that should be impossible if you have honoured the " +
+                    " type parameters for this factory. If you recompile, you " +
+                    " will probably find a compilation error", cause);
+            }
+        }
+        
+        public <U extends T> Map<String,Object> describe(U bean)
+        {
+            // FIXME: this could be more efficient, if I kept a list
+            // of readers, rather than a list of all the methods handled.
+            
+            // NOTE: this method does not use assign, below, hence it works
+            // for interfaces that don't have a full complement of setters
+ 
+            Map<String,Object> description = new HashMap<String,Object>();
+            for(Map.Entry<Method, BeanInvocationHandler> method: methods.entrySet()) {
+                if(MethodType.READER.equals(method.getValue().getMethodType())) {
+                    String name = method.getValue().getPropertyName();
+                    Method readMethod = method.getKey();
+                    description.put(name, invokePropertyMethod(bean, name, readMethod));
+                }
+            }
+            
+            return description;
+        }
+
+        private <U> Object invokePropertyMethod(
+            U bean,
+            String name,
+            Method readMethod,
+            Object ... arguments)
+        {
+            try {
+                return readMethod.invoke(bean, arguments);
+            } catch (IllegalArgumentException e) {
+                throw invalidBeanException(name, bean, e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(
+                    "The method " + readMethod.getName() + " in " +
+                    interfaceClass + " isn't accessible. Either " +
+                    interfaceClass + " must be public, or this function " +
+                    "must be authorised to override reflection");
+            } catch (InvocationTargetException e) {
+                if(e.getCause() instanceof RuntimeException)
+                    throw (RuntimeException)e.getCause();
+                else
+                    throw invalidBeanException(name, bean,e);
+            }
+        }
+        
+        @Override
+        public <U extends T> T copy(U other)
+        {
+            return bean(describe(other));
+        }
+
+        @Override
+        public <U extends T, V extends T> void assign(U assignTo, V assignFrom)
+        {
+            for(Map.Entry<Method, BeanInvocationHandler> method: methods.entrySet()) {
+                if(MethodType.READER.equals(method.getValue().getMethodType())) {
+                    Method readMethod = method.getKey();
+                    Method writeMethod = method.getValue().getWriter();
+                    String name = method.getValue().getPropertyName();
+                    if(writeMethod == null)
+                        throw new IllegalArgumentException(
+                            "No setter for " + name +
+                            "in " + interfaceClass.getCanonicalName() + 
+                            ". To use assign, there must be a set method " +
+                            "corresponding to every get method");
+
+                    this.invokePropertyMethod(assignTo, name, writeMethod, 
+                        invokePropertyMethod(assignFrom, name, readMethod));
+                }
+            }
+            
+        }
     }
     
     public static <T> Factory<T> factory(Class<T> iface)
@@ -377,5 +676,10 @@ public class Mock
     public static <T> T bean(Class<T> iface) 
     {
         return bean(iface, store(new HashMap<String, Object>()));
+    }
+    
+    public static <T> T copy(Class<T> iface, T source)
+    {
+        return factory(iface).copy(source);
     }
 }

@@ -13,13 +13,14 @@ import junit.framework.TestCase;
 public class MockTest
     extends TestCase
 {
+    // The fact that this interface isn't public is part of the test
     interface ExampleBean
     {
         public int getInt1();
         public void setInt1(int i);
         public String getString1();
         public void setString1(String s);
-        public boolean getBoolean1();
+        public boolean isBoolean1();
         public void setBoolean1(boolean b);
         public byte getByte1();
         public void setByte1(byte b);
@@ -35,6 +36,110 @@ public class MockTest
         public void setFloat1(float f);
     }
     
+    public class ConcreteExampleBean
+    implements ExampleBean
+    {
+        int int1;
+        String string1;
+        boolean boolean1;
+        byte byte1;
+        short short1;
+        long long1;
+        char char1;
+        double double1;
+        float float1;
+        
+        public int getInt1()
+        {
+            return int1;
+        }
+        
+        public void setInt1(int int1)
+        {
+            this.int1 = int1;
+        }
+        
+        public String getString1()
+        {
+            return string1;
+        }
+        
+        public void setString1(String string1)
+        {
+            this.string1 = string1;
+        }
+        
+        public boolean isBoolean1()
+        {
+            return boolean1;
+        }
+        
+        public void setBoolean1(boolean boolean1)
+        {
+            this.boolean1 = boolean1;
+        }
+        
+        public byte getByte1()
+        {
+            return byte1;
+        }
+        
+        public void setByte1(byte byte1)
+        {
+            this.byte1 = byte1;
+        }
+        
+        public short getShort1()
+        {
+            return short1;
+        }
+        
+        public void setShort1(short short1)
+        {
+            this.short1 = short1;
+        }
+        
+        public long getLong1()
+        {
+            return long1;
+        }
+        
+        public void setLong1(long long1)
+        {
+            this.long1 = long1;
+        }
+        
+        public char getChar1()
+        {
+            return char1;
+        }
+        
+        public void setChar1(char char1)
+        {
+            this.char1 = char1;
+        }
+        
+        public double getDouble1()
+        {
+            return double1;
+        }
+        
+        public void setDouble1(double double1)
+        {
+            this.double1 = double1;
+        }
+        
+        public float getFloat1()
+        {
+            return float1;
+        }
+        
+        public void setFloat1(float float1)
+        {
+            this.float1 = float1;
+        }
+
+    }
 
     interface ExampleSubclassBean
     extends ExampleBean
@@ -88,13 +193,26 @@ public class MockTest
         assertEquals(0, instance.getLong1());
         assertEquals(new Float(0.0), instance.getFloat1());
         assertEquals(new Double(0.0), instance.getDouble1());
-        assertFalse(instance.getBoolean1());
+        assertFalse(instance.isBoolean1());
+    }
+    
+    private ExampleBean concreteExample()
+    {
+        ExampleBean a = new ConcreteExampleBean();
+        init(a);
+        return a;
     }
     
     private ExampleBean example()
     throws Exception
     {
         ExampleBean a = exampleFactory.bean();
+        init(a);
+        return a;
+    }
+
+    private void init(ExampleBean a)
+    {
         a.setBoolean1(true);
         a.setByte1((byte)20);
         a.setChar1('z');
@@ -104,7 +222,6 @@ public class MockTest
         a.setLong1(597);
         a.setShort1((short)99);
         a.setString1("foo");
-        return a;
     }
     
     public void testEquals()
@@ -124,5 +241,25 @@ public class MockTest
         ObjectOutputStream out = new ObjectOutputStream(buffer);
         System.out.println(Lists.list(example().getClass().getInterfaces()));
         out.writeObject(example());
+    }
+    
+    public void testCopy()
+    throws Exception
+    {
+        exampleFactory.copy(concreteExample());
+        ExampleBean a = example();
+        assertEquals(a, exampleFactory.copy(a));
+    }
+    
+    public void testAssign()
+    throws Exception
+    {
+        ExampleBean a = example();
+        ExampleBean b = exampleFactory.bean();
+        exampleFactory.assign(b, a);
+        assertEquals(a, b);
+        ExampleBean c = new ConcreteExampleBean();
+        exampleFactory.assign(c, a);
+        assertEquals(a, exampleFactory.copy(c));
     }
 }
