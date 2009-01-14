@@ -69,12 +69,50 @@ public class AnnotationHelper
             
         }, JavaC3.allSuperclasses(type, superclasses));
     }
+
+    /**
+     * Tell me which of my superclasses has the named annotation.
+     * @param annotationClass
+     * @param type
+     * @param superclasses
+     * @return
+     */
+    public static Class<?> getAnnotatedClass(
+        final Class<? extends Annotation> annotationClass, 
+        final Class<?> type,
+        JavaC3.DirectSuperclasses superclasses)
+    {
+        return Lists.any(new Transform<Class<?>, Class<?>>() {
+
+            public Class<?> apply(Class<?> c)
+            {
+                return c.getAnnotation(annotationClass) == null ? null : c;
+            }
+
+        }, JavaC3.allSuperclasses(type, superclasses));
+    }
     
     public static <T extends Annotation> T getAnnotation(
                     final Class<T> annotationClass, 
                     final Class<?> type)
     {
         return getAnnotation(
+            annotationClass, 
+            type, 
+            DefaultDirectSuperclasses.SUPERCLASSES);
+    }
+    
+    /**
+     * Tell me which of my superclasses has the named annotation.
+     * direct superclasses is the default.
+     * @see DefaultDirectSuperclasses#SUPERCLASSES
+     * @see #getAnnotatedClass(Class, Class, net.lshift.java.dispatch.JavaC3.DirectSuperclasses)
+     */
+    public static Class<?> getAnnotatedClass(
+        final Class<? extends Annotation> annotationClass, 
+        final Class<?> type)
+    {
+        return getAnnotatedClass(
             annotationClass, 
             type, 
             DefaultDirectSuperclasses.SUPERCLASSES);
