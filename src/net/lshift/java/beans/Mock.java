@@ -434,8 +434,6 @@ public class Mock
     {
         private static final long serialVersionUID = 1L;
 
-        private static final Object [] NO_ARGUMENTS = new Object[0];
-
         private transient Class<T> interfaceClass;
         private transient Map<Method,BeanInvocationHandler> methods;
         private String interfaceName;
@@ -681,5 +679,10 @@ public class Mock
     public static <T> T copy(Class<T> iface, T source)
     {
         return factory(iface).copy(source);
+    }
+
+    public static <T, U extends T, V extends T> void assign(Class<T> iface, U dest, V source)
+    {
+        factory(iface).assign(dest, source);
     }
 }
