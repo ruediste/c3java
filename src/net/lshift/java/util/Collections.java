@@ -2,13 +2,31 @@
 package net.lshift.java.util;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 
 public class Collections
 {
     public static class Procedures
     {
+        public static Transform<Object,Object> IDENTITY = 
+            new Transform<Object,Object>() {
 
+            @Override
+            public Object apply(Object x)
+            {
+                return x;
+            }
+            
+        };
+        
+        @SuppressWarnings("unchecked")
+        public static <V> Transform<V,V> identity()
+        {
+            return (Transform<V,V>)IDENTITY;
+        }
+
+        
 	public static final Predicate<? extends Iterator> HAS_NEXT =
 	    new Predicate<Iterator>() {
 		public Boolean apply(Iterator i) {
@@ -61,6 +79,28 @@ public class Collections
 	    }
 	};
 
+        public static final Comparator<Collection<?>> SIZE_INCREASING = 
+            new Comparator<Collection<?>>() {
+
+            @Override
+            public int compare(Collection<?> a, Collection<?> b)
+            {
+                return a.size() - b.size();
+            }
+            
+        };
+
+        public static final Comparator<Collection<?>> SIZE_DECREASING = 
+            new Comparator<Collection<?>>() {
+
+            @Override
+            public int compare(Collection<?> a, Collection<?> b)
+            {
+                return b.size() - a.size();
+            }
+            
+        };
+	
         // I _could_ return something not a singleton here
         // to avoid a warning, and implement equals in a
         // sensible way, but I'd rather suppress warnings
