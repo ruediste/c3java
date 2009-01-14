@@ -90,12 +90,17 @@ public class Serialization
     {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
-            ObjectOutputStream out = mapOutputStream(marshalTransform, buffer);
+            ObjectOutputStream out = 
+                marshalTransform == null 
+                    ? new ObjectOutputStream(buffer) 
+                    : mapOutputStream(marshalTransform, buffer);
             out.writeObject(source);
             out.flush();
-            return mapInputStream(
-                new ByteArrayInputStream(buffer.toByteArray()),
-                unmarshalTransform).readObject();
+            InputStream bufferIn = new ByteArrayInputStream(buffer.toByteArray());
+            return (unmarshalTransform == null 
+                            ? new ObjectInputStream(bufferIn)
+                            : mapInputStream(bufferIn, unmarshalTransform)
+                   ).readObject();
         }
         catch(IOException e) {
             // This probably means source, or something transform.apply returned
