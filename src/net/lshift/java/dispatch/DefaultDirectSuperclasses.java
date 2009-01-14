@@ -16,7 +16,7 @@ import net.lshift.java.util.Lists;
  * suggests the order is sane - ie. its the order in which they are
  * declared, but I can't find that documented anywhere, and
  * in the case of other peoples classes, that may not be acceptable
- * anyway. There are a few intersecting concerns invovled - like basic
+ * anyway. There are a few intersecting concerns involved - like basic
  * type ordering, array handling, and in future, generics, so you
  * are going to want to subclass this in most cases.
  */
