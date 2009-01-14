@@ -1,24 +1,21 @@
 
 package net.lshift.java.lang;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.AccessibleObject;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.lshift.java.util.Bag;
 
 public class EqualsHelper
 {
-    private static final Class<?>[] WRITE_OBJECT_SIGNATURE = 
-        new Class [] { ObjectOutputStream.class };
-    private static final Class<?>[] READ_OBJECT_SIGNATURE = 
-        new Class [] { ObjectInputStream.class };
 
     public static class EqualsHelperError
 	extends Error
@@ -50,18 +47,6 @@ public class EqualsHelper
         }
     }
 
-    private static boolean isCustomSerialization(Class<?> c)
-    {
-        try {
-            return (Serializable.class.isAssignableFrom(c) &&
-                    (c.getMethod("readObject", READ_OBJECT_SIGNATURE) != null ||
-                     c.getMethod("writeObject", WRITE_OBJECT_SIGNATURE) != null));
-        }
-        catch (Exception e) {
-            throw new EqualsHelperError(e);
-        }
-    }
-    
     /**
      * Compare two objects field by field, element by element (if is array).
      * @param a first object to compare
@@ -69,7 +54,7 @@ public class EqualsHelper
      * @param c We will test the fields defined in this class
      *  and all its super classes.
      */
-    private static boolean equals(Object a, Object b, Class c, Equality equality)
+    private static boolean equals(Object a, Object b, Class<?> c, Equality equality)
     {
 	if(c == Object.class) {
 	    return true;
@@ -149,12 +134,12 @@ public class EqualsHelper
          Equality e)
     {
 	if(a.size() == b.size()) {
-	    Collection copy = new LinkedList<Object>(b);
+	    Collection<?> copy = new LinkedList<Object>(b);
 	    boolean result = true;
-	    for(Iterator ai = a.iterator(); result && ai.hasNext();) {
+	    for(Iterator<?> ai = a.iterator(); result && ai.hasNext();) {
 		result = false;
 		Object itema = ai.next();
-		for(Iterator bi = copy.iterator(); !result && bi.hasNext();) {
+		for(Iterator<?> bi = copy.iterator(); !result && bi.hasNext();) {
 		    result = e.equals(itema, bi.next());
 		    if(result) bi.remove();
 		}
@@ -177,11 +162,11 @@ public class EqualsHelper
         return unorderedEquals(a, b, e);
     }
 
-    public static boolean equals(Map a, Map b, Equality equality)
+    public static boolean equals(Map<?,?> a, Map<?,?> b, Equality equality)
     {
         boolean result = (a.size() == b.size());
-        for(Iterator e = a.entrySet().iterator(); e.hasNext() && result;) {
-            Map.Entry entry = (Map.Entry)e.next();
+        for(Iterator<?> e = a.entrySet().iterator(); e.hasNext() && result;) {
+            Map.Entry<?,?> entry = (Map.Entry<?,?>)e.next();
             result = b.containsKey(entry.getKey()) &&
                 equality.equals(entry.getValue(), b.get(entry.getKey()));
         }
