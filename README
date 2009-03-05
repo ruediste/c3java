@@ -8,9 +8,9 @@ Anything useful that depends only on java. So far:
  - some equality primitives that might be useful for unit testing
  - a few IO adapters
 
-I suppose all of this might easily end up in various jakarta commons
-projects so from an open source point of view, this is really just a
-staging post.
+This functionality might well be found in various Jakarta Commons
+projects, but this uses the latest versions of java, and in many
+cases borrows paradigms from other programming languages.
 
 Licensing
 ---------
@@ -20,29 +20,11 @@ see NOTICE.
 To build from source
 --------------------
 
-You will need:
-
- - ant 1.6
- - junit 3.8.1
-
-Please follow the installation instructions for the above.
-
-Copy sample.build.properties to build.properties.
-
-Edit build.properties to point to where you installed junit above.
-
- > ant dist
-
-builds a distribution and places it in the dist directory.
-
-To use
-------
-
-Include java.lshift.net.jar on your classpath
+This is a maven 2 project. See http://maven.apache.org/
 
 Documentation
 -------------
 
-Documentation is exclusively javadoc in doc/api
+Documentation is exclusively javadoc.
 
 More information may be available at http://www.lshift.net/opensource.

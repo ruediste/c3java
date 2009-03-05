@@ -3,6 +3,7 @@ package net.lshift.java.dispatch;
 import static net.lshift.java.lang.Types.asClass;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -13,7 +14,14 @@ import java.util.Map;
 import net.lshift.java.util.Transform;
 import net.lshift.java.util.TwoTuple;
 
-
+/**
+ * Dispatch to a delegate, converting parameters and return values.
+ * The delegate must implement the proxy interface. The idea is that the 
+ * parameters are processed consistently according to their type, rather than by
+ * the method or position. This is useful for simulating RPC - simply by using 
+ * serialization to clone the arguments and return values. It can also be used 
+ * to normalise values.
+ */
 public class ConverterDispatch
 {
     public interface ParameterConverterFactory
@@ -22,6 +30,15 @@ public class ConverterDispatch
             Transform<S,D> converter(Class<S> source, Class<D> dest);
     }
     
+    /**
+     * Create a proxy, given a parameter converter.
+     * @param <C> the contract class
+     * @param contract the contract class
+     * @param target the object to delegate to
+     * @param converter the converter, which nows how to convert
+     *   parameters and return values.
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public static <C> C proxy(
                     Class<C> contract,
@@ -34,6 +51,7 @@ public class ConverterDispatch
                         invocationHandler(contract, target, converter));
     }
 
+    @SuppressWarnings("unchecked")
     private static InvocationHandler invocationHandler(
                     final Method targetMethod,
                     final Method contractMethod,
@@ -58,7 +76,12 @@ public class ConverterDispatch
                 Object [] converted = new Object[argc];
                 for(int i = 0; i != argc; ++i)
                     converted[i] = (Object)converters.get(i).apply(args[i]);
-                return method.invoke(target, converted);
+                try {
+                    return method.invoke(target, converted);
+                }
+                catch(InvocationTargetException e) {
+                    throw e.getCause();
+                }
             }
             
         };

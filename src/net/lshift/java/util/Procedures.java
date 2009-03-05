@@ -2,6 +2,8 @@ package net.lshift.java.util;
 
 import java.util.Map;
 
+import net.lshift.java.lang.Variable;
+
 public class Procedures
 {
     public static <V> Predicate<V> equal(final V value)
@@ -42,6 +44,17 @@ public class Procedures
             public Boolean apply(V x)
             {
                  return !proc.apply(x);
+            }
+        };
+    }
+    
+    public static <T, U> Variable<U> variable(
+        final Transform<T,U> transform, 
+        final T value)
+    {
+        return new Variable<U>() {
+            public U get() {
+                return transform.apply(value);
             }
         };
     }

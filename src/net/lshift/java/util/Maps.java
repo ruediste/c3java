@@ -1,5 +1,6 @@
 package net.lshift.java.util;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +59,6 @@ public class Maps
      */
     public static <K,V> Map<K,V> map(Map.Entry<K,V> ... entries)
     {
-        return map(entries);
+        return map(Arrays.asList(entries));
     }
 }

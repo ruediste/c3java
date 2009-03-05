@@ -66,6 +66,10 @@ public class Lists
 	return seed;
     }
 
+    public static <E> FoldState<E> foldState(boolean proceed, E seed)
+    {
+        return new FoldState<E>(proceed, seed);
+    }
     
     public static <E> List<E> list(E ... e)
     {
@@ -399,13 +403,52 @@ public class Lists
     @SuppressWarnings("unchecked")
     public static <E> List<E> reverse(Collection<E> c)
     {
-        // This is an efficient way to reverse a 
+        // This is an efficient way to reverse a list
         int index = c.size();
         E[] l = (E[])(new Object[index]);
         for(E element: c)
             l[--index] = element;
         
         return Arrays.asList(l);
+    }
+    
+    public static <E> Iterable<E> reverseIterable(final List<E> l)
+    {
+        return new Iterable<E>() {
+
+            @Override
+            public Iterator<E> iterator()
+            {
+                return reverseIterator(l);
+            }
+        };
+    }
+    
+    public static <E> Iterator<E> reverseIterator(final List<E> l)
+    {
+        return new Iterator<E> () {
+
+            private ListIterator<E> i = l.listIterator(l.size());
+            
+            @Override
+            public boolean hasNext()
+            {
+                return i.hasPrevious();
+            }
+
+            @Override
+            public E next()
+            {
+                return i.previous();
+            }
+
+            @Override
+            public void remove()
+            {
+                i.remove();
+            }
+            
+        };
     }
     
     public static <E> List<E> head(List<E> c, int size)

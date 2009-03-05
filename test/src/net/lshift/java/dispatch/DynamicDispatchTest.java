@@ -21,6 +21,10 @@ package net.lshift.java.dispatch;
 import java.util.*;
 import java.lang.reflect.*;
 
+import net.lshift.java.dispatch.DynamicDispatch.ClosureMethod;
+import net.lshift.java.util.Lists;
+import net.lshift.java.util.Transform;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
@@ -39,6 +43,8 @@ public class DynamicDispatchTest
     public static class C extends A { }
     public static class D extends A { }
     public static class E extends A implements X { }
+    public static class F { }
+    public static class G { }
 
     public static class ToStringABC
     {
@@ -62,6 +68,11 @@ public class DynamicDispatchTest
 	    return "X";
 	}
 
+	public String toString(Void v)
+	{
+	    return "null";
+	}
+	
 	public String toString(B b, C c)
 	{
 	    return "BC";
@@ -77,7 +88,39 @@ public class DynamicDispatchTest
 	    return "A"+ i;
 	}
     }
+    
+    public class ToStringZFG
+    {
+        public String toString(A a)
+        {
+            return "Z";
+        }
+        
+        public String toString(F f)
+        {
+            return "F";
+        }
+        
+        public String  toString(G g)
+        {
+            return "G";
+        }
+    }
 
+    public class ToStringVariable
+    {
+        final String value;
+        public ToStringVariable(String value)
+        {
+            this.value = value;
+        }
+        
+        public String toString(A a)
+        {
+            return value;
+        }
+    }
+    
     public interface ToString
     {
 	public String toString(Object o);
@@ -99,18 +142,11 @@ public class DynamicDispatchTest
 	    ("toString", new Class [] { Object.class, Object.class });
     }
 
-    private Method toStringMethod(Class c)
+    private ClosureMethod toStringMethod(Class<?> ... c)
 	throws Exception
     {
-	return ToStringABC.class.getDeclaredMethod
-	    ("toString", new Class [] { c });
-    }
-
-    private Method toStringMethod(Class c1, Class c2)
-	throws Exception
-    {
-	return ToStringABC.class.getDeclaredMethod
-	    ("toString", new Class [] { c1, c2 });
+	return new ClosureMethod(ToStringABC.class, 
+	    ToStringABC.class.getDeclaredMethod("toString",  c ));
     }
 
     public void testAppliesTo()
@@ -121,30 +157,42 @@ public class DynamicDispatchTest
 		   (toStringProcedure(), new Class [] { A.class }));
 	assertTrue("procedure applies to method",
 		   DynamicDispatch.appliesTo
-		   (toStringProcedure(), toStringMethod(A.class)));
+		   (toStringProcedure(), toStringMethod(A.class).method));
     }
 
     public void testProcedureMethods()
 	throws Exception
     {
-	Set methods = DynamicDispatch.procedureMethods
-	    (toStringProcedure(), ToStringABC.class.getDeclaredMethods());
-	assertEquals(4, methods.size());
+        List<ClosureMethod> methods = Lists.asList(DynamicDispatch.procedureMethods(
+            toStringProcedure(), closureMethods(ToStringABC.class)));
+        
+	assertEquals(5, methods.size());
+	System.out.println(methods);
 	assertTrue("contains A", methods.contains(toStringMethod(A.class)));
 	assertTrue("contains B", methods.contains(toStringMethod(B.class)));
 	assertTrue("contains C", methods.contains(toStringMethod(C.class)));
 	assertTrue("contains X", methods.contains(toStringMethod(X.class)));
 
-	methods = DynamicDispatch.procedureMethods
-	    (toString2Procedure(), ToStringABC.class.getDeclaredMethods());
+	methods = Lists.asList(DynamicDispatch.procedureMethods
+	    (toString2Procedure(), closureMethods(ToStringABC.class)));
 	assertEquals(2, methods.size());
 	assertTrue("contains BC", methods.contains(toStringMethod(B.class, C.class)));
 	assertTrue("contains CB", methods.contains(toStringMethod(C.class, B.class)));
     }
 
+    private static List<ClosureMethod> closureMethods(final Class<?> c)
+    {
+        return Lists.map(new Transform<Method,ClosureMethod>() {
+            public ClosureMethod apply(Method x) {
+                return new ClosureMethod(c, x);
+            }
+
+        }, Arrays.asList(c.getDeclaredMethods()));
+    }
+
     public void testToStringABC()
     {
-	ToString x = (ToString)DynamicDispatch.proxy(ToString.class, new ToStringABC());
+	ToString x = DynamicDispatch.proxy(ToString.class, new ToStringABC());
 	assertEquals("A", x.toString(new A()));
 	assertEquals("B", x.toString(new B()));
 	assertEquals("C", x.toString(new C()));
@@ -152,6 +200,43 @@ public class DynamicDispatchTest
 	assertEquals("BC", x.toString(new B(), new C()));
 	assertEquals("CB", x.toString(new C(), new B()));
 	assertEquals("A1", x.toString(new A(), 1));
+    }
+    
+    public void testToStringComposed()
+    {
+        ToString x = DynamicDispatch.proxy(
+            ToString.class, 
+            new ToStringZFG(), 
+            new ToStringABC());
+        assertEquals("Z", x.toString(new A()));
+        assertEquals("F", x.toString(new F()));
+        assertEquals("G", x.toString(new G()));
+        assertEquals("BC", x.toString(new B(), new C()));
+        assertEquals("CB", x.toString(new C(), new B()));
+        x = DynamicDispatch.proxy(
+            ToString.class, 
+            new ToStringABC(), 
+            new ToStringZFG());
+        assertEquals("A", x.toString(new A()));
+        assertEquals("B", x.toString(new B()));
+        assertEquals("C", x.toString(new C()));
+        assertEquals("F", x.toString(new F()));
+        assertEquals("G", x.toString(new G()));
+    }    
+
+    public void testToStringComposedVariable()
+    {
+        ToString x = DynamicDispatch.proxy(
+            ToString.class, 
+            new ToStringVariable("X"), 
+            new ToStringVariable("Y"));
+        assertEquals("X", x.toString(new A()));
+    }
+    
+    public void testToStringNull()
+    {
+        ToString x = (ToString)DynamicDispatch.proxy(ToString.class, new ToStringABC());
+        assertEquals("null", x.toString(null));
     }
 
     @SuppressWarnings("serial")
