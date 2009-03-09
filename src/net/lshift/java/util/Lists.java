@@ -76,15 +76,17 @@ public class Lists
         return new ArrayList<E>(Arrays.asList(e));
     }
     
+    public static <E> List<E> copy(List<E> l)
+    {
+        return asList(l);
+    }
+    
     // I can't figure out a way to get rid of this warning, so I've
     // put this in its own method, and supressed the warnings
     @SuppressWarnings("unchecked")
     public static <E> List<E> asList(Iterable<? extends E> c)
     {
-        if(c instanceof List) {
-            return (List<E>)c;
-        }
-        else if(c instanceof Collection) {
+        if(c instanceof Collection) {
             return new ArrayList<E>((Collection<E>)c);
         }
         else {
@@ -301,7 +303,7 @@ public class Lists
     
     public static <E> List<E> tail(List<E> list)
     {
-        return list.subList(1, list.size());
+        return java.util.Collections.unmodifiableList(list.subList(1, list.size()));
     }
     
     public static <E> Collection<Collection<E>> zip(Iterable<E>... c)
@@ -309,6 +311,14 @@ public class Lists
         return zip(Arrays.asList(c));
     }
     
+    /**
+     * Zip lists together.
+     * This builds a list by adding one item from each list, and repeating
+     * until one of the input lists is empty.
+     * @param <E>
+     * @param l
+     * @return
+     */
     public static <E> Collection<Collection<E>> zip(List<Iterable<E>> l)
     {
         Collection<Iterator<E>> iterators = 
