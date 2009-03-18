@@ -31,7 +31,7 @@ public class Maps
      * @param v value for the entry
      * @return an entry with key k, and value v
      */
-    public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
+    public static <K,V, KX extends K, VX extends V> Map.Entry<K,V> entry(final KX k, final VX v)
     {
         return new Map.Entry<K, V>() {
             public K getKey() {

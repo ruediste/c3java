@@ -470,4 +470,16 @@ public class Lists
     {
         return c.subList(begin, c.size());
     }
+
+    public static boolean all(List<Boolean> list)
+    {
+        return all(new Predicate<Boolean>() {
+            @Override
+            public Boolean apply(Boolean x)
+            {
+                return x;
+            }
+            
+        }, list);
+    }
 }

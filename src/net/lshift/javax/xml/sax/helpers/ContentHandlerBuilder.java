@@ -2,17 +2,28 @@ package net.lshift.javax.xml.sax.helpers;
 
 import static net.lshift.javax.xml.sax.helpers.QName.qname;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
+
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 
 import net.lshift.java.dispatch.Delegate;
 import net.lshift.java.dispatch.DynamicDispatch;
 import net.lshift.java.lang.Variable;
 import net.lshift.java.util.Lists;
+import net.lshift.java.util.Maps;
+import net.lshift.java.util.Sets;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -36,28 +47,68 @@ public class ContentHandlerBuilder
 
     /**
      * This handler sets documentLocator if its called on the
-     * content handler.
+     * content handler. It also calls setDocumentHelper on delegate,
+     * which is suitable for filters.
      * @see #getDocumentLocator()
      */
-    public final DocumentLocatorContentHandler
-        documentLocatorHandler = new DocumentLocatorContentHandler() {
+    public final DocumentLocatorContentHandler documentLocatorHandler(
+        final ContentHandler delegate) 
+    {
+        return  new DocumentLocatorContentHandler() {
+    
             public void setDocumentLocator(Locator locator) {
                 ContentHandlerBuilder.this.documentLocator = locator;
+                delegate.setDocumentLocator(locator);
             }
-    };
+        };
+    }
 
-    public final PrefixMappingContentHandler
-        prefixMappingHandler = new PrefixMappingContentHandler() {
-            public void endPrefixMapping(String prefix) {
-                prefixMappings.remove(prefix);
-            }
-
-            public void startPrefixMapping(String uri, String prefix) {
-                prefixMappings.put(prefix, uri);
-            }
-        
-    };
+    public final PrefixMappingContentHandler prefixMappingHandler(
+        final ContentHandler delegate) 
+    {
+        return new PrefixMappingContentHandler() {
     
+            public void endPrefixMapping(String prefix) 
+            throws SAXException
+            {
+                prefixMappings.remove(prefix);
+                delegate.endPrefixMapping(prefix);
+            }
+
+            public void startPrefixMapping(String prefix, String uri)
+            throws SAXException
+            {
+                prefixMappings.put(prefix, uri);
+                delegate.startPrefixMapping(prefix, uri);
+            }
+        };   
+    }
+    
+    /**
+     * Create a content handler which is mostly a filter.
+     * It collects the document locator, and tracks name spaces,
+     * and passes these on to delegate.
+     * It dispatches anything it doesn't understand to 'delegate'
+     * @param delegate
+     */
+    public ContentHandlerBuilder(ContentHandler delegate)
+    {
+        override(delegate);
+        override(documentLocatorHandler(delegate));
+        override(prefixMappingHandler(delegate));
+        push();
+    }
+    
+    /**
+     * Constructor for a content handler.
+     * This sets up a content handler with various defaults you will
+     * want if you are processing the document. It ignores ignorable
+     * whitespace regardless of the flag on the parser. It collects
+     * the document locator, and tracks namespaces. It ignores
+     * startDocument() and endDocument().
+     * @see prefixMappingHandler
+     * @see documentLocatorHandler
+     */
     public ContentHandlerBuilder()
     {
         // We know the document is going to start, we don't need to do anything
@@ -66,8 +117,8 @@ public class ContentHandlerBuilder
         // Ignoring ignore-able whitespace seems like a safe default
         override(Delegate.noop(IgnorableWhitespaceContentHandler.class));
         
-        override(documentLocatorHandler);
-        override(prefixMappingHandler);
+        override(documentLocatorHandler(Delegate.noop(ContentHandler.class)));
+        override(prefixMappingHandler(Delegate.noop(ContentHandler.class)));
         
         // Various things we want to know about
         override(new Object() {
@@ -197,29 +248,57 @@ public class ContentHandlerBuilder
             stackhandler);
     };
 
-    public static ElementContentHandler mixed(
-        final Map<QName, NamedElementHandler> handlers)
+    public static final ElementContentHandler unexpected(final Set<QName> expected)
+    {
+        return new ElementContentHandler() {
+
+            @Override
+            public void endElement(String uri, String localName, String name)
+                throws SAXException
+            {
+                    unexpectedElement(qname(uri, localName), expected);
+            }
+
+            @Override
+            public void startElement(
+                String uri,
+                String localName,
+                String name,
+                Attributes atts)
+                throws SAXException
+            {
+                unexpectedElement(qname(uri, localName), expected);
+            }
+        };
+    }
+    
+    
+    public static ElementContentHandler byElementName(
+        final Map<QName, NamedElementHandler> handlers,
+        final ElementContentHandler undefined)
     {
         return new ElementContentHandler() {
 
             private NamedElementHandler getHandler(String uri, String localName) 
             throws SAXException
             {
+                return handlers.get(qname(uri, localName));
+            }
+
+            private boolean hasHandler(String uri, String localName)
+            {
                 QName qname = qname(uri, localName);
-                if(handlers.containsKey(qname)) {
-                    return handlers.get(qname);
-                }
-                else {
-                    unexpectedElement(qname, handlers.keySet());
-                    return null;
-                }
+                return handlers.containsKey(qname);
             }
             
             @Override
             public void endElement(String uri, String localName, String name)
                 throws SAXException
             {
-                getHandler(uri, localName).endElement();
+                if(hasHandler(uri, localName))
+                    getHandler(uri, localName).endElement();
+                else
+                    undefined.endElement(uri, localName, name);
             }
 
 
@@ -231,61 +310,54 @@ public class ContentHandlerBuilder
                 Attributes atts)
                 throws SAXException
             {
-                getHandler(uri, localName).startElement(atts);
+                if(hasHandler(uri, localName))
+                    getHandler(uri, localName).startElement(atts);
+                else
+                    undefined.startElement(uri, localName, name, atts);
             }
             
         };
+    }
+    public static ElementContentHandler mixed(
+        final Map<QName, NamedElementHandler> handlers)
+    {
+        return byElementName(handlers, unexpected(handlers.keySet()));
     }
 
     public static ElementContentHandler listOf(
         final QName required,
         final NamedElementHandler handler)
     {
+        return byElementName(required, handler, 
+            unexpected(Sets.set(required)));
+    }
+
+
+    public static ElementContentHandler asElementContentHandler(final ContentHandler ch)
+    {
         return new ElementContentHandler() {
-            
+
+            @Override
+            public void endElement(String uri, String localName, String name)
+                throws SAXException
+            {
+                ch.endElement(uri, localName, name);
+            }
+
+            @Override
             public void startElement(
                 String uri,
                 String localName,
                 String name,
                 Attributes atts)
-            throws SAXException
+                throws SAXException
             {
-                if(required.equals(qname(uri, localName))) {
-                    handler.startElement(atts);
-                }
-                else {
-                    unexpectedElement(qname(uri, localName), required);
-                }
-            }
-
-            public void endElement(
-                String uri,
-                String localName,
-                String name)
-            throws SAXException
-            {
-                if(required.equals(qname(uri, localName))) {
-                    handler.endElement();
-                }
-                else {
-                    unexpectedElement(qname(uri, localName), required);
-                }
+                ch.startElement(uri, localName, name, atts);
             }
             
-            public String toString() {
-                return required + " => " + handler;
-            }
         };
     }
-
-    private static void unexpectedElement(QName qname, QName required) 
-    throws SAXException
-    {
-        throw new SAXException("Unexpected element: " + qname +
-            " Expecting " + required);
-
-    }
-
+    
     private static void unexpectedElement(QName qname, Collection<QName> required) 
     throws SAXException
     {
@@ -294,9 +366,67 @@ public class ContentHandlerBuilder
 
     }
 
+
+    @SuppressWarnings("unchecked")
+    public static ElementContentHandler byElementName(
+        QName required,
+        NamedElementHandler handler,
+        ElementContentHandler undefined)
+    {
+        return byElementName(
+            Maps.map(Maps.entry(required, handler)), undefined);
+    }
+
+    public static Writer charactersWriter(final ContentHandler importch)
+    {
+        return new Writer() {
+            public void close() { }
+            public void flush() { }
+            public void write(char[] cbuf, int off, int len)
+                throws IOException
+            {
+                try {
+                    importch.characters(cbuf, off, len);
+                } catch (SAXException e) {
+                    throw new IOException("Error writing characters", e);
+                }
+            }
+            
+        };
+    }
+    
+    public static ContentHandler contentHandler(Writer writer) 
+    throws SAXException
+    {
+        SAXTransformerFactory factory = 
+            (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+        TransformerHandler handler;
+        try {
+            handler = factory.newTransformerHandler();
+        } catch (TransformerConfigurationException e) {
+            throw new SAXException("Error creating identity transform", e);
+        }
+        handler.setResult(new StreamResult(writer));
+        return handler;
+    }
+
+    public void applyPrefixMappings(ContentHandler other) 
+    throws SAXException
+    {
+        for(Map.Entry<String, String> mapping: getPrefixMappings().entrySet())
+            other.startPrefixMapping(mapping.getKey(), mapping.getValue());
+    }
+    
+    // ------------------------------------------------------------------------
+    
     public Locator getDocumentLocator()
     {
         return documentLocator;
+    }
+
+    public Map<String, String> getPrefixMappings()
+    {
+        return Collections.unmodifiableMap(prefixMappings);
     }
 
 
