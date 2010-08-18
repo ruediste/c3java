@@ -2,3 +2,6 @@
 syntax: regexp
 ^target$
 ^build$
+^.settings
+^.classpath$
+^.project$
