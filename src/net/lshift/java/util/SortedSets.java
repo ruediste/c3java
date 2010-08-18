@@ -122,7 +122,7 @@ public class SortedSets
         return result;
     }
     
-    public static <E> SortedSet<E> union(E [] ... cn)
+    public static <E> SortedSet<E> sortedSet(E [] ... cn)
     {
         SortedSet<E> result = new TreeSet<E>();
         for(E[] c: cn)
@@ -130,7 +130,7 @@ public class SortedSets
         return result;
     }
     
-    public static <E> SortedSet<E> union(Comparator<E> comparator, E [] ... cn)
+    public static <E> SortedSet<E> sortedSet(Comparator<E> comparator, E [] ... cn)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
         for(E[] c: cn)
@@ -138,7 +138,7 @@ public class SortedSets
         return result;
     }
     
-    public static <E> Set<E> union(Iterable<E> ... cn)
+    public static <E> Set<E> sortedSet(Iterable<E> ... cn)
     {
         SortedSet<E> result = new TreeSet<E>();
         for(Iterable<E> c: cn)

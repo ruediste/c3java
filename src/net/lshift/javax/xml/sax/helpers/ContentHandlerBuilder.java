@@ -203,7 +203,7 @@ public class ContentHandlerBuilder
         });
 
         return DynamicDispatch.proxy(ContentHandler.class,
-            new Object() {
+           Lists.<Object>list(new Object() {
 
                 @SuppressWarnings("unused")
                 public void startElement(
@@ -245,7 +245,7 @@ public class ContentHandlerBuilder
                     newhandlers.clear();
                 }
             },
-            stackhandler);
+            stackhandler));
     };
 
     public static final ElementContentHandler unexpected(final Set<QName> expected)

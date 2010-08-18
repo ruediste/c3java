@@ -1,11 +1,29 @@
 
 package net.lshift.java.dispatch;
 
-import java.lang.reflect.*;
-import java.util.*;
+import static net.lshift.java.util.Lists.filter;
 
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.lshift.java.dispatch.JavaC3.JavaC3Exception;
 import net.lshift.java.lang.Types;
 import net.lshift.java.util.Lists;
+import net.lshift.java.util.Predicate;
 import net.lshift.java.util.Transform;
 
 /**
@@ -24,6 +42,41 @@ import net.lshift.java.util.Transform;
  */
 public class DynamicDispatch
 {
+    public static final MethodFilterMap ANONYMOUS_METHODS = 
+        new MethodFilterMap() {
+                public MethodFilter apply(final Method procedure) {
+                    return new MethodFilter() {
+                        public Boolean apply(ClosureMethod x) {
+                            return validateAppliesTo(procedure, x.method);
+                        }
+                    };
+                }
+            };
+
+    public static final MethodFilterMap NAMED_METHODS = 
+        new MethodFilterMap() {
+                public MethodFilter apply(final Method procedure) {
+                    return new MethodFilter() {
+                        public Boolean apply(ClosureMethod x) {
+                            return defaultAppliesTo(procedure, x.method);
+                        }
+                    };
+                }
+            };
+
+    public static final InvocationHandler DEFAULT_FALLBACK = new InvocationHandler() {
+
+        @Override
+        public Object invoke(Object target, Method procedure, Object[] args)
+            throws Throwable
+        {
+            throw new UnsupportedOperationException
+            ((new Signature
+              (procedure, types(procedure, args))).toString());
+        }
+        
+    };
+            
     private static Map<DispatcherType,MultiClass> dispatchers = 
         Collections.synchronizedMap(new HashMap<DispatcherType,MultiClass>());
 
@@ -98,12 +151,11 @@ public class DynamicDispatch
 
     public static <T> T proxy(Class<? extends T> constraint, Object closure)
     {
-	return proxy(constraint, Lists.list(closure), null);
-    }
-
-    public static <T> T proxy(Class<? extends T> constraint, Iterable<Object> closure)
-    {
-        return proxy(constraint, closure, null);
+	return proxy(constraint, 
+	    NAMED_METHODS, 
+	    ANY_VALUES, 
+	    Lists.list(closure), 
+	    DEFAULT_FALLBACK);
     }
 
     /**
@@ -120,10 +172,13 @@ public class DynamicDispatch
      * @param closures the list if classes implementing the proxy.
      * @return
      */
-    public static <T> T proxy(Class<? extends T> constraint, Object ... closures)
+    public static <T> T proxy(Class<? extends T> constraint, Iterable<Object> closure)
     {
-        return proxy(constraint, Arrays.asList(closures), null);
+        return proxy(constraint, NAMED_METHODS, ANY_VALUES, 
+            closure, 
+            DEFAULT_FALLBACK);
     }
+
 
     /**
      * Alternate invocation method.
@@ -144,10 +199,11 @@ public class DynamicDispatch
     {
 	final MultiClass genclass = 
 	    dispatcher(constraint, 
-	        Collections.singletonList((Class<Object>)closure.getClass()));
+	        Collections.singletonList((Class<Object>)closure.getClass()),
+	        NAMED_METHODS, ANY_VALUES);
 
 	Method template = constraint.getMethod(methodName, parameterTypes);
-	ClosureMethod method = genclass.method(template, parameters);
+	ClosureMethod method = genclass.method(template, parameters).apply(parameters);
 	return method.method.invoke(closure, parameters);
     }
 
@@ -161,6 +217,8 @@ public class DynamicDispatch
      */
     @SuppressWarnings("unchecked")
     public static <T> T proxy(final Class<? extends T> constraint,
+			       MethodFilterMap appliesTo,
+			       MethodSelectorMap valueFilterFactory,
 			       Iterable<Object> closuresList,
 			       final InvocationHandler fallback)
     {
@@ -169,7 +227,7 @@ public class DynamicDispatch
 	        public Class<Object> apply(Object x) {
 	            return (Class<Object>) x.getClass();
 	        }
-	    }, closuresList));
+	    }, closuresList), appliesTo, valueFilterFactory);
 
 	final Map<Class<?>,Object> closures = new HashMap<Class<?>,Object>();
 	for(Object closure: Lists.reverseIterable(Lists.asList(closuresList)))
@@ -182,17 +240,12 @@ public class DynamicDispatch
 		 public Object invoke(Object proxy, Method procedure, Object [] args)
 		     throws Throwable
 		 {
-		     ClosureMethod method = genclass.method(procedure, args);
-		     Object closure = closures.get(method.declaredBy);
+		     ClosureMethod method = genclass.method(procedure, args).apply(args);
 		     if(method == null) {
-			 if(fallback != null)
-			     return fallback.invoke(proxy, procedure, args);
-			 else
-			     throw new UnsupportedOperationException
-				 ((new Signature
-				   (procedure, types(procedure, args))).toString());
+		         return fallback.invoke(proxy, procedure, args);
 		     }
 		     else {
+		         Object closure = closures.get(method.declaredBy.implementation);
 			 try {
 			     return method.method.invoke(closure, args);
 			 }
@@ -211,15 +264,21 @@ public class DynamicDispatch
 	     });
     }
 
+
     private static MultiClass dispatcher(
-        Class<?> constraint, 
-        List<Class<Object>> list)
+        Class<?> constraint,
+        List<Class<Object>> list,
+        MethodFilterMap appliesTo,
+        MethodSelectorMap valueFilterFactory)
     {
-	DispatcherType key = new DispatcherType(constraint, list);
+        DispatcherType key = new DispatcherType(constraint, list, appliesTo, valueFilterFactory);
 	MultiClass dispatcher = dispatchers.get(key);
 
 	if(dispatcher == null) {
-	    dispatcher = new MultiClass(constraint, list);
+            dispatcher = new MultiClass(constraint, 
+	        appliesTo, 
+	        valueFilterFactory,
+	        list );
 	    dispatchers.put(key, dispatcher);
 	}
 
@@ -231,16 +290,26 @@ public class DynamicDispatch
 
     private static class DispatcherType
     {
-	private Class<?> constraint;
-	private List<Class<Object>> closures;
+	private final Class<?> constraint;
+	private final List<Class<Object>> closures;
+	private final MethodFilterMap appliesTo;
+	private final MethodSelectorMap valueFilterFactory;
+        
 
-	public DispatcherType(Class<?> constraint, List<Class<Object>> closures)
-	{
-	    this.constraint = constraint;
-	    this.closures = closures;
-	}
+	public DispatcherType(
+                          Class<?> constraint,
+                          List<Class<Object>> closures,
+                          MethodFilterMap appliesTo,
+                          MethodSelectorMap valueFilterFactory)
+        {
+            super();
+            this.constraint = constraint;
+            this.closures = closures;
+            this.appliesTo = appliesTo;
+            this.valueFilterFactory = valueFilterFactory;
+        }
 
-	public int hashCode()
+        public int hashCode()
 	{
 	    return constraint.hashCode() ^ closures.hashCode();
 	}
@@ -249,7 +318,9 @@ public class DynamicDispatch
 	{
 	    DispatcherType other = (DispatcherType)o;
 	    return ((constraint == other.constraint) && 
-		    (closures.equals(other.closures)));
+		    (closures.equals(other.closures)) &&
+		    (this.appliesTo.equals(other.appliesTo)) &&
+		    (this.valueFilterFactory.equals(other.valueFilterFactory)));
 	}
     }
 
@@ -264,7 +335,7 @@ public class DynamicDispatch
     
     private interface Procedure
     {
-        public ClosureMethod lookup(Signature signature);
+        public Set<ClosureMethod> lookup(Signature signature);
     }
     
     private static class NoSuchProcedure
@@ -272,7 +343,7 @@ public class DynamicDispatch
     {
 
         @Override
-        public ClosureMethod lookup(Signature signature)
+        public Set<ClosureMethod> lookup(Signature signature)
         {
             throw new NoSuchMethodError(signature.toString());
         }
@@ -282,15 +353,15 @@ public class DynamicDispatch
     private static class NoArgumentsProcedure
     implements Procedure
     {
-        final ClosureMethod method;
+        final Set<ClosureMethod> method;
         
         public NoArgumentsProcedure(ClosureMethod method)
         {
-            this.method = method;
+            this.method = Collections.singleton(method);
         }
         
         @Override
-        public ClosureMethod lookup(Signature signature)
+        public Set<ClosureMethod> lookup(Signature signature)
         {
             return method;
         }
@@ -346,12 +417,40 @@ public class DynamicDispatch
 	    }
 	}
 
+        
 	private Set<ClosureMethod> methods(int position, Class<?> [] parameterTypes)
 	    throws JavaC3.JavaC3Exception
 	{
-	    Class<?> paramterType = parameterTypes[position];
+	    /*
+	         FIXME: This is nigh unreadable
+	         
+	         The idea is that a method is only more specific than another
+	         if for every parameter it is as specific, or more specific,
+	         and that its more specific for one or more parameters.
+	         
+	         We are really getting the set of methods thats most specific for
+	         each parameter, and then then intersecting these sets. An
+	         unambiguous result is a set containing one method.
+	         
+	         Notice that if you use one java class, and only methods with
+	         the same name, that an unabiguous result is the only one
+	         possible.
+	         
+	         I've now added support for ignoring the method name, which
+	         makes it possible to have methods with matching signatures,
+	         and I've removed the override mechanism that applies to
+	         lists of closures.
+	         
+	         Thats deliberately allows for multiple results, because I
+	         want to allow for a separate resolver to filter the list.
+	     */
+	    
+	    Class<?> parameterType = parameterTypes[position];
 	    Map<Class<?>, Set<ClosureMethod>> index = indexes.get(position);
-	    for(Class<?> c: JavaC3.allSuperclasses(paramterType)) {
+	    // allSuperclasses returns all the superclasses for the parameter
+	    // in order of specificity. I'm going to iterate through
+	    // that list, looking for matching methods
+	    for(Class<?> c: JavaC3.allSuperclasses(parameterType)) {
 		Set<ClosureMethod> methods = index.get(c);
 		if(methods != null) {
 		    methods = new HashSet<ClosureMethod>(methods);
@@ -365,32 +464,38 @@ public class DynamicDispatch
 	    return Collections.emptySet();
 	}
 
-	public ClosureMethod lookup(Signature signature)
+	public Set<ClosureMethod> lookup(Signature signature)
 	{
 	    try {
-		Set<ClosureMethod> methods = methods(0, signature.parameterTypes);
+		Set<ClosureMethod> methods = methods(signature.parameterTypes);
 		if(methods.isEmpty()) {
 		    for(int i = 0; i != indexes.size(); ++i)
 			System.err.println(i + ": " + indexes.get(i));
+		    // FIXME: this might be ambiguous, rather than no
+		    // such method. We should work it out and report 
+		    // appropriately.
 		    throw new NoSuchMethodError(signature.toString());
 		}
-		
-		return methods.iterator().next();
+
+		return methods;
 	    }
 	    catch(JavaC3.JavaC3Exception e) {
 		throw new AmbiguousMethodException(e.toString());
 	    }
 	}
+
+        public Set<ClosureMethod> methods(Class<?> [] parameterTypes)
+            throws JavaC3Exception
+        {
+            return methods(0, parameterTypes);
+        }
 	
-	public List<Class<? extends Null<?>>> getNullTypes()
-	{
-	    return nullTypes;
-	}
+
     }
 
     // ------------------------------------------------------------------------
 
-    protected static boolean appliesTo(Method constraint, Class<?> [] params)
+    public static boolean appliesTo(Method constraint, Class<?> [] params)
     {
 	Class<?> [] cparams = constraint.getParameterTypes();
 	boolean result = (params.length == cparams.length);
@@ -400,40 +505,42 @@ public class DynamicDispatch
     }
 
     /**
-     * Determine if method is applicable to a procedure.
+     * Default determine if method is applicable to a procedure.
+     * This default implementation checks that the method names match
+     * exactly.
      */
-    protected static boolean appliesTo(Method procedure, Method method)
+    public static boolean defaultAppliesTo(Method procedure, Method method)
     {
 	return 
 	    (procedure.getName().equals(method.getName()) &&
-	     appliesTo(procedure, method.getParameterTypes()) &&
+	     validateAppliesTo(procedure, method));
+    }
+
+    /**
+     * All methods must satisfy this to be applicable.
+     * For a method to apply to a procedure, the number and type of arguments
+     * and the return types must be assignable, and it must be public.
+     * @param procedure the procedure/multi-method
+     * @param method the method
+     * @return true if the method applies to the procedure
+     */
+    private static boolean validateAppliesTo(Method procedure, Method method)
+    {
+        return (appliesTo(procedure, method.getParameterTypes()) &&
 	     procedure.getReturnType()
 	     .isAssignableFrom(method.getReturnType()) &&
 	     (method.getModifiers() & Modifier.PUBLIC) != 0);
     }
 
-    /**
-     * Get the set of closure methods applicable to this procedure
-     */
-    protected static Iterable<ClosureMethod> procedureMethods(
-        Method constraint, 
-        List<ClosureMethod> methods)
-    {
-	List<ClosureMethod> cmethods = new ArrayList<ClosureMethod>();
-	for(ClosureMethod method: methods) {
-	    if(appliesTo(constraint, method.method))
-		cmethods.add(method);
-	}
 
-	return unique(constraint, cmethods);
-    }
 
     /**
      * Reduce a list of methods to a list of methods with
      * unique signatures - the first item in the list wins.
-     * This is the most obvious way to make combining classes with
-     * matching methods deterministic. It might not be necessary,
-     * but for now, I just want to be sure.
+     * This is the most obvious way to make it possible to
+     * override a method from one class (closure) with a method
+     * from another. Otherwise the method resolver would consider
+     * the result ambiguous.
      * @param procedure
      * @param pmethods
      * @return
@@ -454,6 +561,34 @@ public class DynamicDispatch
 
     // ------------------------------------------------------------------------
     
+    public static class ClosureClass
+    implements Comparable<ClosureClass>
+    {
+        public final int rank;
+        public final Class<?> implementation;
+        
+        public ClosureClass(int rank, Class<?> implementation)
+        {
+            this.rank = rank;
+            this.implementation = implementation;
+        }
+
+        public int compareTo(ClosureClass other)
+        {
+            return this.rank - other.rank;
+        }
+        
+        public int hashCode()
+        {
+            return implementation.hashCode();
+        }
+        
+        public String toString()
+        {
+            return "[" + implementation.getCanonicalName() + " rank " + rank + "]";
+        }
+    }
+    
     /**
      * A method in a closure class.
      * We keep track of the closure, rather than calculate it later:
@@ -462,11 +597,13 @@ public class DynamicDispatch
      */
     public static class ClosureMethod
     {
-        public final Class<?> declaredBy;
+        public final ClosureClass declaredBy;
         public final Method method;
         
-        public ClosureMethod(Class<?> declaredBy, Method method)
+        public ClosureMethod(ClosureClass declaredBy, Method method)
         {
+            if(declaredBy == null && method == null)
+                throw new IllegalArgumentException();
             this.declaredBy = declaredBy;
             this.method = method;
         }
@@ -486,7 +623,7 @@ public class DynamicDispatch
         {
             return "[" + 
                 new Signature(method) + 
-                " in closure " + declaredBy.getName() + "]";
+                " in closure " + declaredBy + "]";
         }
         
         public int hashCode()
@@ -497,37 +634,106 @@ public class DynamicDispatch
 
     // ------------------------------------------------------------------------
 
+    protected static final MethodSelector INVALID_VALUE_FILTER = new MethodSelector() {
+        public ClosureMethod apply(Object[] x) {
+            throw new UnsupportedOperationException("No methods match this value");
+        }
+    };
+
+    protected static final MethodSelector AMBIGUOUS_VALUE_FILTER = new MethodSelector() {
+        public ClosureMethod apply(Object[] x) {
+            throw new UnsupportedOperationException("Multiple methods match these parameters");
+        }
+    };
+
+    public static MethodSelectorMap ANY_VALUES =
+        new MethodSelectorMap() {
+        public MethodSelector getMethodSelector(Method procedure, Set<ClosureMethod> methods) {
+            if(methods.isEmpty()) {
+                return INVALID_VALUE_FILTER;
+            }
+
+            if(methods.size() > 1) {
+                // Sort the methods by closure rank
+                List<ClosureMethod> sortedByClosure = new ArrayList<ClosureMethod>(methods);
+                Collections.sort(sortedByClosure, new Comparator<ClosureMethod>() {
+                    public int compare(ClosureMethod a, ClosureMethod b) {
+                        return a.declaredBy.rank - b.declaredBy.rank;
+                    }
+                });
+                
+                // Get the first method by this ordering. We are happy if the
+                // duplicates are overrides - that is, they are in different
+                // closures.
+                Iterator<ClosureMethod> methodsIterator = sortedByClosure.iterator();
+                final ClosureMethod method = methodsIterator.next();
+                ClosureMethod followedBy = methodsIterator.next();
+                if(method.declaredBy.equals(followedBy.declaredBy)) {
+                    return AMBIGUOUS_VALUE_FILTER;                        
+                }
+
+                return singleMethodValueFilter(method);
+            }
+            else {
+                final ClosureMethod method = methods.iterator().next();
+                return singleMethodValueFilter(method);
+            }
+        }
+
+        private MethodSelector singleMethodValueFilter(
+            final ClosureMethod method)
+        {
+            return new MethodSelector() {
+                public ClosureMethod apply(Object[] parameters) {
+                    return method;
+                }
+            };
+        }
+    };
+    
+
     /**
      * A 'multiclass' - a class where each method is a multi - method. 
      * There is a procedure for each method in the contract.
      */
     public static class MultiClass
     {
-	Map<Signature, ClosureMethod> shortcuts = new HashMap<Signature, ClosureMethod>();
+	Map<Signature, MethodSelector> shortcuts = new HashMap<Signature, MethodSelector>();
 	Map<Method, Procedure> procedures = new HashMap<Method, Procedure>();
+	final MethodFilterMap signatureAppliesTo;
+	final MethodSelectorMap methodSelectorMap;
+	
 
         protected MultiClass(
-            Class<?> constraint, 
+            Class<?> constraint,
+            MethodFilterMap appliesTo,
+            MethodSelectorMap valueFilterFactory,
             List<Class<Object>> implementations)
         {
+            this.signatureAppliesTo = appliesTo;
+            this.methodSelectorMap = valueFilterFactory;
             Method [] procedures = constraint.getDeclaredMethods();
                 for(int p = 0; p != procedures.length; ++p) {
                     List<ClosureMethod> methods = new ArrayList<ClosureMethod>();
+                    int index = 0;
                     for(final Class<?> implementation: implementations) {
+                        final ClosureClass closureClass = new ClosureClass(index++, implementation);
                         methods.addAll(Lists.map(new Transform<Method, ClosureMethod>(){
-                            public ClosureMethod apply(Method x) {
-                                return new ClosureMethod(implementation, x);
+                            public ClosureMethod apply(Method method) {
+                                return new ClosureMethod(closureClass, method);
                             }
                         }, Arrays.asList(implementation.getDeclaredMethods())));
                     this.procedures.put
                         (procedures[p], procedure(procedures[p], methods));
                 }
             }
+                
         }
 
 	private Procedure procedure(Method method, List<ClosureMethod> methods)
         {
-            Iterable<ClosureMethod> pmethods = procedureMethods(method, methods);
+            Iterable<ClosureMethod> pmethods = filter(signatureAppliesTo.apply(method), methods);
+            
             if(!pmethods.iterator().hasNext()) {
                 return new NoSuchProcedure();
             }
@@ -539,7 +745,7 @@ public class DynamicDispatch
             }
         }
 
-	protected final ClosureMethod method(Method procedureMethod, Object [] args)
+	protected final MethodSelector method(Method procedureMethod, Object [] args)
 	{
 	    Signature signature = new Signature
 		(procedureMethod, types(procedureMethod, args));
@@ -548,10 +754,13 @@ public class DynamicDispatch
 	    }
 	    else {
 		Procedure procedure = procedures.get(procedureMethod);
-		ClosureMethod method = procedure.lookup(signature);
-		AccessibleObject.setAccessible(new AccessibleObject[] { method.method }, true);
-		shortcuts.put(signature, method);
-		return method;
+		Set<ClosureMethod> methods = procedure.lookup(signature);
+		for(ClosureMethod method: methods)
+		    AccessibleObject.setAccessible(new AccessibleObject[] { method.method }, true);
+		MethodSelector selector = 
+		    methodSelectorMap.getMethodSelector(procedureMethod, methods);
+		shortcuts.put(signature, selector);
+		return selector;
 	    }
 	}
     }

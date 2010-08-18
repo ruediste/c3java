@@ -18,9 +18,15 @@
 
 package net.lshift.java.dispatch;
 
+import static net.lshift.java.dispatch.DynamicDispatch.DEFAULT_FALLBACK;
+import static net.lshift.java.dispatch.DynamicDispatch.ANY_VALUES;
+import static net.lshift.java.dispatch.DynamicDispatch.ANONYMOUS_METHODS;
+import static net.lshift.java.util.Lists.list;
+
 import java.util.*;
 import java.lang.reflect.*;
 
+import net.lshift.java.dispatch.DynamicDispatch.ClosureClass;
 import net.lshift.java.dispatch.DynamicDispatch.ClosureMethod;
 import net.lshift.java.util.Lists;
 import net.lshift.java.util.Transform;
@@ -31,6 +37,8 @@ import junit.framework.TestSuite;
 public class DynamicDispatchTest
     extends TestCase
 {
+    private static final ClosureClass TO_STRING_ABC_CLOSURE_CLASS = new ClosureClass(0, ToStringABC.class);
+
     public static TestSuite suite()
     {
         return new TestSuite(DynamicDispatchTest.class);
@@ -145,7 +153,7 @@ public class DynamicDispatchTest
     private ClosureMethod toStringMethod(Class<?> ... c)
 	throws Exception
     {
-	return new ClosureMethod(ToStringABC.class, 
+	return new ClosureMethod(TO_STRING_ABC_CLOSURE_CLASS, 
 	    ToStringABC.class.getDeclaredMethod("toString",  c ));
     }
 
@@ -156,15 +164,15 @@ public class DynamicDispatchTest
 		   DynamicDispatch.appliesTo
 		   (toStringProcedure(), new Class [] { A.class }));
 	assertTrue("procedure applies to method",
-		   DynamicDispatch.appliesTo
+		   DynamicDispatch.defaultAppliesTo
 		   (toStringProcedure(), toStringMethod(A.class).method));
     }
 
     public void testProcedureMethods()
 	throws Exception
     {
-        List<ClosureMethod> methods = Lists.asList(DynamicDispatch.procedureMethods(
-            toStringProcedure(), closureMethods(ToStringABC.class)));
+        List<ClosureMethod> methods = Lists.asList(procedureMethods(
+            toStringProcedure(), closureMethodsToStringABC()));
         
 	assertEquals(5, methods.size());
 	System.out.println(methods);
@@ -173,22 +181,31 @@ public class DynamicDispatchTest
 	assertTrue("contains C", methods.contains(toStringMethod(C.class)));
 	assertTrue("contains X", methods.contains(toStringMethod(X.class)));
 
-	methods = Lists.asList(DynamicDispatch.procedureMethods
-	    (toString2Procedure(), closureMethods(ToStringABC.class)));
+	methods = Lists.asList(procedureMethods
+	    (toString2Procedure(), closureMethodsToStringABC()));
 	assertEquals(2, methods.size());
 	assertTrue("contains BC", methods.contains(toStringMethod(B.class, C.class)));
 	assertTrue("contains CB", methods.contains(toStringMethod(C.class, B.class)));
     }
 
-    private static List<ClosureMethod> closureMethods(final Class<?> c)
+    private List<ClosureMethod> closureMethodsToStringABC()
     {
+        final ClosureClass closureClass = TO_STRING_ABC_CLOSURE_CLASS;
         return Lists.map(new Transform<Method,ClosureMethod>() {
             public ClosureMethod apply(Method x) {
-                return new ClosureMethod(c, x);
+                return new ClosureMethod(closureClass, x);
             }
-
-        }, Arrays.asList(c.getDeclaredMethods()));
+        
+        }, Arrays.asList(ToStringABC.class.getDeclaredMethods()));
     }
+
+    private Iterable<? extends ClosureMethod> procedureMethods(
+        Method procedure,
+        List<ClosureMethod> closureMethods)
+    {
+        return Lists.filter(DynamicDispatch.NAMED_METHODS.apply(procedure), closureMethods);
+    }
+
 
     public void testToStringABC()
     {
@@ -206,8 +223,7 @@ public class DynamicDispatchTest
     {
         ToString x = DynamicDispatch.proxy(
             ToString.class, 
-            new ToStringZFG(), 
-            new ToStringABC());
+            list(new ToStringZFG(), new ToStringABC()));
         assertEquals("Z", x.toString(new A()));
         assertEquals("F", x.toString(new F()));
         assertEquals("G", x.toString(new G()));
@@ -215,8 +231,7 @@ public class DynamicDispatchTest
         assertEquals("CB", x.toString(new C(), new B()));
         x = DynamicDispatch.proxy(
             ToString.class, 
-            new ToStringABC(), 
-            new ToStringZFG());
+            list(new ToStringABC(), new ToStringZFG()));
         assertEquals("A", x.toString(new A()));
         assertEquals("B", x.toString(new B()));
         assertEquals("C", x.toString(new C()));
@@ -227,9 +242,8 @@ public class DynamicDispatchTest
     public void testToStringComposedVariable()
     {
         ToString x = DynamicDispatch.proxy(
-            ToString.class, 
-            new ToStringVariable("X"), 
-            new ToStringVariable("Y"));
+            ToString.class,
+            Lists.<Object>list(new ToStringVariable("X"), new ToStringVariable("Y")));
         assertEquals("X", x.toString(new A()));
     }
     
@@ -333,6 +347,66 @@ public class DynamicDispatchTest
 	     (Add.class, adder, "add", 
 	      new Object[] { Boolean.TRUE, Boolean.TRUE },
 	      new Class[] { Boolean.TYPE, Boolean.TYPE }));
+    }
+    
+    
+    public static class AnyABC
+    {
+        public String a(A a)
+        {
+            return "A";
+        }
+
+        public String b(B b)
+        {
+            return "B";
+        }
+
+        public String c(C c)
+        {
+            return "C";
+        }
+
+        public String x(X c)
+        {
+            return "X";
+        }
+
+        public String nullvoid(Void v)
+        {
+            return "null";
+        }
+        
+        public String bc(B b, C c)
+        {
+            return "BC";
+        }
+
+        public String cb(C c, B b)
+        {
+            return "CB";
+        }
+
+        public String ai(A a, int i)
+        {
+            return "A"+ i;
+        }
+    }
+    
+    public void testAnyABC()
+    {
+        ToString x = DynamicDispatch.proxy(ToString.class, 
+            ANONYMOUS_METHODS, 
+            ANY_VALUES,
+            Lists.<Object>list(new AnyABC()),
+            DEFAULT_FALLBACK);
+        assertEquals("A", x.toString(new A()));
+        assertEquals("B", x.toString(new B()));
+        assertEquals("C", x.toString(new C()));
+        assertEquals("A", x.toString(new D()));
+        assertEquals("BC", x.toString(new B(), new C()));
+        assertEquals("CB", x.toString(new C(), new B()));
+        assertEquals("A1", x.toString(new A(), 1));
     }
     
 }
