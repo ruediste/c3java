@@ -5,6 +5,7 @@ import java.lang.ref.Reference;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Map;
 
 public class Collections
 {
@@ -63,6 +64,14 @@ public class Collections
 			return (NextTransform<T>)NEXT;
 		}
 
+		public static <K,V> Transform<K,V> get(final Map<K,V> map)
+		{
+		    return new Transform<K,V>() {
+		        public V apply(K k) {
+		            return map.get(k);
+		        }
+		    };
+		}
 
 		public static <E> Transform<Iterable<E>,Iterator<E>> iterator()
 		{
