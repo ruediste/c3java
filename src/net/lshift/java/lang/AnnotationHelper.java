@@ -2,10 +2,12 @@ package net.lshift.java.lang;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import net.lshift.java.dispatch.DefaultDirectSuperclasses;
 import net.lshift.java.dispatch.JavaC3;
 import net.lshift.java.util.Lists;
+import net.lshift.java.util.Predicate;
 import net.lshift.java.util.Transform;
 
 public class AnnotationHelper
@@ -68,6 +70,43 @@ public class AnnotationHelper
             }
             
         }, JavaC3.allSuperclasses(type, superclasses));
+    }
+
+    /**
+     * Retrieves all annotations of a type and its superclasses
+     * @param annotationClass
+     * @param type
+     * @param <T>
+     * @return
+     */
+    public static <T extends Annotation> Iterable<T> getAnnotations(
+            final Class<T> annotationClass,
+            final Class<?> type)
+    {
+        return getAnnotations
+            (annotationClass,
+             type,
+             DefaultDirectSuperclasses.SUPERCLASSES);
+    }
+
+    public static <T extends Annotation> Iterable<T> getAnnotations(
+        final Class<T> annotationClass,
+        final Class<?> type,
+        JavaC3.DirectSuperclasses superclasses)
+    {
+        List<T> annotations = Lists.map(new Transform<Class<?>,T>() {
+
+            public T apply(Class<?> c) {
+                return c.getAnnotation(annotationClass);
+            }
+        }, JavaC3.allSuperclasses(type, superclasses));
+
+        return Lists.filter(new Predicate<T>() {
+
+            public Boolean apply(T t) {
+                return t != null;
+            }
+        }, annotations);
     }
 
     /**
