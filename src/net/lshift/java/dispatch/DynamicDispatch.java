@@ -1,9 +1,23 @@
 
 package net.lshift.java.dispatch;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import net.lshift.java.lang.Classes;
+import net.lshift.java.lang.Strings;
 import net.lshift.java.lang.Types;
 import net.lshift.java.util.Lists;
 import net.lshift.java.util.Transform;
@@ -270,11 +284,19 @@ public class DynamicDispatch
     private static class NoSuchProcedure
     implements Procedure
     {
+        private final List<Class<Object>> implementations;
+        
+
+        public NoSuchProcedure(List<Class<Object>> implementations)
+        {
+            this.implementations = implementations;
+        }
 
         @Override
         public ClosureMethod lookup(Signature signature)
         {
-            throw new NoSuchMethodError(signature.toString());
+            throw new NoSuchMethodError(signature.toString() + " in " + 
+                Strings.join(Lists.map(Classes.getName(), implementations), ","));
         }
         
     }
@@ -382,10 +404,10 @@ public class DynamicDispatch
 	    }
 	}
 	
-	public List<Class<? extends Null<?>>> getNullTypes()
-	{
-	    return nullTypes;
-	}
+        public List<Class<? extends Null<?>>> getNullTypes()
+        {
+            return nullTypes;
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -520,16 +542,24 @@ public class DynamicDispatch
                             }
                         }, Arrays.asList(implementation.getDeclaredMethods())));
                     this.procedures.put
-                        (procedures[p], procedure(procedures[p], methods));
+                        (procedures[p], procedure(procedures[p], methods, implementations));
                 }
             }
         }
 
-	private Procedure procedure(Method method, List<ClosureMethod> methods)
+        /**
+         * Get a Multi Method applicable to a specific method, from the list of all methods
+         * @param method The multi method implements
+         * @param methods the methods to search for candidate methods
+         * @param implementations the classes the methods are obtained from - just so
+         *   I can report them when a method isn't found.
+         * @return
+         */
+	private Procedure procedure(Method method, List<ClosureMethod> methods, List<Class<Object>> implementations)
         {
             Iterable<ClosureMethod> pmethods = procedureMethods(method, methods);
             if(!pmethods.iterator().hasNext()) {
-                return new NoSuchProcedure();
+                return new NoSuchProcedure(implementations);
             }
             else {
                 if(method.getParameterTypes().length == 0)

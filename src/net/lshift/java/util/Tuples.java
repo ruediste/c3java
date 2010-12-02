@@ -5,15 +5,15 @@ package net.lshift.java.util;
  * @author david
  *
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public abstract class Tuples
     // This will extend the largest tuple class I implement, 4-tuple for now
-    extends FourTuple
+    extends FiveTuple
 {
     private static final long serialVersionUID = 1L;
 
-    private Tuples(Object first, Object second, Object third, Object fourth) {
-        super(first, second, third, fourth);
+    private Tuples(Object first, Object second, Object third, Object fourth, Object fifth) {
+        super(first, second, third, fourth, fifth);
     }
 
 }

@@ -1,6 +1,11 @@
 package net.lshift.java.util;
 
+import static net.lshift.java.util.Iterators.transform;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -114,4 +119,39 @@ public class Iterators
         };
     }
     
+    /**
+     * Zip lists together.
+     * This returns an single iterator, which in turn returns a list by 
+     * adding one item from each iterator, until one of the input iterators is empty.
+     * @param <E>
+     * @param l
+     * @return
+     */
+    public static <E> Iterator<Iterator<E>> zip(final List<Iterator<E>> iterators)
+    {
+        return new Iterator<Iterator<E>> () {
+            public boolean hasNext() {
+                return Lists.all(Collections.Procedures.<E>hasNext(), iterators);
+            }
+
+            public Iterator<E> next() {
+                return transform(iterators.iterator(), Collections.Procedures.<E>next());
+            }
+
+            public void remove() {
+                Lists.forEach(Collections.Procedures.remove(), iterators);
+            }
+            
+        };
+    }
+    
+    public static <E, F> Iterator<E> zip(
+        List<Iterable<F>> l, 
+        Transform<Iterator<F>, E> factory)
+    {
+        return transform(
+            Iterators.<F>zip(
+                Lists.map(Collections.Procedures.<F>iterator(), l)), 
+            factory);
+    }
 }

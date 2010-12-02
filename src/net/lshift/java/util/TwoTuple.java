@@ -3,6 +3,8 @@ package net.lshift.java.util;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +27,13 @@ implements Serializable
     public TwoTuple(T first, U second) {
         super(first);
         this.second = second;
+    }
+
+    @SuppressWarnings("unchecked")
+    public TwoTuple(Iterator<Object> i)
+    {
+        super((T)i.next());
+        this.second = (U)i.next();
     }
 
     @Override
@@ -86,5 +95,23 @@ implements Serializable
     public static <K,V> Map<K,V> map(TwoTuple<K,V> ... tuples)
     {
         return map(Arrays.asList(tuples));
+    }
+    
+    private static <T,U> Transform<Iterator<Object>, TwoTuple<T,U>> twoTuple()
+    {
+        return new Transform<Iterator<Object>, TwoTuple<T,U>>() {
+            public TwoTuple<T,U> apply(Iterator<Object> x) {
+                return new TwoTuple<T,U>(x);
+            }
+        };
+    }
+
+    public static <T,U,V,W> Iterator<TwoTuple<T,U>> zip(
+        TwoTuple<Iterable<T>, Iterable<U>> tl, 
+        Transform<Iterator<Object>, FourTuple<T, U, V, W>> factory)
+    {
+        @SuppressWarnings("unchecked")
+        List<Iterable<Object>> l = (List<Iterable<Object>>)((List<?>)tl);
+        return Iterators.zip(l, TwoTuple.<T,U>twoTuple());
     }
 }
