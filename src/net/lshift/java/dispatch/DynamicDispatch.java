@@ -198,15 +198,7 @@ public class DynamicDispatch
 		 {
 		     ClosureMethod method = genclass.method(procedure, args);
 		     Object closure = closures.get(method.declaredBy);
-		     if(method == null) {
-			 if(fallback != null)
-			     return fallback.invoke(proxy, procedure, args);
-			 else
-			     throw new UnsupportedOperationException
-				 ((new Signature
-				   (procedure, types(procedure, args))).toString());
-		     }
-		     else {
+		     {
 			 try {
 			     return method.method.invoke(closure, args);
 			 }
@@ -271,7 +263,8 @@ public class DynamicDispatch
     // ------------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private static Class<? extends Null<?>> nullClass(Class<? extends Null> x)
+    private static Class<? extends Null<?>> nullClass(
+        @SuppressWarnings("rawtypes") Class<? extends Null> x)
     {
         return (Class<? extends Null<?>>)x;
     }
@@ -404,10 +397,7 @@ public class DynamicDispatch
 	    }
 	}
 	
-        public List<Class<? extends Null<?>>> getNullTypes()
-        {
-            return nullTypes;
-        }
+
     }
 
     // ------------------------------------------------------------------------
@@ -571,8 +561,7 @@ public class DynamicDispatch
 
 	protected final ClosureMethod method(Method procedureMethod, Object [] args)
 	{
-	    Signature signature = new Signature
-		(procedureMethod, types(procedureMethod, args));
+	    Signature signature = new Signature(procedureMethod, types(procedureMethod, args));
 	    if(shortcuts.containsKey(signature)) {
 		return shortcuts.get(signature);
 	    }
