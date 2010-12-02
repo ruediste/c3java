@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Iterator;
 
 import junit.framework.TestCase;
 
@@ -79,5 +80,29 @@ public class AnnotationHelperTest
                 AnnotationHelper.getAnnotation(
                     TestTypeAnnotation.class, 
                     TestAImpl2x.class).value());
+    }
+
+    private void assertTestAnnotationsPresent(
+        Class<?> type, String... expectedAnnotations)
+    {
+        Iterator<TestTypeAnnotation> annotations =
+            AnnotationHelper.getAnnotations(
+                TestTypeAnnotation.class,
+                type).iterator();
+        
+        for (String expected : expectedAnnotations)
+        {
+            assertTrue(annotations.hasNext());
+            assertEquals(expected, annotations.next().value());
+        }
+        assertFalse(annotations.hasNext());
+    }
+
+    public void testTypeAnnotations()
+        throws Exception
+    {
+        assertTestAnnotationsPresent(TestAImpl1.class, "1");
+        assertTestAnnotationsPresent(TestAImpl2.class, "2", "1");
+        assertTestAnnotationsPresent(TestAImpl2x.class, "2", "1");
     }
 }

@@ -45,6 +45,11 @@ implements List<Object>, Serializable
     {
         return 1;
     }
+
+    public T getFirst()
+    {
+        return first;
+    }
     
     public static <T> Transform<OneTuple<T>,T> first()
     {

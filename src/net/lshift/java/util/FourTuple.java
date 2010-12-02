@@ -39,7 +39,12 @@ public class FourTuple<T, U, V, W>
     {
         return 4;
     }
-    
+
+    public W getFourth()
+    {
+        return fourth;
+    }
+
     public static <T,U,V,W> FourTuple<T,U,V,W> tuple(T a, U b, V c, W d)
     {
         return new FourTuple<T,U,V,W>(a,b,c, d);

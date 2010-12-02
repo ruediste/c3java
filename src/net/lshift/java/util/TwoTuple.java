@@ -52,6 +52,11 @@ implements Serializable
         return 2;
     }
     
+    public U getSecond()
+    {
+        return second;
+    }
+
     public static <T,U> TwoTuple<T,U> tuple(T a, U b)
     {
         return new TwoTuple<T,U>(a,b);

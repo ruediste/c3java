@@ -333,7 +333,50 @@ public class Lists
 
         return result;
     }
-    
+       public static <E, F> Collection<TwoTuple<E, F>> tupleZip(
+        Iterable<E> e, Iterable<F> f)
+    {
+        Iterator<E> iterE = e.iterator();
+        Iterator<F> iterF = f.iterator();
+
+        Collection<TwoTuple<E, F>> result = new ArrayList<TwoTuple<E, F>>();
+        while (iterE.hasNext() && iterF.hasNext())
+            result.add(new TwoTuple<E, F>(iterE.next(), iterF.next()));
+
+        return result;
+    }
+
+    public static <E, F, G> Collection<ThreeTuple<E, F, G>> tupleZip(
+        Iterable<E> e, Iterable<F> f, Iterable<G> g)
+    {
+        Iterator<E> iterE = e.iterator();
+        Iterator<F> iterF = f.iterator();
+        Iterator<G> iterG = g.iterator();
+
+        Collection<ThreeTuple<E, F, G>> result = new ArrayList<ThreeTuple<E, F, G>>();
+        while (iterE.hasNext() && iterF.hasNext() && iterG.hasNext())
+            result.add(new ThreeTuple<E, F, G>(
+                iterE.next(), iterF.next(), iterG.next()));
+
+        return result;
+    }
+
+    public static <E, F, G, H> Collection<FourTuple<E, F, G, H>> tupleZip(
+        Iterable<E> e, Iterable<F> f, Iterable<G> g, Iterable<H> h)
+    {
+        Iterator<E> iterE = e.iterator();
+        Iterator<F> iterF = f.iterator();
+        Iterator<G> iterG = g.iterator();
+        Iterator<H> iterH = h.iterator();
+
+        Collection<FourTuple<E, F, G, H>> result = new ArrayList<FourTuple<E, F, G, H>>();
+        while (iterE.hasNext() && iterF.hasNext() && iterG.hasNext() && iterH.hasNext())
+            result.add(new FourTuple<E, F, G, H>(iterE.next(), iterF.next(),
+                iterG.next(), iterH.next()));
+
+        return result;
+    }
+
     public static <E> boolean equal
         (final Collection<E> control,
 	 Collection<E>... tests)

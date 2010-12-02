@@ -41,7 +41,12 @@ public class ThreeTuple<T, U, V>
     {
         return 3;
     }
-    
+
+    public V getThird()
+    {
+        return third;
+    }
+
     public static <T,U,V> ThreeTuple<T,U,V> tuple(T a, U b, V c)
     {
         return new ThreeTuple<T,U,V>(a,b,c);
