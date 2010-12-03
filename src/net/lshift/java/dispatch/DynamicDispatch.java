@@ -112,12 +112,7 @@ public class DynamicDispatch
 
     public static <T> T proxy(Class<? extends T> constraint, Object closure)
     {
-	return proxy(constraint, Lists.list(closure), null);
-    }
-
-    public static <T> T proxy(Class<? extends T> constraint, Iterable<Object> closure)
-    {
-        return proxy(constraint, closure, null);
+	return proxy(constraint, Lists.list(closure));
     }
 
     /**
@@ -136,7 +131,7 @@ public class DynamicDispatch
      */
     public static <T> T proxy(Class<? extends T> constraint, Object ... closures)
     {
-        return proxy(constraint, Arrays.asList(closures), null);
+        return proxy(constraint, Arrays.asList(closures));
     }
 
     /**
@@ -174,9 +169,9 @@ public class DynamicDispatch
      * of the arguments actually passed.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T proxy(final Class<? extends T> constraint,
-			       Iterable<Object> closuresList,
-			       final InvocationHandler fallback)
+    public static <T> T proxy(
+        final Class<? extends T> constraint,
+        Iterable<Object> closuresList)
     {
 	final MultiClass genclass = 
 	    dispatcher(constraint, Lists.map(new Transform<Object, Class<Object>>() {
