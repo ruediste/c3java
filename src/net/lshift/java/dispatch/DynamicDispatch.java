@@ -525,7 +525,7 @@ public class DynamicDispatch
                             public ClosureMethod apply(Method x) {
                                 return new ClosureMethod(implementation, x);
                             }
-                        }, Arrays.asList(implementation.getDeclaredMethods())));
+                        }, Arrays.asList(implementation.getMethods())));
                     this.procedures.put
                         (procedures[p], procedure(procedures[p], methods, implementations));
                 }
