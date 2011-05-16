@@ -63,10 +63,10 @@ public class Dispatch
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T,C> T filter(
+    public static <T,U extends T,C> T filter(
         Class<T> iface, 
-        final Filter<T,C> filter,
-        final T instance)
+        final Filter<U,C> filter,
+        final U instance)
     {
         return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class [] { iface }, new InvocationHandler() {
 
