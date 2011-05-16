@@ -121,6 +121,41 @@ public class DynamicDispatchTest
         }
     }
     
+    public class ToStringABCandFG
+    extends ToStringABC
+    {
+        public String toString(F f)
+        {
+            return "F";
+        }
+        
+        public String  toString(G g)
+        {
+            return "G";
+        }
+
+    }
+    
+    public class ToStringABCandZFG
+    extends ToStringABC
+    {
+        public String toString(A a)
+        {
+            return "Z";
+        }
+
+        public String toString(F f)
+        {
+            return "F";
+        }
+        
+        public String  toString(G g)
+        {
+            return "G";
+        }
+
+    }
+    
     public interface ToString
     {
 	public String toString(Object o);
@@ -192,14 +227,24 @@ public class DynamicDispatchTest
 
     public void testToStringABC()
     {
-	ToString x = DynamicDispatch.proxy(ToString.class, new ToStringABC());
-	assertEquals("A", x.toString(new A()));
-	assertEquals("B", x.toString(new B()));
-	assertEquals("C", x.toString(new C()));
-	assertEquals("A", x.toString(new D()));
-	assertEquals("BC", x.toString(new B(), new C()));
-	assertEquals("CB", x.toString(new C(), new B()));
-	assertEquals("A1", x.toString(new A(), 1));
+        ToString x = DynamicDispatch.proxy(ToString.class, new ToStringABC());
+        assertEquals("A", x.toString(new A()));
+        assertEquals("B", x.toString(new B()));
+        assertEquals("C", x.toString(new C()));
+        assertEquals("A", x.toString(new D()));
+        assertEquals("BC", x.toString(new B(), new C()));
+        assertEquals("CB", x.toString(new C(), new B()));
+        assertEquals("A1", x.toString(new A(), 1));
+    }
+
+    public void testSubclasses()
+    {
+        ToString x = DynamicDispatch.proxy(ToString.class, new ToStringABCandFG());
+        assertEquals("A", x.toString(new A()));
+        assertEquals("B", x.toString(new B()));
+        assertEquals("C", x.toString(new C()));
+        assertEquals("F", x.toString(new F()));
+        assertEquals("G", x.toString(new G()));
     }
     
     public void testToStringComposed()
@@ -222,8 +267,9 @@ public class DynamicDispatchTest
         assertEquals("C", x.toString(new C()));
         assertEquals("F", x.toString(new F()));
         assertEquals("G", x.toString(new G()));
-    }    
+    }
 
+    
     public void testToStringComposedVariable()
     {
         ToString x = DynamicDispatch.proxy(
@@ -334,5 +380,25 @@ public class DynamicDispatchTest
 	      new Object[] { Boolean.TRUE, Boolean.TRUE },
 	      new Class[] { Boolean.TYPE, Boolean.TYPE }));
     }
-    
+
+    public void testPerformanceDynamic()
+    {
+        ToString x = DynamicDispatch.proxy(
+            ToString.class, 
+            new ToStringZFG(), 
+            new ToStringABC());
+        A a = new A();
+        for(int i = 0; i != 1000000; ++i)
+            assertEquals("Z", x.toString(a));
+
+    }
+
+    public void testPerformanceStatic()
+    {
+        ToStringABC x = new ToStringABC();
+        A a = new A();
+        for(int i = 0; i != 1000000; ++i)
+            assertEquals("A", x.toString(a));
+
+    }
 }

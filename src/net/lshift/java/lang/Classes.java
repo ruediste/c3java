@@ -1,5 +1,6 @@
 package net.lshift.java.lang;
 
+import net.lshift.java.util.Predicate;
 import net.lshift.java.util.Transform;
 
 public class Classes
@@ -31,4 +32,12 @@ public class Classes
         }
     };
 
+    public static final Predicate<Class<?>> isAssignableFrom(final Class<?> dst)
+    {
+        return new Predicate<Class<?>>() {
+            public Boolean apply(Class<?> x) {
+                return dst.isAssignableFrom(x);
+            }  
+        };
+    }
 }

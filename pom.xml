@@ -5,7 +5,7 @@
   <groupId>net.lshift</groupId>
   <artifactId>java</artifactId>
   <packaging>jar</packaging>
-  <version>2.3.8</version>
+  <version>2.4.0</version>
   <name>LShift Java library</name>
   <url>http://www.lshift.net</url>
   <scm>
@@ -52,11 +52,15 @@
     <testOutputDirectory>${basedir}/build/test/classes</testOutputDirectory>
   </build>
   <distributionManagement>
-
     <repository>
+      <id>lshift</id>
+      <name>LShift Internal Repository</name>
+      <url>dav:http://mvn.lshift.net/mvn</url>
+    </repository>
+    <!-- <repository>
       <id>hc</id>
       <name>LShift Internal Repository</name>
       <url>dav:http://hc.lshift.net/hc/mvn</url>
-    </repository>
+    </repository> -->
   </distributionManagement>
 </project>

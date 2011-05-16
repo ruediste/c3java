@@ -58,4 +58,42 @@ public class Procedures
             }
         };
     }
+    
+    public static <T> Predicate<T> and(final Predicate<T> ... predicates)
+    {
+        return new Predicate<T>() {
+            public Boolean apply(T x)
+            {
+                // I could use map here but it would be needlessly slow
+                for(Predicate<T> predicate: predicates)
+                    if(!predicate.apply(x)) return false;
+                return true;
+                
+            }
+        };
+    }
+
+    public static <T> Predicate<T> or(final Predicate<T> ... predicates)
+    {
+        return new Predicate<T>() {
+            public Boolean apply(T x)
+            {
+                // I could use map here but it would be needlessly slow
+                for(Predicate<T> predicate: predicates)
+                    if(predicate.apply(x)) return true;
+                return false;
+                
+            }
+        };
+    }
+
+    public static <T> Predicate<T> any()
+    {
+        return new Predicate<T>() {
+            public Boolean apply(T x)
+            {
+                return true;
+            }
+        };
+    }
 }

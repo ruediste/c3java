@@ -1,5 +1,6 @@
 package net.lshift.java.lang;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -7,6 +8,7 @@ import java.lang.annotation.Target;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
+import net.lshift.java.util.Procedures;
 
 public class AnnotationHelperTest
     extends TestCase
@@ -104,5 +106,54 @@ public class AnnotationHelperTest
         assertTestAnnotationsPresent(TestAImpl1.class, "1");
         assertTestAnnotationsPresent(TestAImpl2.class, "2", "1");
         assertTestAnnotationsPresent(TestAImpl2x.class, "2", "1");
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.FIELD})
+    public @interface TestInjectorA {
+
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.FIELD})
+    public @interface TestInjectorB {
+
+    }
+
+    public static class InjectorSrc
+    {
+        @TestInjectorA
+        public String a = "a";
+        
+        @TestInjectorB
+        public String b = "b";
+    }
+
+    public static class InjectorDst
+    {
+        @TestInjectorA
+        public String x;
+        
+        @TestInjectorB
+        public CharSequence y;
+
+        @TestInjectorA
+        public String z;
+    }
+    
+    public void testInjector()
+    {
+        AnnotationHelper.Injector<InjectorSrc, InjectorDst> injecter = 
+            AnnotationHelper.injector(
+                InjectorSrc.class, 
+                InjectorDst.class, 
+                Procedures.<Annotation>any());
+        System.out.println(injecter);
+        InjectorDst dst = new InjectorDst();
+        InjectorSrc src = new InjectorSrc();
+        injecter.inject(src, dst);
+        assertEquals(src.a, dst.x);
+        assertEquals(src.a, dst.z);
+        assertEquals(src.b, dst.y);
     }
 }

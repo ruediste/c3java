@@ -1,13 +1,23 @@
 package net.lshift.java.lang;
 
+import static net.lshift.java.util.Lists.filter;
+import static net.lshift.java.util.Procedures.and;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.lshift.java.dispatch.DefaultDirectSuperclasses;
 import net.lshift.java.dispatch.JavaC3;
+import net.lshift.java.lang.AnnotationHelperTest.InjectorDst;
+import net.lshift.java.lang.AnnotationHelperTest.InjectorSrc;
 import net.lshift.java.util.Lists;
 import net.lshift.java.util.Predicate;
+import net.lshift.java.util.Procedures;
 import net.lshift.java.util.Transform;
 
 public class AnnotationHelper
@@ -155,5 +165,89 @@ public class AnnotationHelper
             annotationClass, 
             type, 
             DefaultDirectSuperclasses.SUPERCLASSES);
+    }
+
+    
+    public interface Injector<A,B> {
+        public void inject(A src, B dst);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <A, B> Injector<A,B> injector( 
+        final Class<? extends A> a, 
+        final Class<? extends B> b,
+        Predicate<Annotation> include)
+    {
+        final Map<Field, List<Field>> assignments = new HashMap<Field, List<Field>>();
+
+        Field[] dstFields = b.getFields();
+        for(Field srcField: a.getFields()) {
+            for(Annotation srcAnnotation: filter(include, srcField.getAnnotations())) {
+                assignments.put(srcField, 
+                    filter(
+                        and(
+                            hasAnnotation(srcAnnotation.annotationType()), 
+                            isAssignableFrom(srcField.getType())), 
+                        dstFields));
+            }
+        }
+        
+        return new Injector<A,B>() {
+
+            @Override
+            public void inject(A src, B dst)
+            {
+                for(Map.Entry<Field, List<Field>> assignmentSrc: assignments.entrySet()) {
+                    for(Field assignmentDst: assignmentSrc.getValue()) {
+                        Object value;
+                        try {
+                            value = assignmentSrc.getKey().get(src);
+                            assignmentDst.set(dst, value);
+                        } catch (IllegalArgumentException e) {
+                            throw new RuntimeException(
+                                "You've somehow managed to call this with incorrect typed arguments. " +
+                                "I.e. arguments that don't match the classes you constructed the " +
+                                "injector for.", e);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException("Problem reading or writing fields in injector", e);
+                        }
+                    }
+                }
+            }
+            
+            public String toString()
+            {
+                return assignments.toString();
+            }
+            
+        };
+    }
+
+    
+    private static Predicate<Field> isAssignableFrom(final Class<?> type)
+    {
+        return new Predicate<Field>() {
+            public Boolean apply(Field x) {
+                return x.getType().isAssignableFrom(type);
+            }
+        };
+    }
+
+    public static Predicate<Field> hasAnnotation(final Class<? extends Annotation> a)
+    {
+        return new Predicate<Field>() {
+            public Boolean apply(Field x) {
+                return x.getAnnotation(a) != null;
+            }
+            
+        };
+    }
+    
+
+    public static <A, B> Injector<A,B> injector( 
+        final Class<A> a, 
+        final Class<B> b)
+    {
+        return injector(a, b, Procedures.<Annotation>any());
     }
 }
