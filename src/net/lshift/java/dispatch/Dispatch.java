@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import net.lshift.java.util.TwoTuple;
+import net.lshift.java.util.ThreeTuple;
 
 public class Dispatch
 {
@@ -17,9 +17,9 @@ public class Dispatch
          * @param instance the instance the method will be dispatched to
          * @param m the method being invoked
          * @param args the parameters the proxy was invoked with
-         * @return arguments compatible with with the method being invoked
+         * @return a tuple of: arguments compatible with with the method being invoked
          */
-        public TwoTuple<C,Object []> before(T instance, Method m, Object [] args);
+        public ThreeTuple<C,T,Object []> before(T instance, Method m, Object [] args);
         
         /**
          * Executed when the invocation of a method on target returns.
@@ -58,15 +58,15 @@ public class Dispatch
     /**
      * @param <T>
      * @param iface
-     * @param filter
      * @param instance
+     * @param filter
      * @return
      */
     @SuppressWarnings("unchecked")
     public static <T,U extends T,C> T filter(
         Class<T> iface, 
-        final Filter<U,C> filter,
-        final U instance)
+        final U instance,
+        final Filter<U,C> filter)
     {
         return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class [] { iface }, new InvocationHandler() {
 
@@ -74,23 +74,23 @@ public class Dispatch
             public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable
             {
-                TwoTuple<C, Object[]> before = filter.before(instance, method, args);
+                ThreeTuple<C,U,Object[]> before = filter.before(instance, method, args);
                 try {
 
                     return filter.returned(
                         before.first,
-                        instance, 
+                        before.second,
                         method, 
                         args, 
                         method.invoke(
-                            instance, 
-                            before.second));
+                            before.second, 
+                            before.third));
                 }
                 catch(InvocationTargetException e) {
-                    throw filter.exception(before.first, instance, method, args, e.getCause());
+                    throw filter.exception(before.first, before.second, method, args, e.getCause());
                 }
                 finally {
-                    filter.after(before.first, instance, method, args);
+                    filter.after(before.first, before.second, method, args);
                 }
             }
             
