@@ -6,15 +6,12 @@ import static net.lshift.java.util.Procedures.and;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import net.lshift.java.dispatch.DefaultDirectSuperclasses;
 import net.lshift.java.dispatch.JavaC3;
-import net.lshift.java.lang.AnnotationHelperTest.InjectorDst;
-import net.lshift.java.lang.AnnotationHelperTest.InjectorSrc;
 import net.lshift.java.util.Lists;
 import net.lshift.java.util.Predicate;
 import net.lshift.java.util.Procedures;
