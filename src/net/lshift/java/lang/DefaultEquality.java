@@ -51,12 +51,12 @@ public class DefaultEquality
         return EqualsHelper.equals(a, b, delegate);
     }
 
-    public boolean equals(List a, List b)
+    public boolean equals(List<?> a, List<?> b)
     {
         return EqualsHelper.equals(a, b, delegate);
     }
 
-    public boolean equals(Map a, Map b)
+    public boolean equals(Map<?,?> a, Map<?,?> b)
     {
         return EqualsHelper.equals(a, b, delegate);
     }

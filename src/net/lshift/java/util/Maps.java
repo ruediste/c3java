@@ -14,10 +14,10 @@ public class Maps
         return result;
     }
     
-    public static <K,V> Map<K,V> map(Iterable<Map.Entry<K,V>> c)
+    public static <K,V> Map<K,V> map(Iterable<Map.Entry<? extends K, ? extends V>> c)
     {
         Map<K,V> m = new HashMap<K,V>();
-        for(Map.Entry<K, V> e: c)
+        for(Map.Entry<? extends K, ? extends V> e: c)
             m.put(e.getKey(), e.getValue());
         return m;
     }
@@ -31,7 +31,8 @@ public class Maps
      * @param v value for the entry
      * @return an entry with key k, and value v
      */
-    public static <K,V, KX extends K, VX extends V> Map.Entry<K,V> entry(final KX k, final VX v)
+    // public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
+    public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
     {
         return new Map.Entry<K, V>() {
             public K getKey() {
@@ -57,7 +58,7 @@ public class Maps
      * @param entries
      * @return
      */
-    public static <K,V> Map<K,V> map(Map.Entry<K,V> ... entries)
+    public static <K,V> Map<K,V> map(Map.Entry<? extends K, ? extends V> ... entries)
     {
         return map(Arrays.asList(entries));
     }
