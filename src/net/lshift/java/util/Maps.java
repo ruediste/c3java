@@ -62,4 +62,53 @@ public class Maps
     {
         return map(Arrays.asList(entries));
     }
+
+    /**
+     * Create a map with no entries - avoid varargs-related generics warnings
+     */
+    public static <K,V> Map<K,V> map() {
+        return java.util.Collections.emptyMap();
+    }
+
+    /**
+     * Create a map with one entry - avoid varargs-related generics warnings
+     */
+    @SuppressWarnings("unchecked")
+    public static <K,V> Map<K,V> map(
+        Map.Entry<? extends K, ? extends V> e1) {
+        return map(Lists.<Map.Entry<? extends K, ? extends V>>list(e1));
+    }
+
+    /**
+     * Create a map with two entries - avoid varargs-related generics warnings
+     */
+    @SuppressWarnings("unchecked")
+    public static <K,V> Map<K,V> map(
+        Map.Entry<? extends K, ? extends V> e1,
+        Map.Entry<? extends K, ? extends V> e2) {
+        return map(Arrays.asList(e1, e2));
+    }
+
+    /**
+     * Create a map with three entries - avoid varargs-related generics warnings
+     */
+    @SuppressWarnings("unchecked")
+    public static <K,V> Map<K,V> map(
+        Map.Entry<? extends K, ? extends V> e1,
+        Map.Entry<? extends K, ? extends V> e2,
+        Map.Entry<? extends K, ? extends V> e3) {
+        return map(Arrays.asList(e1, e2, e3));
+    }
+
+    /**
+     * Create a map with four entries - avoid varargs-related generics warnings
+     */
+    @SuppressWarnings("unchecked")
+    public static <K,V> Map<K,V> map(
+        Map.Entry<? extends K, ? extends V> e1,
+        Map.Entry<? extends K, ? extends V> e2,
+        Map.Entry<? extends K, ? extends V> e3,
+        Map.Entry<? extends K, ? extends V> e4) {
+        return map(Arrays.asList(e1, e2, e3, e4));
+    }
 }
