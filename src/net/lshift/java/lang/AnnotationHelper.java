@@ -164,15 +164,33 @@ public class AnnotationHelper
             DefaultDirectSuperclasses.SUPERCLASSES);
     }
 
-    
-    public interface Injector<A,B> {
-        public void inject(A src, B dst);
+    /**
+     * An Injector copies fields from one class to another.
+     * The set of properties considered can be restricted. The copies are
+     * selected by type compatibility. That is, each field in the source
+     * is copied to each field in the destination which is assignable from
+     * the source's static type.
+     * @param <S> the source bean's class
+     * @param <D> the destination bean's class
+     */
+    public interface Injector<S,D> {
+        public void inject(S src, D dst);
     }
 
+    /**
+     * Construct an injector given two classes, and a predicate which filters
+     * fields.
+     * @param <S>
+     * @param <D>
+     * @param a
+     * @param b
+     * @param include
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public static <A, B> Injector<A,B> injector( 
-        final Class<? extends A> a, 
-        final Class<? extends B> b,
+    public static <S, D> Injector<S,D> injector( 
+        final Class<? extends S> a, 
+        final Class<? extends D> b,
         Predicate<Annotation> include)
     {
         final Map<Field, List<Field>> assignments = new HashMap<Field, List<Field>>();
@@ -189,10 +207,10 @@ public class AnnotationHelper
             }
         }
         
-        return new Injector<A,B>() {
+        return new Injector<S,D>() {
 
             @Override
-            public void inject(A src, B dst)
+            public void inject(S src, D dst)
             {
                 for(Map.Entry<Field, List<Field>> assignmentSrc: assignments.entrySet()) {
                     for(Field assignmentDst: assignmentSrc.getValue()) {
@@ -230,17 +248,33 @@ public class AnnotationHelper
         };
     }
 
-    public static Predicate<Field> hasAnnotation(final Class<? extends Annotation> a)
+    /**
+     * Use an annotation to restrict the fields used in injection.
+     * The annotation will typically reflect a single cross cutting concern
+     * @param annotation
+     * @return a predicate which filters a field based on it having
+     * the annotation specified.
+     */
+    public static Predicate<Field> hasAnnotation(
+        final Class<? extends Annotation> annotation)
     {
         return new Predicate<Field>() {
             public Boolean apply(Field x) {
-                return x.getAnnotation(a) != null;
+                return x.getAnnotation(annotation) != null;
             }
             
         };
     }
     
-
+    /**
+     * Use an annotation to restrict the fields used in injection.
+     * The annotation will typically reflect a single cross cutting concern
+     * @param <A>
+     * @param <B>
+     * @param a
+     * @param b
+     * @return
+     */
     public static <A, B> Injector<A,B> injector( 
         final Class<A> a, 
         final Class<B> b)
