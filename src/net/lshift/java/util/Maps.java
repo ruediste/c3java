@@ -3,6 +3,7 @@ package net.lshift.java.util;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class Maps
 {
@@ -14,7 +15,7 @@ public class Maps
         return result;
     }
     
-    public static <K,V> Map<K,V> map(Iterable<Map.Entry<? extends K, ? extends V>> c)
+    public static <K,V> Map<K,V> map(Iterable<? extends Map.Entry<K,V>> c)
     {
         Map<K,V> m = new HashMap<K,V>();
         for(Map.Entry<? extends K, ? extends V> e: c)
@@ -31,7 +32,6 @@ public class Maps
      * @param v value for the entry
      * @return an entry with key k, and value v
      */
-    // public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
     public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
     {
         return new Map.Entry<K, V>() {
@@ -58,8 +58,25 @@ public class Maps
      * @param entries
      * @return
      */
-    public static <K,V> Map<K,V> map(Map.Entry<? extends K, ? extends V> ... entries)
-    {
-        return map(Arrays.asList(entries));
+    @SuppressWarnings("unchecked")
+    public static <K,V> Map<K,V> map(Map.Entry<? extends K, ? extends V> ... entries) {
+        return map((Iterable<? extends Entry<K, V>>) Arrays.asList(entries));
+    }
+    
+    /**
+     * Fill a map.
+     * @param <K>
+     * @param <V>
+     * @param <KX>
+     * @param keys The keys for which the map should contain values
+     * @param values the factory for the values
+     * @return
+     */
+    public static <K,V, KX> Map<K,V> fill(Iterable<K> keys, final Factory<V> values) {
+        return map(Iterators.transform(keys, new Transform<K, Map.Entry<K, V>>() {
+            public Map.Entry<K, V> apply(K key) {
+                return entry(key, values.create());
+            }
+        }));
     }
 }

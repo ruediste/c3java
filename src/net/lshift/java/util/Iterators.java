@@ -1,9 +1,5 @@
 package net.lshift.java.util;
 
-import static net.lshift.java.util.Iterators.transform;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;

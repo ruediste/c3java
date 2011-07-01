@@ -71,6 +71,13 @@ public class Lists
         return new FoldState<E>(proceed, seed);
     }
     
+    /**
+     * Create a list. 
+     * @param <E>
+     * @param e
+     * @return A list containing each argument in original order. The
+     * list is mutable.
+     */
     public static <E> List<E> list(E ... e)
     {
         return new ArrayList<E>(Arrays.asList(e));
@@ -79,6 +86,24 @@ public class Lists
     public static <E> List<E> copy(List<E> l)
     {
         return asList(l);
+    }
+    
+    /**
+     * A factory for lists with the spec
+     * @param <E>
+     * @param i
+     * @return
+     */
+    public static <E> Factory<List<E>> asListFactory(final Iterable<E> i) {
+        return new Factory<List<E>>() {
+            public List<E> create() {
+                return asList(i);
+            }
+        };
+    }
+    
+    public static <E> Factory<List<E>> listFactory(E ...e) {
+        return asListFactory(Arrays.asList(e));
     }
     
     // I can't figure out a way to get rid of this warning, so I've
