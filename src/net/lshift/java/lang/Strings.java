@@ -2,6 +2,8 @@ package net.lshift.java.lang;
 
 import java.util.Iterator;
 
+import net.lshift.java.util.Transform;
+
 public class Strings
 {
     public static String join(Iterable<String> strings, String separator)
@@ -16,5 +18,13 @@ public class Strings
         }
         
         return buffer.toString();
+    }
+    
+    public static <T> Transform<T,String> asString() {
+        return new Transform<T,String>() {
+            public String apply(Object x) {
+                return x.toString();
+            }
+        };
     }
 }

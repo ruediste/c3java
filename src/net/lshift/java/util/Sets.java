@@ -27,6 +27,33 @@ public class Sets
         return result;
     }
     
+    public static <E> Set<E> union(Collection<E> c1)
+    {
+        Set<E> result = new HashSet<E>();
+        result.addAll(c1);
+        return result;
+    }
+
+    public static <E> Set<E> union(Collection<E> c1, Collection<E> c2)
+    {
+        Set<E> result = new HashSet<E>();
+        result.addAll(c1);
+        result.addAll(c2);
+        return result;
+    }
+
+    public static <E> Set<E> union(
+        Collection<E> c1, 
+        Collection<E> c2,
+        Collection<E> c3)
+    {
+        Set<E> result = new HashSet<E>();
+        result.addAll(c1);
+        result.addAll(c2);
+        result.addAll(c3);
+        return result;
+    }
+    
     public static <E> Set<E> union(E [] ... cn)
     {
         Set<E> result = new HashSet<E>();
@@ -43,7 +70,8 @@ public class Sets
                 result.add(e);
         return result;
     }
-    
+
+
     public static <E> Set<E> intersection(Set<E> ... cn)
     {
         if(cn.length < 1)
