@@ -121,6 +121,39 @@ public class SortedSets
             result.addAll(c);
         return result;
     }
+
+    public static <E> SortedSet<E> union(
+        Comparator<E> comparator, 
+        Collection<E> a)
+    {
+        SortedSet<E> result = new TreeSet<E>(comparator);
+        result.addAll(a);
+        return result;
+    }
+    
+    public static <E> SortedSet<E> union(
+        Comparator<E> comparator, 
+        Collection<E> a,
+        Collection<E> b)
+    {
+        SortedSet<E> result = new TreeSet<E>(comparator);
+        result.addAll(a);
+        result.addAll(b);
+        return result;
+    }
+    
+    public static <E> SortedSet<E> union(
+        Comparator<E> comparator, 
+        Collection<E> a,
+        Collection<E> b,
+        Collection<E> c)
+    {
+        SortedSet<E> result = new TreeSet<E>(comparator);
+        result.addAll(a);
+        result.addAll(b);
+        result.addAll(c);
+        return result;
+    }
     
     public static <E> SortedSet<E> union(E [] ... cn)
     {
@@ -135,6 +168,30 @@ public class SortedSets
         SortedSet<E> result = new TreeSet<E>(comparator);
         for(E[] c: cn)
             result.addAll(Arrays.asList(c));
+        return result;
+    }
+    
+    public static <E> SortedSet<E> union(Comparator<E> comparator, E [] a)
+    {
+        SortedSet<E> result = new TreeSet<E>(comparator);
+        result.addAll(Arrays.asList(a));
+        return result;
+    }
+    
+    public static <E> SortedSet<E> union(Comparator<E> comparator, E [] a, E [] b)
+    {
+        SortedSet<E> result = new TreeSet<E>(comparator);
+        result.addAll(Arrays.asList(a));
+        result.addAll(Arrays.asList(b));
+        return result;
+    }
+    
+    public static <E> SortedSet<E> union(Comparator<E> comparator, E [] a, E [] b, E [] c)
+    {
+        SortedSet<E> result = new TreeSet<E>(comparator);
+        result.addAll(Arrays.asList(a));
+        result.addAll(Arrays.asList(b));
+        result.addAll(Arrays.asList(c));
         return result;
     }
     
