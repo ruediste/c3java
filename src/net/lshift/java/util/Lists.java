@@ -468,6 +468,30 @@ public class Lists
     {
         return concatenate(Arrays.asList(lists));
     }
+
+    /**
+     * Concatenate lists
+     * @param <E>
+     * @param lists the lists to concatenate
+     * @return a list containing all the elements in the lists concatenated
+     */
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> concatenate(List<E> a, List<E> b)
+    {
+        return concatenate(Arrays.asList(a, b));
+    }
+
+    /**
+     * Concatenate lists
+     * @param <E>
+     * @param lists the lists to concatenate
+     * @return a list containing all the elements in the lists concatenated
+     */
+    @SuppressWarnings("unchecked")
+    public static <E> List<E> concatenate(List<E> a, List<E> b, List<E> c)
+    {
+        return concatenate(Arrays.asList(a, b, c));
+    }
     
     /**
      * Reverse a list

@@ -6,6 +6,56 @@ import java.util.Map;
 
 public class Maps
 {
+    public static class EntryImpl<K, V>
+        implements Map.Entry<K, V>
+    {
+        private final K k;
+        private final V v;
+
+        protected EntryImpl(K k, V v)
+        {
+            this.k = k;
+            this.v = v;
+        }
+
+        public K getKey() {
+            return k;
+        }
+
+        public V getValue() {
+            return v;
+        }
+
+        public V setValue(V value) {
+            throw new UnsupportedOperationException();
+        }
+        
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            @SuppressWarnings("rawtypes")
+            Map.Entry e = (Map.Entry)o;
+            Object k1 = getKey();
+            Object k2 = e.getKey();
+            if (k1 == k2 || (k1 != null && k1.equals(k2))) {
+                Object v1 = getValue();
+                Object v2 = e.getValue();
+                if (v1 == v2 || (v1 != null && v1.equals(v2)))
+                    return true;
+            }
+            return false;
+        }
+        
+        public int hashCode() {
+            return (k==null   ? 0 : k.hashCode()) ^
+                   (v==null ? 0 : v.hashCode());
+        }
+
+        public String toString() {
+            return String.format("%s: %s", k, v);
+        }
+    }
+
     public static <A,B> Map<B,A> invert(Map<A,B> map)
     {
         Map<B,A> result = new HashMap<B,A>();
@@ -33,19 +83,7 @@ public class Maps
      */
     public static <K,V> Map.Entry<K,V> entry(final K k, final V v)
     {
-        return new Map.Entry<K, V>() {
-            public K getKey() {
-                return k;
-            }
-
-            public V getValue() {
-                return v;
-            }
-
-            public V setValue(V value) {
-                throw new UnsupportedOperationException();
-            }
-        };
+        return new EntryImpl<K, V>(k, v);
     }
 
     /**
