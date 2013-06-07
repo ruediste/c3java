@@ -115,7 +115,7 @@ public class Collections
         // to avoid a warning, and implement equals in a
         // sensible way, but I'd rather suppress warnings
         @SuppressWarnings("unchecked")
-        public static <C extends Collection> Transform<C,Integer> size()
+        public static <C extends Collection<?>> Transform<C,Integer> size()
         {
             return (Transform<C, Integer>)SIZE;
         }
@@ -132,7 +132,7 @@ public class Collections
         // to avoid a warning, and implement equals in a
         // sensible way, but I'd rather suppress warnings
         @SuppressWarnings("unchecked")
-        public static <C extends Collection> Predicate<C> isEmpty()
+        public static <C extends Collection<?>> Predicate<C> isEmpty()
         {
             return (Predicate<C>)IS_EMPTY;
         }

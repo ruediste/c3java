@@ -21,31 +21,31 @@ import java.util.NoSuchElementException;
  * @author david
  *
  */
-public class IteratorChain
-    implements Iterator
+public class IteratorChain<E>
+    implements Iterator<E>
 {
-    private final Iterator iterators;
-    private Iterator used = null;
-    private Iterator current = null;
-    
-    public IteratorChain(Iterator iterators)
+    private final Iterator<Iterator<E>> iterators;
+    private Iterator<E> used = null;
+    private Iterator<E> current = null;
+
+    public IteratorChain(Iterator<Iterator<E>> iterators)
     {
         this.iterators = iterators;
     }
-    
-    public IteratorChain(Iterator [] iterators)
+
+    public IteratorChain(Iterator<E> [] iterators)
     {
         this(Arrays.asList(iterators).iterator());
     }
-    
+
     public boolean hasNext()
     {
         while((current == null || !current.hasNext()) && iterators.hasNext())
-            current = (Iterator)iterators.next();
+            current = iterators.next();
         return (current == null) ? false : current.hasNext();
     }
 
-    public Object next()
+    public E next()
     {
         if(!hasNext())
             throw new NoSuchElementException();

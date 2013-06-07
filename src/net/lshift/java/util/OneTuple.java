@@ -50,19 +50,5 @@ implements List<Object>, Serializable
     {
         return first;
     }
-    
-    public static <T> Transform<OneTuple<T>,T> first()
-    {
-        return new Transform<OneTuple<T>,T>() {
-            public T apply(OneTuple<T> x) {
-                return x.first;
-            }
-        };
-    }
-    
-    public static <T> OneTuple<T> tuple(T a)
-    {
-        return new OneTuple<T>(a);
-    }
 
 }

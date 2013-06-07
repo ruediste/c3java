@@ -1,7 +1,8 @@
 
 package net.lshift.java.util;
 
-public interface Transform<T,U>
-{
-    public U apply(T x);    
+import com.google.common.base.Function;
+
+public interface Transform<T,U> extends Function<T,U> {
+
 }

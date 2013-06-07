@@ -3,6 +3,7 @@ package net.lshift.fsa;
 import static java.lang.String.format;
 import static net.lshift.java.util.Maps.entry;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +14,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
 
@@ -56,6 +61,10 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
     public final Class<E> events;
     public final S initial;
 
+    private final ReadWriteLock stateLock = new ReentrantReadWriteLock(true);
+    private final Lock stateWriteLock = stateLock.writeLock();;
+    private final Lock stateReadLock = stateLock.readLock();
+
     private S state;
     private int stateCounter = 0;
     private Set<StateChangeListener<S,E>> listeners =
@@ -79,29 +88,59 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
     }
 
 
-    public final synchronized void trigger(E event) {
+    public final void trigger(E event) {
         if(!offer(event)) {
             throw new IllegalStateException(
                 String.format("No transition for event %1$s in state %2$s", event.name(), state.name()));
         }
     }
 
-    public final synchronized boolean test(E event) {
-        return this.transitions.get(state).get(event) != null;
+    public final boolean test(E event) {
+        stateReadLock.lock();
+        try {
+            return this.transitions.get(state).get(event) != null;
+        } finally {
+            stateReadLock.unlock();
+        }
     }
 
-    public final synchronized boolean offer(E event) {
-        Transition<S,E> transition = this.transitions.get(state).get(event);
-        if(transition == null)
+    public final boolean offer(E event) {
+        stateWriteLock.lock();
+        return offerHaveWriteLock(event);
+    }
+
+    public final boolean tryOffer(E event, long time, TimeUnit unit) 
+        throws InterruptedException {
+        if(stateWriteLock.tryLock(time, unit)) {
+            return offerHaveWriteLock(event);
+        } else {
             return false;
+        }
+    }
 
-        StateChangeEvent<S, E> changeEvent = newStateChangeEvent(event, transition);
-        for(Action action: transition.actions)
-            action.invoke();
-        this.state = transition.result;
-        this.stateCounter++;
-        notifyStateChangeEvent(changeEvent);
+    private boolean offerHaveWriteLock(E event) {
+        Transition<S,E> transition;
+        try {
+            transition = this.transitions.get(state).get(event);
+            if(transition == null)
+                return false;
 
+            this.state = transition.result;
+            this.stateCounter++;
+            stateReadLock.lock();
+        } finally {
+            stateWriteLock.unlock();
+        }
+        
+        try {
+            StateChangeEvent<S, E> changeEvent = newStateChangeEvent(event, transition);
+            for(Action action: transition.actions)
+                action.invoke();
+            notifyStateChangeEvent(changeEvent);
+        } finally {
+             stateReadLock.unlock();
+        }
+        
         return true;
     }
 
@@ -111,7 +150,13 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
     }
 
     private void notifyStateChangeEvent(StateChangeEvent<S, E> changeEvent) {
-        for(StateChangeListener<S, E> listener: listeners)
+       
+        List<StateChangeListener<S, E>> listenersSnapshot;
+        synchronized(listeners) {
+            listenersSnapshot = new ArrayList<StateChangeListener<S, E>>(listeners);
+        }
+        
+        for(StateChangeListener<S, E> listener: listenersSnapshot)
             listener.stateChange(changeEvent);
     }
 
@@ -125,10 +170,10 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
     }
 
     public S triggerAndWaitFor(E event, S ... stateList) throws InterruptedException {
-        final Collection<S> states = Arrays.asList(stateList);
+        final Collection<S> waitFor = Arrays.asList(stateList);
         final BlockingQueue<S> queue = new ArrayBlockingQueue<S>(1);
         final StateChangeListener<S,E> listener = new StateChangeListener<S,E>() {
-            public void stateChange(StateChangeEvent<S, E> event) {
+            public void stateChange(StateChangeEvent<S, E> stateChange) {
                 // Note: use offer. Once we have sent one event, offer will
                 // return false. This is fine: the scheduler won't be blocked,
                 // and its not an error when this happens. I originally thought
@@ -136,41 +181,60 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
                 // of zero. If no-one is listening yet, offer will fail, which
                 // would be a race, and if you use put() the state machine will
                 // block, which is undesirable
-                if(states.contains(event.getNewState())) {
-                    queue.offer(event.getNewState());
+                if(waitFor.contains(stateChange.getNewState())) {
+                    queue.offer(stateChange.getNewState());
                 }
             }
         };
-
+        
+        this.addStateChangeListener(listener);
         try {
-            synchronized(this) {
-                this.addStateChangeListener(listener);
+            if(event != null) {
                 this.trigger(event);
+                return queue.take();
+            } else {
+                S currentState = getState();
+                return waitFor.contains(currentState) ? currentState : queue.take();
             }
-
-            return queue.take();
         }
         finally {
-            // Note: it doesn't matter that the listener may not have been added
             this.removeStateChangeListener(listener);
         }
     }
 
-    public synchronized boolean addStateChangeListener(StateChangeListener<S, E> e) {
-        return listeners.add(e);
+    public S waitFor(S ... stateList) throws InterruptedException {
+        return triggerAndWaitFor(null, stateList);
+    }
+    
+    public boolean addStateChangeListener(StateChangeListener<S, E> e) {
+        synchronized(listeners) {
+            return listeners.add(e);
+        }
     }
 
-    public synchronized boolean removeStateChangeListener(Object o) {
-        return listeners.remove(o);
+    public boolean removeStateChangeListener(Object o) {
+        synchronized(listeners) {
+            return listeners.remove(o);
+        }
     }
 
-    public synchronized void assertState(S ... states) {
-        List<S> stateSet = Arrays.asList(states);
-        if(!stateSet.contains(state))
-            throw new IllegalStateException(format("%1$s not in %1$s", state, stateSet));
+    public void assertState(S ... expected) {
+        stateReadLock.lock();
+        try {
+            List<S> stateSet = Arrays.asList(expected);
+            if(!stateSet.contains(state))
+                throw new IllegalStateException(format("%1$s not in %1$s", state, stateSet));
+        } finally {
+            stateReadLock.unlock();
+        }
     }
 
-    public synchronized S getState() {
-        return state;
+    public S getState() {
+        stateReadLock.lock();
+        try {
+            return state;
+        } finally {
+            stateReadLock.unlock();
+        }
     }
 }

@@ -12,7 +12,7 @@ public class MapsTest
 {
     public class A {}
     public class B extends A {}
-    
+
     /**
      * This test is aimed at showing java will calculate the types are
      * compatible when the value types aren't homogeneous. It succeeds
@@ -24,11 +24,10 @@ public class MapsTest
         // compatible when the value types aren't homogeneous
         @SuppressWarnings({ "unused", "unchecked" })
         Map<String, A> map = map(entry("A", new A()), entry("B", new B()));
-        
     }
-    
+
     public void testEntry()
     {
-        
+
     }
 }

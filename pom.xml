@@ -5,7 +5,7 @@
   <groupId>net.lshift</groupId>
   <artifactId>java</artifactId>
   <packaging>jar</packaging>
-  <version>2.5.0</version>
+  <version>2.6.0</version>
   <name>LShift Java library</name>
   <url>http://www.lshift.net</url>
   <scm>
@@ -18,10 +18,15 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>com.google.guava</groupId>
+    	<artifactId>guava</artifactId>
+    	<version>14.0.1</version>
+    </dependency>
   </dependencies>
   <build>
     <extensions>
-      <!--  this is how we pulish components internally -->
+      <!--  this is how we publish components internally -->
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-webdav</artifactId>
@@ -55,7 +60,7 @@
     <repository>
       <id>lshift</id>
       <name>LShift Internal Repository</name>
-      <url>dav:http://mvn.lshift.net/mvn</url>
+      <url>dav:https://mvn.lshift.net/mvn</url>
     </repository>
     <!-- <repository>
       <id>hc</id>

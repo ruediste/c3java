@@ -42,7 +42,7 @@ public class Pair<E>
         else
             return new Pair<U>(car, Lists.foldRight(new Cons<U>(), null, cdr));
     }
-    
+
     public static class Cons<U>
         implements Lists.FoldProcedure<U,Pair<U>>
     {
@@ -99,7 +99,7 @@ public class Pair<E>
             pair = pair.cdr;
             index = index - 1;
         }
-        
+
         if(index == 0 && pair != null)
             return pair.car;
         else

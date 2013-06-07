@@ -37,7 +37,15 @@ public class Procedures
             
         };
     }
-    
+
+    public static <K> Predicate<K> getBoolean(final Map<K,Boolean> map) {
+        return new Predicate<K>() {
+            public Boolean apply(K x) {
+                return map.get(x);
+            }
+        };
+    }
+   
     public static <V> Predicate<V> not(final Predicate<V> proc)
     {
         return new Predicate<V>() {
