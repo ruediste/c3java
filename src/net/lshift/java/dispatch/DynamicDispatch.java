@@ -562,10 +562,14 @@ public class DynamicDispatch
 	    }
 	    else {
 		Procedure procedure = procedures.get(procedureMethod);
-		ClosureMethod method = procedure.lookup(signature);
-		AccessibleObject.setAccessible(new AccessibleObject[] { method.method }, true);
-		shortcuts.put(signature, method);
-		return method;
+		if(procedure == null) {
+		    throw new IllegalArgumentException();
+		} else {
+		    ClosureMethod method = procedure.lookup(signature);
+		    AccessibleObject.setAccessible(new AccessibleObject[] { method.method }, true);
+		    shortcuts.put(signature, method);
+		    return method;
+		}
 	    }
 	}
     }
