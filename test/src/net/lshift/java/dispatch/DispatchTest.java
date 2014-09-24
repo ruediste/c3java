@@ -26,11 +26,11 @@ public class DispatchTest
 {
     public static TestSuite suite()
     {
-	TestSuite suite = new TestSuite("dispatch");
-	suite.addTest(JavaC3Test.suite());
-	// suite.addTest(ImplementsFirstDirectSuperclassesTest.suite());
-	suite.addTest(DynamicDispatchTest.suite());
+        TestSuite suite = new TestSuite("dispatch");
+        suite.addTest(JavaC3Test.suite());
+        // suite.addTest(ImplementsFirstDirectSuperclassesTest.suite());
+        suite.addTest(DynamicDispatchTest.suite());
         suite.addTest(ExecutorServiceProxyTest.suite());
-	return suite;
+        return suite;
     }
 }

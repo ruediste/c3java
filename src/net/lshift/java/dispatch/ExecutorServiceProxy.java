@@ -1,5 +1,9 @@
 package net.lshift.java.dispatch;
 
+import static com.google.common.base.Predicates.in;
+import static com.google.common.base.Predicates.not;
+import static java.util.Arrays.asList;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,19 +20,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import net.lshift.java.util.Lists;
+import com.google.common.collect.Iterables;
 
 /**
  * Execute methods in a thread.
  * This looks like a pretty strange thing to want to do, but its born
  * of a specific need...
- * 
+ *
  * I'm using sleepy cat BDB java edition, and I want to use its stored
  * collections. The collections rely on ambient authority to get a transaction:
  * the transactions are bound to threads. However there is no way to bind a
  * thread to a transaction, other than when the transaction is created.
  * If I want to write an RMI based server, this is obviously pretty useless.
- *       
+ *
  * @author david
  *
  */
@@ -38,7 +42,7 @@ public class ExecutorServiceProxy
         new ThreadLocal<ExecutorServiceProxy>();
 
     private static final long DEFAULT_TIMEOUT = 30; // 30 seconds
-    
+
 
     public interface ThreadProperty<T>
     {
@@ -47,19 +51,19 @@ public class ExecutorServiceProxy
          * @return
          */
         public T get();
-        
+
         /**
          * Set the value of this property for the current thread
          * @param value
          */
         public void set(T value);
-        
+
         /**
          * Clear the value of this property for the current thread
          */
         public void remove();
     }
-    
+
     public static <T> ThreadProperty<T> threadProperty(final ThreadLocal<T> tl)
     {
         return new ThreadProperty<T>() {
@@ -78,32 +82,32 @@ public class ExecutorServiceProxy
             {
                 tl.set(value);
             }
-            
+
         };
     }
-    
+
     public final ExecutorService executor;
-    
+
     /**
      * This is to allow you to transfer the values of thread context
      * to the execution service while it executes the requested method.
-     * Its probably most useful for logging purposes. 
+     * Its probably most useful for logging purposes.
      */
     public final Set<ThreadProperty<Object>> properties;
-    
+
     public ExecutorServiceProxy(ExecutorService executor)
     {
         this(executor, new HashSet<ThreadProperty<Object>>());
     }
 
     public ExecutorServiceProxy
-        (ExecutorService executor, 
+        (ExecutorService executor,
          Set<ThreadProperty<Object>> properties)
     {
         this.executor = executor;
         this.properties = properties;
     }
-    
+
     private StackTraceElement [] truncateStack
         (Throwable cause, Class<?> delegate)
     {
@@ -111,20 +115,22 @@ public class ExecutorServiceProxy
             throw new Exception();
         }
         catch(Exception e) {
-            return Lists.difference
-                (cause.getStackTrace(),
-                 e.getStackTrace()).toArray(new StackTraceElement[0]);
+            return Iterables.toArray(
+                Iterables.filter(
+                    asList(cause.getStackTrace()),
+                    not(in(asList(e.getStackTrace())))),
+                StackTraceElement.class);
         }
     }
-    
+
     private StackTraceElement [] mergeStack
-        (Throwable cause, 
+        (Throwable cause,
          Throwable ref,
          Class<?> proxy)
     {
         StackTraceElement [] catchStack = ref.getStackTrace();
         StackTraceElement [] causeStack = cause.getStackTrace();
-        List<StackTraceElement> merged = 
+        List<StackTraceElement> merged =
             new ArrayList<StackTraceElement>(catchStack.length + causeStack.length);
         String proxyName = proxy.getName();
         for(StackTraceElement element: causeStack) {
@@ -134,11 +140,11 @@ public class ExecutorServiceProxy
         }
 
         merged.add(new StackTraceElement
-                   (ExecutorServiceProxy.class.getName(), 
+                   (ExecutorServiceProxy.class.getName(),
                     "invoke", "Generated Source", -1));
 
         int index = 0;
-        for(; (index != catchStack.length 
+        for(; (index != catchStack.length
                && !catchStack[index].getClassName().equals(proxyName)); ++index);
         for(; index != catchStack.length; ++index)
             if(!catchStack[index].getClassName().equals(proxyName))
@@ -147,23 +153,23 @@ public class ExecutorServiceProxy
 
         return merged.toArray(new StackTraceElement[merged.size()]);
     }
-    
+
     private class ProxyInvocationHandler
         implements InvocationHandler
     {
         final Object delegate;
-        
+
         public ProxyInvocationHandler(Object delegate)
         {
             this.delegate = delegate;
         }
-        
-        public Object invoke(Object proxy, final Method method, final Object[] args) 
+
+        public Object invoke(Object proxy, final Method method, final Object[] args)
             throws Throwable
         {
-            final Map<ThreadProperty<Object>,Object> propertyValues = 
+            final Map<ThreadProperty<Object>,Object> propertyValues =
                 new HashMap<ThreadProperty<Object>,Object>();
-        
+
             for(ThreadProperty<Object> property: properties) {
                 propertyValues.put(property, property.get());
             }
@@ -222,7 +228,7 @@ public class ExecutorServiceProxy
             }
         }
     }
-    
+
     /**
      * Construct a proxy, for which each method is
      * invoked by the execution server.
@@ -231,22 +237,22 @@ public class ExecutorServiceProxy
      * @return a proxy implementing the interfaces
      */
     @SuppressWarnings("unchecked")
-    public <T> T proxy(final Object delegate, Class [] interfaces)
+    public <T> T proxy(final Object delegate, Class<?> [] interfaces)
     {
         return (T)Proxy.newProxyInstance
             (delegate.getClass().getClassLoader(),
              interfaces,
              new ProxyInvocationHandler(delegate));
     }
-    
-    public void stop() 
+
+    public void stop()
         throws InterruptedException
     {
         executor.shutdown();
         if(this != current())
             executor.awaitTermination(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
     }
-    
+
     public static ExecutorServiceProxy current()
     {
         return PROXY.get();

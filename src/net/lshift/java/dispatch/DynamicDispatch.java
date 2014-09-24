@@ -16,11 +16,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.lshift.java.lang.Classes;
-import net.lshift.java.lang.Strings;
-import net.lshift.java.lang.Types;
-import net.lshift.java.util.Lists;
-import net.lshift.java.util.Transform;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.primitives.Primitives;
 
 /**
  * Generate an implementation of an interface which uses
@@ -38,7 +40,7 @@ import net.lshift.java.util.Transform;
  */
 public class DynamicDispatch
 {
-    private static Map<DispatcherType,MultiClass> dispatchers = 
+    private static Map<DispatcherType,MultiClass> dispatchers =
         Collections.synchronizedMap(new HashMap<DispatcherType,MultiClass>());
 
 
@@ -46,34 +48,34 @@ public class DynamicDispatch
     {
         if(args == null)
             return new Class<?>[0];
-        
-	Class<?> [] parameterTypes = procedure.getParameterTypes();
-	Class<?> [] types = new Class[args.length];
-	for(int i = 0; i != args.length; ++i) {
-	    if(parameterTypes[i].isPrimitive()) {
-	        // This is how I handle primitives: I work out from the
-	        // procedure if the argument should be a primitive, and
-	        // then convert the type appropriately.
-		types[i] = Types.PRIMITIVE.get(args[i].getClass());
-	    }
-	    else if(args[i] == null) {
-	        // We can work out the root of all the types by looking at the
-	        // method signature. We consider null to be of that type, unless
-	        // that type is Object, in which case we use Void, so you can
-	        // dispatch on null.
-	        // FIXME: have a magic Null<Foo> that we consider a sub-type of 
-	        // Foo, where Foo is the root parameter type.
-	        if(parameterTypes[i] == Object.class)
-	            types[i] = Void.class;
-	        else
-	            types[i] = parameterTypes[i];
-	    }
-	    else {
-		types[i] = args[i].getClass();
-	    }
-	}
 
-	return types;
+        Class<?> [] parameterTypes = procedure.getParameterTypes();
+        Class<?> [] types = new Class[args.length];
+        for(int i = 0; i != args.length; ++i) {
+            if(parameterTypes[i].isPrimitive()) {
+                // This is how I handle primitives: I work out from the
+                // procedure if the argument should be a primitive, and
+                // then convert the type appropriately.
+                types[i] = Primitives.unwrap(args[i].getClass());
+            }
+            else if(args[i] == null) {
+                // We can work out the root of all the types by looking at the
+                // method signature. We consider null to be of that type, unless
+                // that type is Object, in which case we use Void, so you can
+                // dispatch on null.
+                // FIXME: have a magic Null<Foo> that we consider a sub-type of
+                // Foo, where Foo is the root parameter type.
+                if(parameterTypes[i] == Object.class)
+                    types[i] = Void.class;
+                else
+                    types[i] = parameterTypes[i];
+            }
+            else {
+                types[i] = args[i].getClass();
+            }
+        }
+
+        return types;
     }
 
     /**
@@ -89,30 +91,30 @@ public class DynamicDispatch
      * preventing access to a method.
      */
     public static class IllegalAccessException
-	extends RuntimeException
+        extends RuntimeException
     {
         private static final long serialVersionUID = 1L;
 
         public IllegalAccessException(String message)
-	{
-	    super(message);
-	}
+        {
+            super(message);
+        }
     }
 
     public static class AmbiguousMethodException
-	extends RuntimeException
+        extends RuntimeException
     {
         private static final long serialVersionUID = 1L;
 
         public AmbiguousMethodException(String message)
-	{
-	    super(message);
-	}
+        {
+            super(message);
+        }
     }
 
     public static <T> T proxy(Class<? extends T> constraint, Object closure)
     {
-	return proxy(constraint, Lists.list(closure));
+        return proxy(constraint, ImmutableList.of(closure));
     }
 
     /**
@@ -147,17 +149,17 @@ public class DynamicDispatch
         String methodName,
         Object [] parameters,
         Class<?> [] parameterTypes)
-    throws NoSuchMethodException, 
+    throws NoSuchMethodException,
         java.lang.IllegalAccessException,
         InvocationTargetException
     {
-	final MultiClass genclass = 
-	    dispatcher(constraint, 
-	        Collections.singletonList((Class<Object>)closure.getClass()));
+        final MultiClass genclass =
+            dispatcher(constraint,
+                Collections.singletonList((Class<Object>)closure.getClass()));
 
-	Method template = constraint.getMethod(methodName, parameterTypes);
-	ClosureMethod method = genclass.method(template, parameters);
-	return method.method.invoke(closure, parameters);
+        Method template = constraint.getMethod(methodName, parameterTypes);
+        ClosureMethod method = genclass.method(template, parameters);
+        return method.method.invoke(closure, parameters);
     }
 
 
@@ -173,85 +175,86 @@ public class DynamicDispatch
         final Class<? extends T> constraint,
         Iterable<Object> closuresList)
     {
-	final MultiClass genclass = 
-	    dispatcher(constraint, Lists.map(new Transform<Object, Class<Object>>() {
-	        public Class<Object> apply(Object x) {
-	            return (Class<Object>) x.getClass();
-	        }
-	    }, closuresList));
+        final MultiClass genclass =
+            dispatcher(constraint, Iterables.transform(closuresList, new Function<Object, Class<Object>>() {
+                public Class<Object> apply(Object x) {
+                    return (Class<Object>) x.getClass();
+                }
+            }));
 
-	final Map<Class<?>,Object> closures = new HashMap<Class<?>,Object>();
-	for(Object closure: Lists.reverseIterable(Lists.asList(closuresList)))
-	    closures.put(closure.getClass(), closure);
+        final Map<Class<?>,Object> closures = new HashMap<Class<?>,Object>();
+        for(Object closure: ImmutableList.of(closuresList).reverse()) {
+            closures.put(closure.getClass(), closure);
+        }
 
-	return (T)Proxy.newProxyInstance
-	    (constraint.getClassLoader(),
-	     new Class [] { constraint },
-	     new InvocationHandler() {
-		 public Object invoke(Object proxy, Method procedure, Object [] args)
-		     throws Throwable
-		 {
-		     ClosureMethod method = genclass.method(procedure, args);
-		     Object closure = closures.get(method.declaredBy);
-		     {
-			 try {
-			     return method.method.invoke(closure, args);
-			 }
-			 catch(InvocationTargetException e) {
-			     throw e.getTargetException();
-			 }
-			 catch(IllegalAccessException e) {
-			     /* This can happen because of a security policy 
-				(it doesn't seem to be possible to provoke it 
-				otherwise - see test) */
-			     throw new DynamicDispatch.IllegalAccessException
-				 (e.getMessage());
-			 }
-		     }
-		 }
-	     });
+        return (T)Proxy.newProxyInstance
+            (constraint.getClassLoader(),
+             new Class [] { constraint },
+             new InvocationHandler() {
+                 public Object invoke(Object proxy, Method procedure, Object [] args)
+                     throws Throwable
+                 {
+                     ClosureMethod method = genclass.method(procedure, args);
+                     Object closure = closures.get(method.declaredBy);
+                     {
+                         try {
+                             return method.method.invoke(closure, args);
+                         }
+                         catch(InvocationTargetException e) {
+                             throw e.getTargetException();
+                         }
+                         catch(IllegalAccessException e) {
+                             /* This can happen because of a security policy
+                                (it doesn't seem to be possible to provoke it
+                                otherwise - see test) */
+                             throw new DynamicDispatch.IllegalAccessException
+                                 (e.getMessage());
+                         }
+                     }
+                 }
+             });
     }
 
     private static MultiClass dispatcher(
-        Class<?> constraint, 
-        List<Class<Object>> list)
+        Class<?> constraint,
+        Iterable<Class<Object>> list)
     {
-	DispatcherType key = new DispatcherType(constraint, list);
-	MultiClass dispatcher = dispatchers.get(key);
+        DispatcherType key = new DispatcherType(constraint, list);
+        MultiClass dispatcher = dispatchers.get(key);
 
-	if(dispatcher == null) {
-	    dispatcher = new MultiClass(constraint, list);
-	    dispatchers.put(key, dispatcher);
-	}
+        if(dispatcher == null) {
+            dispatcher = new MultiClass(constraint, list);
+            dispatchers.put(key, dispatcher);
+        }
 
-	return dispatcher;
+        return dispatcher;
     }
-    
+
     // ------------------------------------------------------------------------
 
 
     private static class DispatcherType
     {
-	private Class<?> constraint;
-	private List<Class<Object>> closures;
+        private Class<?> constraint;
+        private Iterable<Class<Object>> closures;
 
-	public DispatcherType(Class<?> constraint, List<Class<Object>> closures)
-	{
-	    this.constraint = constraint;
-	    this.closures = closures;
-	}
+        public DispatcherType(Class<?> constraint, Iterable<Class<Object>> closures)
+        {
+            this.constraint = constraint;
+            this.closures = closures;
+        }
 
-	public int hashCode()
-	{
-	    return constraint.hashCode() ^ closures.hashCode();
-	}
+        public int hashCode()
+        {
+            return constraint.hashCode() ^ closures.hashCode();
+        }
 
-	public boolean equals(Object o)
-	{
-	    DispatcherType other = (DispatcherType)o;
-	    return ((constraint == other.constraint) && 
-		    (closures.equals(other.closures)));
-	}
+        public boolean equals(Object o)
+        {
+            DispatcherType other = (DispatcherType)o;
+            return ((constraint == other.constraint) &&
+                    (closures.equals(other.closures)));
+        }
     }
 
 
@@ -263,135 +266,137 @@ public class DynamicDispatch
     {
         return (Class<? extends Null<?>>)x;
     }
-    
+
     private interface Procedure
     {
         public ClosureMethod lookup(Signature signature);
     }
-    
+
     private static class NoSuchProcedure
     implements Procedure
     {
-        private final List<Class<Object>> implementations;
-        
+        private final Iterable<Class<Object>> implementations;
 
-        public NoSuchProcedure(List<Class<Object>> implementations)
+
+        public NoSuchProcedure(Iterable<Class<Object>> implementations)
         {
             this.implementations = implementations;
         }
 
-        @Override
+        static Function<Class<?>, String> CLASS_NAME = new Function<Class<?>, String>() {
+            public String apply(Class<?> input) {
+                return input.getName();
+            }
+        };
+
         public ClosureMethod lookup(Signature signature)
         {
-            throw new NoSuchMethodError(signature.toString() + " in " + 
-                Strings.join(Lists.map(Classes.getName(), implementations), ","));
+            throw new NoSuchMethodError(signature.toString() + " in " +
+                Joiner.on(",").join(Iterables.transform(implementations, CLASS_NAME)));
         }
-        
     }
-    
+
     private static class NoArgumentsProcedure
     implements Procedure
     {
         final ClosureMethod method;
-        
+
         public NoArgumentsProcedure(ClosureMethod method)
         {
             this.method = method;
         }
-        
-        @Override
+
         public ClosureMethod lookup(Signature signature)
         {
             return method;
         }
-        
     }
-    
+
     private static class MultiProcedure
     implements Procedure
     {
-	// Each Map in this array is for a parameter. It Maps from a type
-	// to a set of methods with that parameter type at that position.
-	private List<Map<Class<?>,Set<ClosureMethod>>> indexes;
+        // Each Map in this array is for a parameter. It Maps from a type
+        // to a set of methods with that parameter type at that position.
+        private List<Map<Class<?>,Set<ClosureMethod>>> indexes;
 
-	// I keep these handy, because they can't be constructed, and of
-	// course I only need them if they are the parameter type
-	// of one of the methods.
-	private List<Class<? extends Null<?>>> nullTypes;
+        // I keep these handy, because they can't be constructed, and of
+        // course I only need them if they are the parameter type
+        // of one of the methods.
+        private List<Class<? extends Null<?>>> nullTypes;
 
-	/**
-	 * Constructor
-	 * @param procedure the procedure method - a method in the
-	 *   contract interface
-	 * @param methods All the methods in the multi-class.
-	 */
+        /**
+         * Constructor
+         * @param procedure the procedure method - a method in the
+         *   contract interface
+         * @param methods All the methods in the multi-class.
+         */
         public MultiProcedure(Method procedure, Iterable<ClosureMethod> pmethods)
-	{
-	    indexes = new ArrayList<Map<Class<?>, Set<ClosureMethod>>>();
-	    nullTypes = new ArrayList<Class<? extends Null<?>>>(
-	                    procedure.getParameterTypes().length);
-	    
-	    for(@SuppressWarnings("unused")
-	        Class<?> type: procedure.getParameterTypes())
-	        indexes.add(new HashMap<Class<?>,Set<ClosureMethod>>());
+        {
+            indexes = new ArrayList<Map<Class<?>, Set<ClosureMethod>>>();
+            nullTypes = new ArrayList<Class<? extends Null<?>>>(
+                            procedure.getParameterTypes().length);
 
-	    for(ClosureMethod method: pmethods) {
-		Class<?> [] parameters = method.method.getParameterTypes();
-		for(int i = 0; i != parameters.length; ++i) {
-		    // It should be the case that that if the ith parameter of
-		    // procedure is T then any Null will be Null<T>: how else
-		    // could the method be applicable?
-		    if(Null.class.isAssignableFrom(parameters[i]))
-		        nullTypes.set(i, nullClass(parameters[i].asSubclass(Null.class)));
-		    
-		    Set<ClosureMethod> s = indexes.get(i).get(parameters[i]);
-		    if(s == null) {
-			s = new HashSet<ClosureMethod>();
-			indexes.get(i).put(parameters[i], s);
-		    }
-		    
-		    s.add(method);
-		}
+            for(@SuppressWarnings("unused")
+                Class<?> type: procedure.getParameterTypes())
+                indexes.add(new HashMap<Class<?>,Set<ClosureMethod>>());
 
-	    }
-	}
+            for(ClosureMethod method: pmethods) {
+                Class<?> [] parameters = method.method.getParameterTypes();
+                for(int i = 0; i != parameters.length; ++i) {
+                    // It should be the case that that if the ith parameter of
+                    // procedure is T then any Null will be Null<T>: how else
+                    // could the method be applicable?
+                    if(Null.class.isAssignableFrom(parameters[i]))
+                        nullTypes.set(i, nullClass(parameters[i].asSubclass(Null.class)));
 
-	private Set<ClosureMethod> methods(int position, Class<?> [] parameterTypes)
-	    throws JavaC3.JavaC3Exception
-	{
-	    Class<?> paramterType = parameterTypes[position];
-	    Map<Class<?>, Set<ClosureMethod>> index = indexes.get(position);
-	    for(Class<?> c: JavaC3.allSuperclasses(paramterType)) {
-		Set<ClosureMethod> methods = index.get(c);
-		if(methods != null) {
-		    methods = new HashSet<ClosureMethod>(methods);
-		    if(parameterTypes.length != position + 1)
-			methods.retainAll(methods(position + 1, parameterTypes));
-		    if(!methods.isEmpty())
-			return methods;
-		}
-	    }
+                    Set<ClosureMethod> s = indexes.get(i).get(parameters[i]);
+                    if(s == null) {
+                        s = new HashSet<ClosureMethod>();
+                        indexes.get(i).put(parameters[i], s);
+                    }
 
-	    return Collections.emptySet();
-	}
+                    s.add(method);
+                }
 
-	public ClosureMethod lookup(Signature signature)
-	{
-	    try {
-		Set<ClosureMethod> methods = methods(0, signature.parameterTypes);
-		if(methods.isEmpty()) {
-		    for(int i = 0; i != indexes.size(); ++i)
-			System.err.println(i + ": " + indexes.get(i));
-		    throw new NoSuchMethodError(signature.toString());
-		}
-		
-		return methods.iterator().next();
-	    }
-	    catch(JavaC3.JavaC3Exception e) {
-		throw new AmbiguousMethodException(e.toString());
-	    }
-	}
-	
+            }
+        }
+
+        private Set<ClosureMethod> methods(int position, Class<?> [] parameterTypes)
+            throws JavaC3.JavaC3Exception
+        {
+            Class<?> paramterType = parameterTypes[position];
+            Map<Class<?>, Set<ClosureMethod>> index = indexes.get(position);
+            for(Class<?> c: JavaC3.allSuperclasses(paramterType)) {
+                Set<ClosureMethod> methods = index.get(c);
+                if(methods != null) {
+                    methods = new HashSet<ClosureMethod>(methods);
+                    if(parameterTypes.length != position + 1)
+                        methods.retainAll(methods(position + 1, parameterTypes));
+                    if(!methods.isEmpty())
+                        return methods;
+                }
+            }
+
+            return Collections.emptySet();
+        }
+
+        public ClosureMethod lookup(Signature signature)
+        {
+            try {
+                Set<ClosureMethod> methods = methods(0, signature.parameterTypes);
+                if(methods.isEmpty()) {
+                    for(int i = 0; i != indexes.size(); ++i)
+                        System.err.println(i + ": " + indexes.get(i));
+                    throw new NoSuchMethodError(signature.toString());
+                }
+
+                return methods.iterator().next();
+            }
+            catch(JavaC3.JavaC3Exception e) {
+                throw new AmbiguousMethodException(e.toString());
+            }
+        }
+
 
     }
 
@@ -399,11 +404,11 @@ public class DynamicDispatch
 
     protected static boolean appliesTo(Method constraint, Class<?> [] params)
     {
-	Class<?> [] cparams = constraint.getParameterTypes();
-	boolean result = (params.length == cparams.length);
-	for(int i = 0; result && i != params.length; ++i)
-	    result = JavaC3.allSuperclasses(params[i]).contains(cparams[i]);
-	return result;
+        Class<?> [] cparams = constraint.getParameterTypes();
+        boolean result = (params.length == cparams.length);
+        for(int i = 0; result && i != params.length; ++i)
+            result = Iterables.contains(JavaC3.allSuperclasses(params[i]), cparams[i]);
+        return result;
     }
 
     /**
@@ -411,28 +416,28 @@ public class DynamicDispatch
      */
     protected static boolean appliesTo(Method procedure, Method method)
     {
-	return 
-	    (procedure.getName().equals(method.getName()) &&
-	     appliesTo(procedure, method.getParameterTypes()) &&
-	     procedure.getReturnType()
-	     .isAssignableFrom(method.getReturnType()) &&
-	     (method.getModifiers() & Modifier.PUBLIC) != 0);
+        return
+            (procedure.getName().equals(method.getName()) &&
+             appliesTo(procedure, method.getParameterTypes()) &&
+             procedure.getReturnType()
+             .isAssignableFrom(method.getReturnType()) &&
+             (method.getModifiers() & Modifier.PUBLIC) != 0);
     }
 
     /**
      * Get the set of closure methods applicable to this procedure
      */
     protected static Iterable<ClosureMethod> procedureMethods(
-        Method constraint, 
+        Method constraint,
         List<ClosureMethod> methods)
     {
-	List<ClosureMethod> cmethods = new ArrayList<ClosureMethod>();
-	for(ClosureMethod method: methods) {
-	    if(appliesTo(constraint, method.method))
-		cmethods.add(method);
-	}
+        List<ClosureMethod> cmethods = new ArrayList<ClosureMethod>();
+        for(ClosureMethod method: methods) {
+            if(appliesTo(constraint, method.method))
+                cmethods.add(method);
+        }
 
-	return unique(constraint, cmethods);
+        return unique(constraint, cmethods);
     }
 
     /**
@@ -451,16 +456,16 @@ public class DynamicDispatch
     {
         Map<Signature, ClosureMethod> bySignature = new HashMap<Signature, ClosureMethod>();
         pmethods.listIterator(pmethods.size());
-        for(ClosureMethod pmethod: Lists.reverseIterable(pmethods))
+        for(ClosureMethod pmethod: Lists.reverse(pmethods))
             bySignature.put(
-                new Signature(procedure, pmethod.method.getParameterTypes()), 
+                new Signature(procedure, pmethod.method.getParameterTypes()),
                 pmethod);
         return bySignature.values();
     }
 
 
     // ------------------------------------------------------------------------
-    
+
     /**
      * A method in a closure class.
      * We keep track of the closure, rather than calculate it later:
@@ -471,31 +476,31 @@ public class DynamicDispatch
     {
         public final Class<?> declaredBy;
         public final Method method;
-        
+
         public ClosureMethod(Class<?> declaredBy, Method method)
         {
             this.declaredBy = declaredBy;
             this.method = method;
         }
-        
+
         public boolean equals(Object o)
         {
             if(o.getClass().equals(getClass())) {
                 ClosureMethod other = (ClosureMethod)o;
-                return ((this.declaredBy.equals(other.declaredBy)) 
+                return ((this.declaredBy.equals(other.declaredBy))
                         && (this.method.equals(other.method)));
             }
-            
+
             return false;
         }
-        
+
         public String toString()
         {
-            return "[" + 
-                new Signature(method) + 
+            return "[" +
+                new Signature(method) +
                 " in closure " + declaredBy.getName() + "]";
         }
-        
+
         public int hashCode()
         {
             return toString().hashCode();
@@ -505,29 +510,32 @@ public class DynamicDispatch
     // ------------------------------------------------------------------------
 
     /**
-     * A 'multiclass' - a class where each method is a multi - method. 
+     * A 'multiclass' - a class where each method is a multi - method.
      * There is a procedure for each method in the contract.
      */
     public static class MultiClass
     {
-	Map<Signature, ClosureMethod> shortcuts = new HashMap<Signature, ClosureMethod>();
-	Map<Method, Procedure> procedures = new HashMap<Method, Procedure>();
+        Map<Signature, ClosureMethod> shortcuts = Maps.newHashMap();
+        Map<Method, Procedure> procedures = Maps.newHashMap();
 
         protected MultiClass(
-            Class<?> constraint, 
-            List<Class<Object>> implementations)
+            Class<?> constraint,
+            Iterable<Class<Object>> implementations)
         {
             Method [] procedures = constraint.getDeclaredMethods();
-                for(int p = 0; p != procedures.length; ++p) {
-                    List<ClosureMethod> methods = new ArrayList<ClosureMethod>();
-                    for(final Class<?> implementation: implementations) {
-                        methods.addAll(Lists.map(new Transform<Method, ClosureMethod>(){
+            for(int p = 0; p != procedures.length; ++p) {
+                List<ClosureMethod> methods = new ArrayList<ClosureMethod>();
+                for(final Class<?> implementation: implementations) {
+                    methods.addAll(Lists.transform(
+                        Arrays.asList(implementation.getMethods()), 
+                        new Function<Method, ClosureMethod>(){
                             public ClosureMethod apply(Method x) {
                                 return new ClosureMethod(implementation, x);
                             }
-                        }, Arrays.asList(implementation.getMethods())));
-                    this.procedures.put
-                        (procedures[p], procedure(procedures[p], methods, implementations));
+                        }));
+                    this.procedures.put(
+                        procedures[p],
+                        procedure(procedures[p], methods, implementations));
                 }
             }
         }
@@ -540,8 +548,9 @@ public class DynamicDispatch
          *   I can report them when a method isn't found.
          * @return
          */
-	private Procedure procedure(Method method, List<ClosureMethod> methods, List<Class<Object>> implementations)
-        {
+        private Procedure procedure(
+                Method method, List<ClosureMethod> methods, 
+                Iterable<Class<Object>> implementations) {
             Iterable<ClosureMethod> pmethods = procedureMethods(method, methods);
             if(!pmethods.iterator().hasNext()) {
                 return new NoSuchProcedure(implementations);
@@ -554,24 +563,24 @@ public class DynamicDispatch
             }
         }
 
-	protected final ClosureMethod method(Method procedureMethod, Object [] args)
-	{
-	    Signature signature = new Signature(procedureMethod, types(procedureMethod, args));
-	    if(shortcuts.containsKey(signature)) {
-		return shortcuts.get(signature);
-	    }
-	    else {
-		Procedure procedure = procedures.get(procedureMethod);
-		if(procedure == null) {
-		    throw new IllegalArgumentException();
-		} else {
-		    ClosureMethod method = procedure.lookup(signature);
-		    AccessibleObject.setAccessible(new AccessibleObject[] { method.method }, true);
-		    shortcuts.put(signature, method);
-		    return method;
-		}
-	    }
-	}
+        protected final ClosureMethod method(Method procedureMethod, Object [] args)
+        {
+            Signature signature = new Signature(procedureMethod, types(procedureMethod, args));
+            if(shortcuts.containsKey(signature)) {
+                return shortcuts.get(signature);
+            }
+            else {
+                Procedure procedure = procedures.get(procedureMethod);
+                if(procedure == null) {
+                    throw new IllegalArgumentException();
+                } else {
+                    ClosureMethod method = procedure.lookup(signature);
+                    AccessibleObject.setAccessible(new AccessibleObject[] { method.method }, true);
+                    shortcuts.put(signature, method);
+                    return method;
+                }
+            }
+        }
     }
 
 }

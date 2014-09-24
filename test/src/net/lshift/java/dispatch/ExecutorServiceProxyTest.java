@@ -18,71 +18,71 @@ public class ExecutorServiceProxyTest
     {
         private static final long serialVersionUID = 1L;
     }
-    
+
     public static class TargetError
         extends Error
     {
         private static final long serialVersionUID = 1L;
     }
-    
+
     public interface Target
     {
         public void set();
-        
+
         public boolean test();
-        
+
         public void exception()
             throws TargetException;
-        
+
         public void error();
 
         public void stop()
             throws InterruptedException;
-        
+
         public void remove();
 
         public void stopException()
             throws TargetException, InterruptedException;
-        
+
         public void illegalArgumentException();
     }
-    
+
     public static class TargetImpl
         implements Target
     {
         private final Object magic = new Object();
         public final ThreadLocal<Object> local = new ThreadLocal<Object>();
-        
+
         public void set()
         {
             local.set(magic);
         }
-        
+
         public boolean test()
         {
             return local.get() == magic;
         }
-        
+
         public void exception()
             throws TargetException
         {
             throw new TargetException();
         }
-        
+
         public void stopException()
             throws TargetException, InterruptedException
         {
             stop();
             throw new TargetException();
         }
-        
+
         public void error()
         {
             throw new TargetError();
         }
 
-        
-        
+
+
         public void stop()
             throws InterruptedException
         {
@@ -99,32 +99,32 @@ public class ExecutorServiceProxyTest
             throw new IllegalArgumentException();
         }
     }
-    
+
     ExecutorServiceProxy server;
     TargetImpl impl;
     Target target;
-    
-    public void setUp() 
+
+    public void setUp()
         throws InterruptedException
     {
         server = new ExecutorServiceProxy(Executors.newSingleThreadExecutor());
         impl = new TargetImpl();
         target = (Target)server.proxy(impl, new Class [] { Target.class });
     }
-    
-    public void tearDown() 
+
+    public void tearDown()
         throws InterruptedException
     {
         server.stop();
     }
-    
-    public void testMagic() 
+
+    public void testMagic()
         throws InterruptedException
     {
         target.set();
         assertTrue(target.test());
     }
-    
+
     public void testException()
     {
         target.set();
@@ -136,11 +136,11 @@ public class ExecutorServiceProxyTest
             e.printStackTrace();
             exception = true;
         }
-        
+
         assertTrue(exception);
         assertTrue(target.test());
     }
-    
+
     public void testError()
     {
         target.set();
@@ -151,11 +151,11 @@ public class ExecutorServiceProxyTest
         catch(TargetError e) {
             error = true;
         }
-        
+
         assertTrue(error);
         assertTrue(target.test());
     }
-    
+
     public void illegalArgumentException()
     {
         target.set();
@@ -166,11 +166,11 @@ public class ExecutorServiceProxyTest
         catch(IllegalArgumentException e) {
             error = true;
         }
-        
+
         assertTrue(error);
         assertTrue(target.test());
     }
-    
+
     public void testCurrentStop()
         throws Exception
     {
@@ -179,7 +179,7 @@ public class ExecutorServiceProxyTest
         target.stop();
         assertTrue(server.executor.isTerminated());
     }
-    
+
     public void testProperties()
     {
         server.properties.add(ExecutorServiceProxy.threadProperty(impl.local));
@@ -191,11 +191,11 @@ public class ExecutorServiceProxyTest
         finally {
             impl.remove();
         }
-        
+
         assertFalse(target.test());
     }
-    
-    public void testStopException() 
+
+    public void testStopException()
         throws InterruptedException
     {
         boolean exception = false;
@@ -208,6 +208,6 @@ public class ExecutorServiceProxyTest
         }
 
         assertTrue(exception);
-          
+
     }
 }

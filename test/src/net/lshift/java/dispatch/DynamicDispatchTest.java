@@ -21,10 +21,10 @@ package net.lshift.java.dispatch;
 import java.util.*;
 import java.lang.reflect.*;
 
-import net.lshift.java.dispatch.DynamicDispatch.ClosureMethod;
-import net.lshift.java.util.Lists;
-import net.lshift.java.util.Transform;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
+import net.lshift.java.dispatch.DynamicDispatch.ClosureMethod;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
@@ -48,59 +48,59 @@ public class DynamicDispatchTest
 
     public static class ToStringABC
     {
-	public String toString(A a)
-	{
-	    return "A";
-	}
+        public String toString(A a)
+        {
+            return "A";
+        }
 
-	public String toString(B b)
-	{
-	    return "B";
-	}
+        public String toString(B b)
+        {
+            return "B";
+        }
 
-	public String toString(C c)
-	{
-	    return "C";
-	}
+        public String toString(C c)
+        {
+            return "C";
+        }
 
-	public String toString(X c)
-	{
-	    return "X";
-	}
+        public String toString(X c)
+        {
+            return "X";
+        }
 
-	public String toString(Void v)
-	{
-	    return "null";
-	}
-	
-	public String toString(B b, C c)
-	{
-	    return "BC";
-	}
+        public String toString(Void v)
+        {
+            return "null";
+        }
 
-	public String toString(C c, B b)
-	{
-	    return "CB";
-	}
+        public String toString(B b, C c)
+        {
+            return "BC";
+        }
 
-	public String toString(A a, int i)
-	{
-	    return "A"+ i;
-	}
+        public String toString(C c, B b)
+        {
+            return "CB";
+        }
+
+        public String toString(A a, int i)
+        {
+            return "A"+ i;
+        }
     }
-    
+
     public class ToStringZFG
     {
         public String toString(A a)
         {
             return "Z";
         }
-        
+
         public String toString(F f)
         {
             return "F";
         }
-        
+
         public String  toString(G g)
         {
             return "G";
@@ -114,13 +114,13 @@ public class DynamicDispatchTest
         {
             this.value = value;
         }
-        
+
         public String toString(A a)
         {
             return value;
         }
     }
-    
+
     public class ToStringABCandFG
     extends ToStringABC
     {
@@ -128,14 +128,14 @@ public class DynamicDispatchTest
         {
             return "F";
         }
-        
+
         public String  toString(G g)
         {
             return "G";
         }
 
     }
-    
+
     public class ToStringABCandZFG
     extends ToStringABC
     {
@@ -148,81 +148,82 @@ public class DynamicDispatchTest
         {
             return "F";
         }
-        
+
         public String  toString(G g)
         {
             return "G";
         }
 
     }
-    
+
     public interface ToString
     {
-	public String toString(Object o);
-	public String toString(Object o1, Object o2);
-	public String toString(Object o, int i);
+        public String toString(Object o);
+        public String toString(Object o1, Object o2);
+        public String toString(Object o, int i);
     }
 
     private Method toStringProcedure()
-	throws Exception
+        throws Exception
     {
-	return ToString.class.getDeclaredMethod
-	    ("toString", new Class [] { Object.class });
+        return ToString.class.getDeclaredMethod
+            ("toString", new Class [] { Object.class });
     }
 
     private Method toString2Procedure()
-	throws Exception
+        throws Exception
     {
-	return ToString.class.getDeclaredMethod
-	    ("toString", new Class [] { Object.class, Object.class });
+        return ToString.class.getDeclaredMethod
+            ("toString", new Class [] { Object.class, Object.class });
     }
 
     private ClosureMethod toStringMethod(Class<?> ... c)
-	throws Exception
+        throws Exception
     {
-	return new ClosureMethod(ToStringABC.class, 
-	    ToStringABC.class.getDeclaredMethod("toString",  c ));
+        return new ClosureMethod(ToStringABC.class,
+            ToStringABC.class.getDeclaredMethod("toString",  c ));
     }
 
     public void testAppliesTo()
-	throws Exception
+        throws Exception
     {
-	assertTrue("procedure applies to argument types",
-		   DynamicDispatch.appliesTo
-		   (toStringProcedure(), new Class [] { A.class }));
-	assertTrue("procedure applies to method",
-		   DynamicDispatch.appliesTo
-		   (toStringProcedure(), toStringMethod(A.class).method));
+        assertTrue("procedure applies to argument types",
+                   DynamicDispatch.appliesTo
+                   (toStringProcedure(), new Class [] { A.class }));
+        assertTrue("procedure applies to method",
+                   DynamicDispatch.appliesTo
+                   (toStringProcedure(), toStringMethod(A.class).method));
     }
 
     public void testProcedureMethods()
-	throws Exception
+        throws Exception
     {
-        List<ClosureMethod> methods = Lists.asList(DynamicDispatch.procedureMethods(
+        List<ClosureMethod> methods = Lists.newArrayList(DynamicDispatch.procedureMethods(
             toStringProcedure(), closureMethods(ToStringABC.class)));
-        
-	assertEquals(5, methods.size());
-	System.out.println(methods);
-	assertTrue("contains A", methods.contains(toStringMethod(A.class)));
-	assertTrue("contains B", methods.contains(toStringMethod(B.class)));
-	assertTrue("contains C", methods.contains(toStringMethod(C.class)));
-	assertTrue("contains X", methods.contains(toStringMethod(X.class)));
 
-	methods = Lists.asList(DynamicDispatch.procedureMethods
-	    (toString2Procedure(), closureMethods(ToStringABC.class)));
-	assertEquals(2, methods.size());
-	assertTrue("contains BC", methods.contains(toStringMethod(B.class, C.class)));
-	assertTrue("contains CB", methods.contains(toStringMethod(C.class, B.class)));
+        assertEquals(5, methods.size());
+        System.out.println(methods);
+        assertTrue("contains A", methods.contains(toStringMethod(A.class)));
+        assertTrue("contains B", methods.contains(toStringMethod(B.class)));
+        assertTrue("contains C", methods.contains(toStringMethod(C.class)));
+        assertTrue("contains X", methods.contains(toStringMethod(X.class)));
+
+        methods = Lists.newArrayList(DynamicDispatch.procedureMethods
+            (toString2Procedure(), closureMethods(ToStringABC.class)));
+        assertEquals(2, methods.size());
+        assertTrue("contains BC", methods.contains(toStringMethod(B.class, C.class)));
+        assertTrue("contains CB", methods.contains(toStringMethod(C.class, B.class)));
     }
 
     private static List<ClosureMethod> closureMethods(final Class<?> c)
     {
-        return Lists.map(new Transform<Method,ClosureMethod>() {
-            public ClosureMethod apply(Method x) {
-                return new ClosureMethod(c, x);
-            }
+        return Lists.transform(Arrays.asList(c.getDeclaredMethods()),
+            new Function<Method,ClosureMethod>() {
+                public ClosureMethod apply(Method x) {
+                    return new ClosureMethod(c, x);
+                }
 
-        }, Arrays.asList(c.getDeclaredMethods()));
+            });
     }
 
     public void testToStringABC()
@@ -246,12 +247,12 @@ public class DynamicDispatchTest
         assertEquals("F", x.toString(new F()));
         assertEquals("G", x.toString(new G()));
     }
-    
+
     public void testToStringComposed()
     {
         ToString x = DynamicDispatch.proxy(
-            ToString.class, 
-            new ToStringZFG(), 
+            ToString.class,
+            new ToStringZFG(),
             new ToStringABC());
         assertEquals("Z", x.toString(new A()));
         assertEquals("F", x.toString(new F()));
@@ -259,8 +260,8 @@ public class DynamicDispatchTest
         assertEquals("BC", x.toString(new B(), new C()));
         assertEquals("CB", x.toString(new C(), new B()));
         x = DynamicDispatch.proxy(
-            ToString.class, 
-            new ToStringABC(), 
+            ToString.class,
+            new ToStringABC(),
             new ToStringZFG());
         assertEquals("A", x.toString(new A()));
         assertEquals("B", x.toString(new B()));
@@ -269,16 +270,15 @@ public class DynamicDispatchTest
         assertEquals("G", x.toString(new G()));
     }
 
-    
     public void testToStringComposedVariable()
     {
         ToString x = DynamicDispatch.proxy(
-            ToString.class, 
-            new ToStringVariable("X"), 
+            ToString.class,
+            new ToStringVariable("X"),
             new ToStringVariable("Y"));
         assertEquals("X", x.toString(new A()));
     }
-    
+
     public void testToStringNull()
     {
         ToString x = (ToString)DynamicDispatch.proxy(ToString.class, new ToStringABC());
@@ -287,105 +287,106 @@ public class DynamicDispatchTest
 
     @SuppressWarnings("serial")
     public static class TestException
-	extends Exception
+        extends Exception
     {
-	public TestException(String message)
-	{
-	    super(message);
-	}
+        public TestException(String message)
+        {
+            super(message);
+        }
     }
 
     private static interface TestExceptionInterface
     {
-	public void test(String message)
-	    throws TestException;
+        public void test(String message)
+            throws TestException;
     }
 
     private static class TestExceptionImpl
     {
-	public void test(String message)
-	    throws TestException
-	{
-	    throw new TestException(message);
-	}
+        @SuppressWarnings("unused")
+        public void test(String message)
+            throws TestException
+        {
+            throw new TestException(message);
+        }
     }
 
     public void testException()
-	throws Exception
+        throws Exception
     {
-	TestExceptionInterface x = 
-	    (TestExceptionInterface)
-	    DynamicDispatch.proxy
-	    (TestExceptionInterface.class, new TestExceptionImpl());
+        TestExceptionInterface x =
+            (TestExceptionInterface)
+            DynamicDispatch.proxy
+            (TestExceptionInterface.class, new TestExceptionImpl());
 
-	String msg = "hello";
-	boolean caught = false;
-	try {
-	    x.test(msg);
-	}
-	catch(TestException e) {
-	    caught = true;
-	}
+        String msg = "hello";
+        boolean caught = false;
+        try {
+            x.test(msg);
+        }
+        catch(TestException e) {
+            caught = true;
+        }
 
-	assertTrue("exception thrown & caught", caught);
+        assertTrue("exception thrown & caught", caught);
     }
 
     public interface Add
     {
-	public int add(int a, int b);
-	public long add(long a, long b);
-	public boolean add(boolean a, boolean b);
+        public int add(int a, int b);
+        public long add(long a, long b);
+        public boolean add(boolean a, boolean b);
     }
 
     public void testInvoke()
-	throws Exception
+        throws Exception
     {
-	Object adder = new Object() {
-	    @SuppressWarnings("unused")
+        Object adder = new Object() {
+            @SuppressWarnings("unused")
             public int add(Object a, Object b)
-	    {
-	        return 0;
-	    }
-
-	    @SuppressWarnings("unused")
-            public int add(int a, int b)
             {
-	        return a + b;
+                return 0;
             }
 
-	    @SuppressWarnings("unused")
+            @SuppressWarnings("unused")
+            public int add(int a, int b)
+            {
+                return a + b;
+            }
+
+            @SuppressWarnings("unused")
             public long add(long a, long b)
-	    {
-	        return a + b;
-	    }
-            
+            {
+                return a + b;
+            }
+
             @SuppressWarnings("unused")
             public boolean add(boolean a, boolean b)
             {
                 return a && b;
             }
-	};
+        };
 
-	assertEquals
-	    (new Integer(2), 
-	     DynamicDispatch.invoke
-	     (Add.class, adder, "add",
-	      new Object[] { new Integer(1), new Integer(1) },
-	      new Class[] { Integer.TYPE, Integer.TYPE }));
+        assertEquals
+            (new Integer(2),
+             DynamicDispatch.invoke
+             (Add.class, adder, "add",
+              new Object[] { new Integer(1), new Integer(1) },
+              new Class[] { Integer.TYPE, Integer.TYPE }));
 
-	assertEquals
-	    (Boolean.TRUE,
-	     DynamicDispatch.invoke
-	     (Add.class, adder, "add", 
-	      new Object[] { Boolean.TRUE, Boolean.TRUE },
-	      new Class[] { Boolean.TYPE, Boolean.TYPE }));
+        assertEquals
+            (Boolean.TRUE,
+             DynamicDispatch.invoke
+             (Add.class, adder, "add",
+              new Object[] { Boolean.TRUE, Boolean.TRUE },
+              new Class[] { Boolean.TYPE, Boolean.TYPE }));
     }
 
     public void testPerformanceDynamic()
     {
         ToString x = DynamicDispatch.proxy(
-            ToString.class, 
-            new ToStringZFG(), 
+            ToString.class,
+            new ToStringZFG(),
             new ToStringABC());
         A a = new A();
         for(int i = 0; i != 1000000; ++i)

@@ -1,35 +1,36 @@
 package net.lshift.java.dispatch;
 
-import static net.lshift.java.lang.Types.asClass;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.lshift.java.util.Transform;
-import net.lshift.java.util.TwoTuple;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Primitives;
 
 /**
  * Dispatch to a delegate, converting parameters and return values.
- * The delegate must implement the proxy interface. The idea is that the 
+ * The delegate must implement the proxy interface. The idea is that the
  * parameters are processed consistently according to their type, rather than by
- * the method or position. This is useful for simulating RPC - simply by using 
- * serialization to clone the arguments and return values. It can also be used 
+ * the method or position. This is useful for simulating RPC - simply by using
+ * serialization to clone the arguments and return values. It can also be used
  * to normalise values.
  */
 public class ConverterDispatch
 {
     public interface ParameterConverterFactory
     {
-        public <S extends Object, D extends Object> 
-            Transform<S,D> converter(Class<S> source, Class<D> dest);
+        public <S extends Object, D extends Object>
+            Function<S,D> converter(Class<S> source, Class<D> dest);
     }
-    
+
     /**
      * Create a proxy, given a parameter converter.
      * @param <C> the contract class
@@ -42,12 +43,12 @@ public class ConverterDispatch
     @SuppressWarnings("unchecked")
     public static <C> C proxy(
                     Class<C> contract,
-                    Object target, 
+                    Object target,
                     ParameterConverterFactory converter)
     {
         return (C)Proxy.newProxyInstance(
-                        contract.getClassLoader(), 
-                        new Class [] { contract }, 
+                        contract.getClassLoader(),
+                        new Class [] { contract },
                         invocationHandler(contract, target, converter));
     }
 
@@ -59,15 +60,14 @@ public class ConverterDispatch
                     final ParameterConverterFactory converter)
     {
         final int argc = targetMethod.getParameterTypes().length;
-        final List<Transform<Object, Object>> converters = 
-            new ArrayList<Transform<Object,Object>>(argc);
-        // We use asClass here, because we don't care about translating
-        // primitive types in a specific way.
+        final List<Function<Object, Object>> converters = Lists.newArrayListWithCapacity(argc);
+        // We use wrap here, because we distinguish between primitives and there wrapper classes.
+        // That's because that's consistent with the compiler auto-boxing
         for(int i = 0; i != argc; ++i)
-            converters.add((Transform<Object,Object>)converter.converter(
-                           asClass(contractMethod.getParameterTypes()[i]),
-                           asClass(targetMethod.getParameterTypes()[i])));
-        
+            converters.add((Function<Object,Object>)converter.converter(
+                           Primitives.wrap(contractMethod.getParameterTypes()[i]),
+                           Primitives.wrap(targetMethod.getParameterTypes()[i])));
+
         return new InvocationHandler() {
 
             public Object invoke(Object proxy, Method method, Object[] args)
@@ -83,18 +83,36 @@ public class ConverterDispatch
                     throw e.getCause();
                 }
             }
-            
         };
     }
 
-    static class MethodKey extends TwoTuple<String,Integer> {
+    static class MethodKey {
+        public final String name;
+        public final int parameters;
+
         public MethodKey(Method method) {
-            super(method.getName(), method.getParameterTypes().length);
+            this.name = method.getName();
+            this.parameters = method.getParameterTypes().length;
         }
 
-        private static final long serialVersionUID = 1L; 
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name, parameters);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if(this == obj) {
+                return true;
+            } else if(this.getClass() == obj.getClass()) {
+                MethodKey other = (MethodKey)obj;
+                return this.name.equals(other.name) && this.parameters == other.parameters;
+            } else {
+                return false;
+            }
+        }
     }
-    
+
     private static <C> InvocationHandler invocationHandler(
                     Class<C> contract,
                     Object target,
@@ -104,22 +122,22 @@ public class ConverterDispatch
         for(Method method: target.getClass().getMethods()) {
             if(targets.containsKey(new MethodKey(method)))
                 throw new IllegalArgumentException(
-                    "Overloading is not supported. " + 
-                    method.getName() + " in class " + 
+                    "Overloading is not supported. " +
+                    method.getName() + " in class " +
                     target.getClass().getName() + " is overloaded.");
             targets.put(new MethodKey(method), method);
         }
-        
+
         final Map<Method,InvocationHandler> handlers = new HashMap<Method,InvocationHandler>();
         for(Method contractMethod: contract.getMethods()) {
             Method targetMethod = targets.get(new MethodKey(contractMethod));
-            handlers.put(contractMethod, 
-                invocationHandler(targetMethod, 
-                    contractMethod, 
-                    target, 
+            handlers.put(contractMethod,
+                invocationHandler(targetMethod,
+                    contractMethod,
+                    target,
                     converter));
         }
-        
+
         return new InvocationHandler() {
             public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable

@@ -5,8 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import net.lshift.java.lang.Variable;
-import net.lshift.java.lang.Variables;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 public class Delegate
 {
@@ -15,7 +15,7 @@ public class Delegate
             return null;
         }
     };
-    
+
     public static final InvocationHandler UNSUPORTED = new InvocationHandler() {
         public Object invoke(Object proxy, Method method, Object[] args) {
             throw new UnsupportedOperationException();
@@ -34,13 +34,13 @@ public class Delegate
     @SuppressWarnings("unchecked")
     public static <C> C delegateIf(
                     Class<C> contract,
-                    Variable<C> target, 
-                    Variable<Boolean> condition)
+                    Supplier<C> target,
+                    Supplier<Boolean> condition)
     {
         checkVoid(contract);
         return (C)Proxy.newProxyInstance(
-                        contract.getClassLoader(), 
-                        new Class [] { contract }, 
+                        contract.getClassLoader(),
+                        new Class [] { contract },
                         invocationHandler(contract, target, condition));
     }
 
@@ -50,41 +50,41 @@ public class Delegate
             if(!Void.TYPE.equals(method.getReturnType()))
                 throw new IllegalArgumentException(
                     "Only methods with void as their return type are allowed: " +
-                    method.getName() + " in interface " + contract.getName() + 
+                    method.getName() + " in interface " + contract.getName() +
                     " has return type " + method.getReturnType());
     }
-    
+
     public static <C> C delegate(
         Class<C> contract,
-        Variable<C> target)
+        Supplier<C> target)
     {
-        return delegateIf(contract, target, Variables.TRUE);
+        return delegateIf(contract, target, Suppliers.ofInstance(true));
     }
-    
+
     @SuppressWarnings("unchecked")
     public static <C> C noop(Class<C> contract)
     {
         checkVoid(contract);
         return (C)Proxy.newProxyInstance(
-                        contract.getClassLoader(), 
-                        new Class [] { contract }, 
+                        contract.getClassLoader(),
+                        new Class [] { contract },
                         NOOP);
     }
-    
+
     @SuppressWarnings("unchecked")
     public static <C> C unsupported(Class<C> contract)
     {
         checkVoid(contract);
         return (C)Proxy.newProxyInstance(
-                        contract.getClassLoader(), 
-                        new Class [] { contract }, 
+                        contract.getClassLoader(),
+                        new Class [] { contract },
                         UNSUPORTED);
     }
-    
+
     private static <C> InvocationHandler invocationHandler(
         final Class<C> contract,
-        final Variable<C> target,
-        final Variable<Boolean> condition)
+        final Supplier<C> target,
+        final Supplier<Boolean> condition)
     {
         return new InvocationHandler() {
             public Object invoke(Object proxy, Method method, Object[] args)
@@ -101,5 +101,5 @@ public class Delegate
             }
         };
     }
-   
+
 }
