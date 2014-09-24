@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package net.lshift.javax.xml.sax.helpers;
 

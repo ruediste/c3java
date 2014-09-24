@@ -19,13 +19,13 @@ public class RemoteMapSever<K,V>
     {
         this(RMIStubFactory.INSTANCE, map);
     }
-    
+
     public RemoteMapSever(StubFactory factory, Map<K,V> map)
     {
         this.map = map;
         this.factory = factory;
     }
-    
+
     public void clear()
     {
         map.clear();
@@ -67,7 +67,7 @@ public class RemoteMapSever<K,V>
         return map.isEmpty();
     }
 
-    public RemoteCollection<K> keySet() 
+    public RemoteCollection<K> keySet()
         throws RemoteException
     {
         return factory.export(new RemoteCollectionServer<K>(factory, map.keySet()));
@@ -93,7 +93,7 @@ public class RemoteMapSever<K,V>
         return map.size();
     }
 
-    public RemoteCollection<V> values() 
+    public RemoteCollection<V> values()
         throws RemoteException
     {
         return factory.export(new RemoteCollectionServer<V>(factory, map.values()));
@@ -105,6 +105,6 @@ public class RemoteMapSever<K,V>
             UnicastRemoteObject.unexportObject(this, true);
         }
         catch (NoSuchObjectException e) { }
-        
+
     }
 }

@@ -11,13 +11,13 @@ public class ThreeTuple<T, U, V>
 
     public V third;
 
-    public ThreeTuple(T first, U second, V third) 
+    public ThreeTuple(T first, U second, V third)
     {
         super(first, second);
         this.third = third;
     }
 
-    @SuppressWarnings("unchecked") 
+    @SuppressWarnings("unchecked")
     ThreeTuple(Iterator<Object> i) {
         super((T)i.next(), (U)i.next());
         this.third = (V)i.next();

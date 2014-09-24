@@ -7,17 +7,17 @@ import java.util.NoSuchElementException;
 
 /**
  * Concatenate the members of several iterators into one.
- * 
+ *
  * Commons Collections would seem to have this covered by
  * its IteratorChain, or where you require laziness ObjectGraphIterator.
- * ObjectGraphIterator seems to get remove() wrong and IteratorChain 
+ * ObjectGraphIterator seems to get remove() wrong and IteratorChain
  * isn't lazy.
- * 
+ *
  * This class covers the useful functionality of both classes (because this
  * class can be composed to do the same thing as ObjectGraphIterator
  * anyway). Its implemeted in about 40 lines, while these other two
  * classes are 450 lines combined.
- * 
+ *
  * @author david
  *
  */

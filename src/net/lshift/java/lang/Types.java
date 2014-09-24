@@ -22,19 +22,18 @@ public class Types
         addPrimitive(reps, Void.class);
         PRIMITIVE_WRAPPER = Collections.unmodifiableMap(reps);
     }
-    
+
     static void addPrimitive(Map<Class<?>,Class<?>> reps, Class<?> rep)
     {
         try {
             reps.put((Class<?>) rep.getField("TYPE").get(null), rep);
-            
         }
         catch (Exception e) {
             throw new ExceptionInInitializerError(
                 rep.getName() + " does not contain a primtive type");
         }
     }
-    
+
     public static Class<? extends Object> getWrapperClass(Class <?> primitive)
     {
         if(!primitive.isPrimitive())
@@ -49,16 +48,16 @@ public class Types
     @SuppressWarnings("unchecked")
     public static Class<? extends Object> asClass(Class<?> type)
     {
-        return PRIMITIVE_WRAPPER.containsKey(type) 
+        return PRIMITIVE_WRAPPER.containsKey(type)
             ? PRIMITIVE_WRAPPER.get(type)
             : (Class<Object>)type;
     }
-    
+
     public static final Map<Class<?>,Class<?>> PRIMITIVE;
     static {
         PRIMITIVE = Collections.unmodifiableMap(Maps.invert(PRIMITIVE_WRAPPER));
     }
- 
+
     public static final Map<Class<?>,Object> DEFAULT_VALUES;
     static {
         Map<Class<?>,Object> primitives = new HashMap<Class<?>,Object>();
@@ -72,5 +71,5 @@ public class Types
         primitives.put(Character.TYPE, new Character((char)0));
         DEFAULT_VALUES = Collections.unmodifiableMap(primitives);
     }
- 
+
 }

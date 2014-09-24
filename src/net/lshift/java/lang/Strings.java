@@ -16,10 +16,10 @@ public class Strings
             buffer.append(separator);
             buffer.append(i.next());
         }
-        
+
         return buffer.toString();
     }
-    
+
     public static <T> Transform<T,String> asString() {
         return new Transform<T,String>() {
             public String apply(Object x) {

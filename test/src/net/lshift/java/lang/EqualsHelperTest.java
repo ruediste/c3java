@@ -121,18 +121,18 @@ public class EqualsHelperTest
         assertTrue
             (EqualsHelper.equals
              (new ArrayList(list(exampleC1("1"),
-                                 exampleC1("2"), 
+                                 exampleC1("2"),
                                  exampleC1("3"))),
-              new LinkedList(list(exampleC1("1"), 
-                                  exampleC1("2"), 
+              new LinkedList(list(exampleC1("1"),
+                                  exampleC1("2"),
                                   exampleC1("3")))));
         assertFalse
             (EqualsHelper.equals
              (new ArrayList(list(exampleC1("1"),
-                                 exampleC1("2"), 
+                                 exampleC1("2"),
                                  exampleC1("3"))),
-              new LinkedList(list(exampleC1("1"), 
-                                  exampleC1("2"), 
+              new LinkedList(list(exampleC1("1"),
+                                  exampleC1("2"),
                                   exampleC1("4")))));
     }
 
@@ -163,13 +163,13 @@ public class EqualsHelperTest
         assertTrue
             (EqualsHelper.equals
              (AbstractBag.wrap(list(exampleC1("1"),
-                                    exampleC1("2"), 
+                                    exampleC1("2"),
                                     exampleC1("3"))),
-              AbstractBag.wrap(list(exampleC1("3"), 
-                                    exampleC1("2"), 
+              AbstractBag.wrap(list(exampleC1("3"),
+                                    exampleC1("2"),
                                     exampleC1("1")))));
     }
-    
+
     public void testArrays()
     {
         assertFalse(EqualsHelper.equals

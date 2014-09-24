@@ -7,13 +7,13 @@ public class FourTuple<T, U, V, W>
 {
     private static final long serialVersionUID = 1L;
     public final W fourth;
-    
-    public FourTuple(T first, U second, V third, W fourth) 
+
+    public FourTuple(T first, U second, V third, W fourth)
     {
         super(first, second, third);
         this.fourth = fourth;
     }
-    
+
     @SuppressWarnings("unchecked") FourTuple(Iterator<Object> i)
     {
         super((T)i.next(), (U)i.next(), (V)i.next());

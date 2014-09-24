@@ -64,7 +64,7 @@ public class DefaultEquality
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // The following are for java built in classes for which Object.equals
     // makes sense, or is the only thing that makes sense.
-    
+
     public boolean equals(String a, String b)
     {
         return a.equals(b);
@@ -74,7 +74,7 @@ public class DefaultEquality
     {
         return a.equals(b);
     }
-    
+
     public boolean equals(StringBuffer a, StringBuffer b)
     {
         return a.equals(b);
@@ -84,7 +84,7 @@ public class DefaultEquality
     {
         return a.equals(b);
     }
-    
+
     public boolean equals(Class<?> a, Class<?> b)
     {
         return a.equals(b);

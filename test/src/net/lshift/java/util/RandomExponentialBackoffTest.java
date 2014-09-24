@@ -7,12 +7,12 @@ public class RandomExponentialBackoffTest
     extends TestCase
 {
     RandomExponentialBackoff backoff = new RandomExponentialBackoff();
-    
+
     public void testNewSession()
     {
         backoff.newSession();
     }
-    
+
     public void testNoBackoff()
     {
         double before = backoff.getAverageSuccessTime();
@@ -20,8 +20,8 @@ public class RandomExponentialBackoffTest
         session.complete();
         assertEquals(before, backoff.getAverageSuccessTime());
     }
-    
-    public void testBackoff(int n) 
+
+    public void testBackoff(int n)
         throws InterruptedException
     {
         Session session = backoff.newSession();
@@ -30,8 +30,8 @@ public class RandomExponentialBackoffTest
         session.complete();
         System.out.println("average success time = " + backoff.getAverageSuccessTime());
     }
-    
-    public void testBackoff() 
+
+    public void testBackoff()
         throws InterruptedException
     {
         // careful! if you consecutively increase n the execution time

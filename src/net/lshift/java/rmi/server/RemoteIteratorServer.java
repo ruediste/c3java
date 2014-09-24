@@ -14,7 +14,7 @@ public class RemoteIteratorServer<E>
     private static final long serialVersionUID = 1L;
 
     private final Iterator<E> iterator;
-    
+
     public RemoteIteratorServer(Iterator<E> iterator)
         throws RemoteException
     {
@@ -43,5 +43,5 @@ public class RemoteIteratorServer<E>
         }
         catch (NoSuchObjectException e) { }
     }
-    
+
 }

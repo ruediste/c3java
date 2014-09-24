@@ -52,10 +52,10 @@ public class ContentHandlerBuilder
      * @see #getDocumentLocator()
      */
     public final DocumentLocatorContentHandler documentLocatorHandler(
-        final ContentHandler delegate) 
+        final ContentHandler delegate)
     {
         return  new DocumentLocatorContentHandler() {
-    
+
             public void setDocumentLocator(Locator locator) {
                 ContentHandlerBuilder.this.documentLocator = locator;
                 delegate.setDocumentLocator(locator);
@@ -64,11 +64,11 @@ public class ContentHandlerBuilder
     }
 
     public final PrefixMappingContentHandler prefixMappingHandler(
-        final ContentHandler delegate) 
+        final ContentHandler delegate)
     {
         return new PrefixMappingContentHandler() {
-    
-            public void endPrefixMapping(String prefix) 
+
+            public void endPrefixMapping(String prefix)
             throws SAXException
             {
                 prefixMappings.remove(prefix);
@@ -81,9 +81,9 @@ public class ContentHandlerBuilder
                 prefixMappings.put(prefix, uri);
                 delegate.startPrefixMapping(prefix, uri);
             }
-        };   
+        };
     }
-    
+
     /**
      * Create a content handler which is mostly a filter.
      * It collects the document locator, and tracks name spaces,
@@ -98,7 +98,7 @@ public class ContentHandlerBuilder
         override(prefixMappingHandler(delegate));
         push();
     }
-    
+
     /**
      * Constructor for a content handler.
      * This sets up a content handler with various defaults you will
@@ -113,42 +113,42 @@ public class ContentHandlerBuilder
     {
         // We know the document is going to start, we don't need to do anything
         override(Delegate.noop(DocumentContentHandler.class));
-        
+
         // Ignoring ignore-able whitespace seems like a safe default
         override(Delegate.noop(IgnorableWhitespaceContentHandler.class));
-        
+
         override(documentLocatorHandler(Delegate.noop(ContentHandler.class)));
         override(prefixMappingHandler(Delegate.noop(ContentHandler.class)));
-        
+
         // Various things we want to know about
         override(new Object() {
-            
+
             @SuppressWarnings("unused")
-            public void characters(char [] c, int off, int len) 
+            public void characters(char [] c, int off, int len)
             throws SAXException
             {
                 String s = new String(c, off, len);
                 if(!s.trim().isEmpty())
                     throw new SAXException("Unexpected character content: " + s);
             }
-            
+
             public String toString() {
                 return "utilities";
             }
         });
-        
+
         push();
     }
-    
+
     // ------------------------------------------------------------------------
-    
+
     public interface NamedElementHandler {
         public void startElement(Attributes atts)
             throws SAXException;
         public void endElement()
             throws SAXException;
     }
-    
+
     // ------------------------------------------------------------------------
 
     /**
@@ -167,14 +167,14 @@ public class ContentHandlerBuilder
     }
 
     // ------------------------------------------------------------------------
-    
+
     public void push()
     {
         stack.push(Lists.copy(newhandlers));
         newhandlers.clear();
         updateDispatch();
     }
-    
+
     public void pop()
     {
         stack.pop();
@@ -184,18 +184,18 @@ public class ContentHandlerBuilder
     protected void updateDispatch()
     {
         stackContentHandler = DynamicDispatch.proxy(
-            ContentHandler.class, 
+            ContentHandler.class,
             Lists.reverseIterable(Lists.concatenate(stack)));
     }
 
     // ------------------------------------------------------------------------
 
-    
-    public ContentHandler contentHandler() 
+
+    public ContentHandler contentHandler()
     {
         // stackhandler is the super of the content handler
         final ContentHandler stackhandler = Delegate.delegate(
-            ContentHandler.class, 
+            ContentHandler.class,
             new Variable<ContentHandler>() {
                 public ContentHandler get() {
                     return stackContentHandler;
@@ -224,18 +224,18 @@ public class ContentHandlerBuilder
                     pop();
                     stackhandler.endElement(uri, localName, name);
                     // I think this is what you would expect - that if you
-                    // called override during 
+                    // called override during
                     newhandlers.clear();
                 }
 
                 @SuppressWarnings("unused")
-                public void startDocument() 
+                public void startDocument()
                 throws SAXException
                 {
                     stackhandler.startDocument();
                     push();
                 }
-                
+
                 @SuppressWarnings("unused")
                 public void endDocument()
                 throws SAXException
@@ -271,15 +271,15 @@ public class ContentHandlerBuilder
             }
         };
     }
-    
-    
+
+
     public static ElementContentHandler byElementName(
         final Map<QName, NamedElementHandler> handlers,
         final ElementContentHandler undefined)
     {
         return new ElementContentHandler() {
 
-            private NamedElementHandler getHandler(String uri, String localName) 
+            private NamedElementHandler getHandler(String uri, String localName)
             throws SAXException
             {
                 return handlers.get(qname(uri, localName));
@@ -290,7 +290,7 @@ public class ContentHandlerBuilder
                 QName qname = qname(uri, localName);
                 return handlers.containsKey(qname);
             }
-            
+
             @Override
             public void endElement(String uri, String localName, String name)
                 throws SAXException
@@ -315,7 +315,7 @@ public class ContentHandlerBuilder
                 else
                     undefined.startElement(uri, localName, name, atts);
             }
-            
+
         };
     }
     public static ElementContentHandler mixed(
@@ -328,7 +328,7 @@ public class ContentHandlerBuilder
         final QName required,
         final NamedElementHandler handler)
     {
-        return byElementName(required, handler, 
+        return byElementName(required, handler,
             unexpected(Sets.set(required)));
     }
 
@@ -354,11 +354,11 @@ public class ContentHandlerBuilder
             {
                 ch.startElement(uri, localName, name, atts);
             }
-            
+
         };
     }
-    
-    private static void unexpectedElement(QName qname, Collection<QName> required) 
+
+    private static void unexpectedElement(QName qname, Collection<QName> required)
     throws SAXException
     {
         throw new SAXException("Unexpected element: " + qname +
@@ -391,14 +391,14 @@ public class ContentHandlerBuilder
                     throw new IOException("Error writing characters", e);
                 }
             }
-            
+
         };
     }
-    
-    public static ContentHandler contentHandler(Writer writer) 
+
+    public static ContentHandler contentHandler(Writer writer)
     throws SAXException
     {
-        SAXTransformerFactory factory = 
+        SAXTransformerFactory factory =
             (SAXTransformerFactory) SAXTransformerFactory.newInstance();
         TransformerHandler handler;
         try {
@@ -410,15 +410,15 @@ public class ContentHandlerBuilder
         return handler;
     }
 
-    public void applyPrefixMappings(ContentHandler other) 
+    public void applyPrefixMappings(ContentHandler other)
     throws SAXException
     {
         for(Map.Entry<String, String> mapping: getPrefixMappings().entrySet())
             other.startPrefixMapping(mapping.getKey(), mapping.getValue());
     }
-    
+
     // ------------------------------------------------------------------------
-    
+
     public Locator getDocumentLocator()
     {
         return documentLocator;

@@ -16,13 +16,13 @@ public class RemoteCollectionServer<T>
 
     private final Collection<T> collection;
     private final StubFactory factory;
-    
+
     public RemoteCollectionServer(Collection<T> collection)
         throws RemoteException
     {
         this(RMIStubFactory.INSTANCE, collection);
     }
-    
+
     public RemoteCollectionServer(StubFactory factory, Collection<T> collection)
         throws RemoteException
     {

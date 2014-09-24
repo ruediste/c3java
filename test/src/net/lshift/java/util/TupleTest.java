@@ -21,7 +21,7 @@ public class TupleTest
                         Tuples.tuple('a', 1, 0),
                         Tuples.tuple('b', 2, 0));
     }
-    
+
     @SuppressWarnings("unchecked")
     public void testMapStaticInitializers()
     {
@@ -32,9 +32,9 @@ public class TupleTest
         @SuppressWarnings("unused")
         Map<Character,Integer> m2 = Tuples.map(
             Tuples.tuple('a', 1),
-            Tuples.tuple('b', 2)); 
+            Tuples.tuple('b', 2));
     }
-    
+
     @SuppressWarnings("unchecked")
     public void testEquals()
     {

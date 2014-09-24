@@ -17,8 +17,8 @@ public class Literal
     {
         public String literal(Object o);
     }
-    
-    
+
+
     static Map<Character,String> ESCAPE;
     static {
         Map<Character, String> escape = new HashMap<Character,String>();
@@ -69,7 +69,7 @@ public class Literal
                     return Character.toString(c);
                 }
             }
-            
+
             @SuppressWarnings("unused")
             public String literal(String str)
             {
@@ -78,22 +78,22 @@ public class Literal
                 for(char c: str.toCharArray())
                     buf.append(literal(c));
                 buf.append('"');
-                
+
                 return buf.toString();
             }
-                        
-           
+
+
             @SuppressWarnings("unused")
             public String literal(Long i)
             {
                 return Long.toString(i) + "L";
             }
-            
+
         });
 
     public static String literal(Object o)
     {
         return DISPATCHER.literal(o);
     }
-    
+
 }

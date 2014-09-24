@@ -10,7 +10,7 @@ public class CollectionsTest
         assertFalse(Collections.Procedures.hasNext().apply(Lists.list().iterator()));
         assertTrue(Collections.Procedures.hasNext().apply(Lists.list(new Object()).iterator()));
     }
-    
+
     public void testIsEmpty()
     {
         assertTrue(Collections.Procedures.isEmpty().apply(Lists.list()));

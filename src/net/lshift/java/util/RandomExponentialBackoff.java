@@ -10,12 +10,12 @@ public class RandomExponentialBackoff
     private static final double DEFAULT_BACKOFF_FACTOR = Math.sqrt(2.0);
     private static final double DEFAULT_SUCCESS_TIME = 100.0; // 1/10th of a second
     private static final double DEFAULT_DECAY_TIME = 10000.0; // 10 seconds
-    
+
     private final double decayTime;
     private final double backoffFactor;
     private double averageSuccessTime;
     private long lastUpdateTime;
-    
+
     /**
      * Create a new random exponential backoff context.
      * @param decayTime
@@ -23,7 +23,7 @@ public class RandomExponentialBackoff
      * @param seedSuccessTime
      */
     public RandomExponentialBackoff
-        (double decayTime, 
+        (double decayTime,
          double backoffFactor,
          double seedSuccessTime)
     {
@@ -32,18 +32,18 @@ public class RandomExponentialBackoff
         this.averageSuccessTime = seedSuccessTime;
         this.lastUpdateTime = System.currentTimeMillis();
     }
-    
+
     public RandomExponentialBackoff()
     {
         this(DEFAULT_DECAY_TIME, DEFAULT_BACKOFF_FACTOR, DEFAULT_SUCCESS_TIME);
     }
-    
+
     public class Session
     {
         public final long sessionStartTime;
         public long attemptStartTime;
         public double nextWaitFor;
-        
+
         private Session()
         {
             sessionStartTime = System.currentTimeMillis();
@@ -55,13 +55,13 @@ public class RandomExponentialBackoff
         public long nextWait() {
             return (long)(nextWaitFor*Math.random());
         }
-        
+
         public void newAttempt()
         {
             attemptStartTime = System.currentTimeMillis();
             nextWaitFor = nextWaitFor*backoffFactor;
         }
-        
+
         /**
          * Call after each failed attempt. This makes the current
          * thread sleep for the backoff time.
@@ -85,7 +85,7 @@ public class RandomExponentialBackoff
             // if the first attempt succeeded, I'm not interested in the result
             if(attemptStartTime > sessionStartTime) {
                 // the current time is used to calculate the age of this
-                // result, 
+                // result,
                 long currentTime = System.currentTimeMillis();
                 long duration = attemptStartTime - sessionStartTime;
 
@@ -97,7 +97,7 @@ public class RandomExponentialBackoff
             }
         }
     }
-    
+
     public class RetriesExceededException
         extends Exception
     {
@@ -127,7 +127,7 @@ public class RandomExponentialBackoff
         if(retries <= 0)
             throw new IllegalArgumentException("retries = " + retries);
         Session session = newSession();
-        
+
         for(int i = 1; ; ++i) {
             try {
                 R result = operation.apply();
@@ -141,7 +141,7 @@ public class RandomExponentialBackoff
             }
         }
     }
-    
+
     /**
      * Get a new session
      * Begin your first attempt immediately after calling this.

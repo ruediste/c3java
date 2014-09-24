@@ -527,7 +527,7 @@ public class DynamicDispatch
                 List<ClosureMethod> methods = new ArrayList<ClosureMethod>();
                 for(final Class<?> implementation: implementations) {
                     methods.addAll(Lists.transform(
-                        Arrays.asList(implementation.getMethods()), 
+                        Arrays.asList(implementation.getMethods()),
                         new Function<Method, ClosureMethod>(){
                             public ClosureMethod apply(Method x) {
                                 return new ClosureMethod(implementation, x);
@@ -549,7 +549,7 @@ public class DynamicDispatch
          * @return
          */
         private Procedure procedure(
-                Method method, List<ClosureMethod> methods, 
+                Method method, List<ClosureMethod> methods,
                 Iterable<Class<Object>> implementations) {
             Iterable<ClosureMethod> pmethods = procedureMethods(method, methods);
             if(!pmethods.iterator().hasNext()) {

@@ -11,7 +11,7 @@ public class FiveTuple<T, U, V, W, X>
         super(first, second, third, fourth);
         this.fifth = fifth;
     }
-    
+
     @Override
     public Object get(int index)
     {
@@ -30,7 +30,7 @@ public class FiveTuple<T, U, V, W, X>
     {
         return 5;
     }
-    
+
     public static <T,U,V,W,X> FiveTuple<T,U,V,W,X> tuple(T a, U b, V c, W d, X e)
     {
         return new FiveTuple<T,U,V,W,X>(a,b,c, d, e);

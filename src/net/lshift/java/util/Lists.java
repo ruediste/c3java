@@ -24,55 +24,54 @@ public class Lists
       wherever possible, we return ArrayLists, because thats what java
       programmers will be expecting in general.
      */
-    
     public static <E> void forEach(Procedure<E> proc, Collection<? extends E> list)
     {
-	for(Iterator<? extends E> i = list.iterator(); i.hasNext();)
-	    proc.apply(i.next());
+        for(Iterator<? extends E> i = list.iterator(); i.hasNext();)
+            proc.apply(i.next());
     }
 
     public static class FoldState<E>
     {
-	public FoldState(boolean proceed, E seed)
-	{
-	    this.seed = seed;
-	    this.proceed = proceed;
-	}
+        public FoldState(boolean proceed, E seed)
+        {
+            this.seed = seed;
+            this.proceed = proceed;
+        }
 
-	public final E seed;
-	public final boolean proceed;
+        public final E seed;
+        public final boolean proceed;
     }
 
     public interface FoldProcedure<T,U>
     {
-	public FoldState<U> apply(T item, U accumulator); 
+        public FoldState<U> apply(T item, U accumulator);
     }
 
     /**
      * LISP like fold-left.
      */
     public static <E,S> S foldLeft
-        (FoldProcedure<E,S> proc, 
-         S seed, 
+        (FoldProcedure<E,S> proc,
+         S seed,
          Iterable<? extends E> c)
     {
-	for(Iterator<? extends E> i = c.iterator(); i.hasNext();) {
-	    FoldState<S> state = proc.apply(i.next(), seed);
-	    seed = state.seed;
-	    if(!state.proceed)
-		break;
-	}
+        for(Iterator<? extends E> i = c.iterator(); i.hasNext();) {
+            FoldState<S> state = proc.apply(i.next(), seed);
+            seed = state.seed;
+            if(!state.proceed)
+                break;
+        }
 
-	return seed;
+        return seed;
     }
 
     public static <E> FoldState<E> foldState(boolean proceed, E seed)
     {
         return new FoldState<E>(proceed, seed);
     }
-    
+
     /**
-     * Create a list. 
+     * Create a list.
      * @param <E>
      * @param e
      * @return A list containing each argument in original order. The
@@ -82,12 +81,12 @@ public class Lists
     {
         return new ArrayList<E>(Arrays.asList(e));
     }
-    
+
     public static <E> List<E> copy(List<E> l)
     {
         return asList(l);
     }
-    
+
     /**
      * A factory for lists with the spec
      * @param <E>
@@ -101,11 +100,11 @@ public class Lists
             }
         };
     }
-    
+
     public static <E> Factory<List<E>> listFactory(E ...e) {
         return asListFactory(Arrays.asList(e));
     }
-    
+
     // I can't figure out a way to get rid of this warning, so I've
     // put this in its own method, and supressed the warnings
     @SuppressWarnings("unchecked")
@@ -123,21 +122,21 @@ public class Lists
 
     /**
      * LISP like fold-right.
-     */ 
+     */
     public static <E,S> S foldRight
-        (FoldProcedure<E,S> proc, 
-         S seed, 
+        (FoldProcedure<E,S> proc,
+         S seed,
          Iterable<? extends E> c)
     {
-	List<E> l = asList(c);
-	for(ListIterator<E> i = l.listIterator(l.size()); i.hasPrevious();) {
-	    FoldState<S> state = proc.apply(i.previous(), seed);
-	    seed = state.seed;
-	    if(!state.proceed)
-		break;
-	}
+        List<E> l = asList(c);
+        for(ListIterator<E> i = l.listIterator(l.size()); i.hasPrevious();) {
+            FoldState<S> state = proc.apply(i.previous(), seed);
+            seed = state.seed;
+            if(!state.proceed)
+                break;
+        }
 
-	return seed;
+        return seed;
     }
 
     /**
@@ -148,24 +147,27 @@ public class Lists
      */
     public static <E,S> List<S> map(final Transform<E,S> proc, Iterable<E> c)
     {
-	// because we know the size of the collection in advance
-	// may as well construct an array list
-	ArrayList<S> result = (c instanceof Collection) 
+        // because we know the size of the collection in advance
+        // may as well construct an array list
+        ArrayList<S> result = (c instanceof Collection)
             ? new ArrayList<S>(((Collection<E>)c).size())
             : new ArrayList<S>();
-	for(E item: c)
-	    result.add(proc.apply(item));
-	return result;
+        for(E item: c)
+            result.add(proc.apply(item));
+        return result;
     }
 
     /**
      * LISP like filter
+     * use {@link com.google.common.collect.Iterables#filter(Iterable, com.google.common.base.Predicate)} instead,
+     * but not that this version is eager, while it's replacement is lazy.
      * @param <E>
      * @param proc the predicate to filter with
      * @param c the collection to filter
      * @return a new list containing only those elements of c for
      *   which proc.apply() returns true, in the order c.iterator() returns them
      */
+    @Deprecated
     public static <E> List<E> filter(Predicate<E> proc, Iterable<E> c)
     {
         ArrayList<E> result = new ArrayList<E>();
@@ -173,11 +175,12 @@ public class Lists
             if(proc.apply(e)) result.add(e);
         return result;
     }
-    
+
     /**
      * LISP like filter with array argument
      * @see filter(Predicate<E>, Collection<E>)
      */
+    @Deprecated
     public static <E> List<E> filter(Predicate<E> proc, E[] c)
     {
         ArrayList<E> result = new ArrayList<E>();
@@ -185,10 +188,10 @@ public class Lists
             if(proc.apply(e)) result.add(e);
         return result;
     }
-    
+
     /**
      * SRFI-1 like lset-intersection
-     * this can be O(N^2)) - ie it runs contains on each cn 
+     * this can be O(N^2)) - ie it runs contains on each cn
      * for every element in c. You should sometimes consider
      * intersection(c, Sets.union(cn)).
      * @param <E>
@@ -206,60 +209,59 @@ public class Lists
     {
         return filter(Collections.Procedures.contains(Arrays.asList(c2)), c1);
     }
-  
+
     /**
      * SRFI-1 like lset-difference
-     * this can be O(N^2)) - ie it runs contains on each cn 
+     * this can be O(N^2)) - ie it runs contains on each cn
      * for every element in c. You should sometimes consider
      * difference(c, Sets.union(cn)).
      * @param <E>
      * @param c the collection to filter
      * @param cn collections containing the elements to be excluded
      * @return the elemements of c1 which are not in any of cn, in the order
-     *   c1.iterator() returns them, 
+     *   c1.iterator() returns them,
      *   filter(Procedures.not(Collections.Procedures.contains(cn)), c)
      */
     public static <E> List<E> difference(Collection<E> c, Collection<E> ... cn)
     {
         return filter(Procedures.not(Collections.Procedures.contains(cn)), c);
     }
-    
+
     /**
      * SRFI-1 like lset-difference with array arguments
      * @see difference(Collection<E>, Collection<E> ...)
-     */   
+     */
     public static <E> List<E> difference(E [] c1, E [] c2)
     {
         return filter
             (Procedures.not
              (Collections.Procedures.contains(Arrays.asList(c2))), c1);
     }
- 
-    
+
     // Searching
-    
+
     /**
      * Return the first element statisfying proc.
-     * see find in SRFI-1 
+     * see find in SRFI-1
      * @param <E>
      * @param proc the predicate to satisfy
      * @param c the collection to search in.
      * @return the first element statisfying proc, or null, if no element
      *   satisfies proc.
      */
+    @Deprecated
     public static <E> E find(final Predicate<E> proc, Iterable<? extends E> c)
     {
-	return foldLeft
-	    (new FoldProcedure<E, E>() {
-		public FoldState<E> apply(E item, E accumulator) {
-		    boolean result = proc.apply(item);
-		    return new FoldState<E>(!result, result ? item : null);
-		}
-	    }, null, c);
+        return foldLeft
+            (new FoldProcedure<E, E>() {
+                public FoldState<E> apply(E item, E accumulator) {
+                    boolean result = proc.apply(item);
+                    return new FoldState<E>(!result, result ? item : null);
+                }
+            }, null, c);
     }
 
     // find-tail doesn't make any sense for java lists
-    
     /**
      * Return the first non-null value returned by proc.
      * See any in SRFI-1
@@ -268,7 +270,6 @@ public class Lists
     {
         return foldLeft
             (new FoldProcedure<E, R>() {
-                
                 public FoldState<R> apply(E item, R accumulator)
                 {
                     R result = proc.apply(item);
@@ -277,7 +278,8 @@ public class Lists
                 }
             }, null, c);
     }
-    
+
+    @Deprecated
     public static <E> E findLast(final Predicate<E> proc, Iterable<? extends E> c)
     {
         return foldRight
@@ -308,34 +310,33 @@ public class Lists
      * @param c
      * @return
      */
-    public static <E> boolean all
-        (final Predicate<E> proc, 
-         Iterable<? extends E> c)
-    {
-	return foldRight
-	    (new FoldProcedure<E,Boolean>() {
-		public FoldState<Boolean> apply(E item, Boolean accumulator) {
-		    boolean result = proc.apply(item) && accumulator;
-		    return new FoldState<Boolean>(result, result);
-		}
-	    }, true, c);
+    @Deprecated
+    public static <E> boolean all(
+            final Predicate<E> proc,
+            Iterable<? extends E> c) {
+        return foldRight(new FoldProcedure<E, Boolean>() {
+            public FoldState<Boolean> apply(E item, Boolean accumulator) {
+                boolean result = proc.apply(item) && accumulator;
+                return new FoldState<Boolean>(result, result);
+            }
+        }, true, c);
     }
 
     public static <E> E head(List<? extends E> list)
     {
         return list.get(0);
     }
-    
+
     public static <E> List<E> tail(List<E> list)
     {
         return java.util.Collections.unmodifiableList(list.subList(1, list.size()));
     }
-    
+
     public static <E> Collection<Collection<E>> zip(Iterable<E>... c)
     {
         return zip(Arrays.asList(c));
     }
-    
+
     /**
      * Zip lists together.
      * This builds a list by adding one item from each list, and repeating
@@ -346,7 +347,7 @@ public class Lists
      */
     public static <E> Collection<Collection<E>> zip(List<Iterable<E>> l)
     {
-        Collection<Iterator<E>> iterators = 
+        Collection<Iterator<E>> iterators =
             Lists.map(Collections.Procedures.<E>iterator(), l);
 
         Collection<Collection<E>> result = new ArrayList<Collection<E>>();
@@ -358,8 +359,10 @@ public class Lists
 
         return result;
     }
-       public static <E, F> Collection<TwoTuple<E, F>> tupleZip(
-        Iterable<E> e, Iterable<F> f)
+
+    public static <E, F> Collection<TwoTuple<E, F>> tupleZip(
+            Iterable<E> e,
+            Iterable<F> f)
     {
         Iterator<E> iterE = e.iterator();
         Iterator<F> iterF = f.iterator();
@@ -402,48 +405,45 @@ public class Lists
         return result;
     }
 
-    public static <E> boolean equal
-        (final Collection<E> control,
-	 Collection<E>... tests)
-    {
-	Predicate<Collection<E>> sameLength = new Predicate<Collection<E>>() {
-	    public Boolean apply(Collection<E> x)
-	    {
-		return control.size() == x.size();
-	    }
-	};
-	
-	if (!all(sameLength, Arrays.asList(tests)))
-	    return false;
-	
-        // If some knows what to do with this warning please tell me!
-	Collection<Collection<E>> zipped = zip(tests);
-	
-	Iterator<E> controlIt = control.iterator();
-	Iterator<Collection<E>> zippedIt = zipped.iterator();
-	while (controlIt.hasNext() && zippedIt.hasNext())
-	{
-	    final E elem = controlIt.next();
-	    Collection<E> slice = zippedIt.next();
-	    
-	    Predicate<E> equalToElem = new Predicate<E>() {
+    @Deprecated
+    public static <E> boolean equal(
+            final Collection<E> control,
+            Collection<E>... tests) {
+        Predicate<Collection<E>> sameLength = new Predicate<Collection<E>>() {
+            public Boolean apply(Collection<E> x) {
+                return control.size() == x.size();
+            }
+        };
 
-		public Boolean apply(E x)
-		{
-		    if (null == x && null == elem)
-			return true;
-		    else if (null == x || null == elem)
-			return false;
-		    else
-			return elem.equals(x);
-		}
-	    };
-	    if (!all(equalToElem, slice))
-		return false;
-	}
-	return !(controlIt.hasNext() || zippedIt.hasNext());
+        if (!all(sameLength, Arrays.asList(tests)))
+            return false;
+
+        // If some knows what to do with this warning please tell me!
+        Collection<Collection<E>> zipped = zip(tests);
+
+        Iterator<E> controlIt = control.iterator();
+        Iterator<Collection<E>> zippedIt = zipped.iterator();
+        while (controlIt.hasNext() && zippedIt.hasNext()) {
+            final E elem = controlIt.next();
+            Collection<E> slice = zippedIt.next();
+
+            Predicate<E> equalToElem = new Predicate<E>() {
+
+                public Boolean apply(E x) {
+                    if (null == x && null == elem)
+                        return true;
+                    else if (null == x || null == elem)
+                        return false;
+                    else
+                        return elem.equals(x);
+                }
+            };
+            if (!all(equalToElem, slice))
+                return false;
+        }
+        return !(controlIt.hasNext() || zippedIt.hasNext());
     }
-    
+
     public static <E> List<E> concatenate(List<List<E>> lists)
     {
         int totalSize = foldLeft(new FoldProcedure<List<E>, Integer>() {
@@ -451,13 +451,13 @@ public class Lists
                 return new FoldState<Integer>(true, accumulator + item.size());
             }
         }, 0, lists);
-        
+
         List<E> concatenated = new ArrayList<E>(totalSize);
         for(List<E> item: lists)
             concatenated.addAll(item);
         return concatenated;
     }
-    
+
     /**
      * Concatenate lists
      * @param <E>
@@ -492,7 +492,7 @@ public class Lists
     {
         return concatenate(Arrays.asList(a, b, c));
     }
-    
+
     /**
      * Reverse a list
      * The list is not mutated. This is efficient for Pair, because
@@ -510,10 +510,10 @@ public class Lists
         E[] l = (E[])(new Object[index]);
         for(E element: c)
             l[--index] = element;
-        
+
         return Arrays.asList(l);
     }
-    
+
     public static <E> Iterable<E> reverseIterable(final List<E> l)
     {
         return new Iterable<E>() {
@@ -525,13 +525,13 @@ public class Lists
             }
         };
     }
-    
+
     public static <E> Iterator<E> reverseIterator(final List<E> l)
     {
         return new Iterator<E> () {
 
             private ListIterator<E> i = l.listIterator(l.size());
-            
+
             @Override
             public boolean hasNext()
             {
@@ -549,20 +549,21 @@ public class Lists
             {
                 i.remove();
             }
-            
+
         };
     }
-    
+
     public static <E> List<E> head(List<E> c, int size)
     {
         return c.subList(0, size);
     }
-    
+
     public static <E> List<E> tail(List<E> c, int begin)
     {
         return c.subList(begin, c.size());
     }
 
+    @Deprecated
     public static boolean all(List<Boolean> list)
     {
         return all(new Predicate<Boolean>() {
@@ -571,7 +572,7 @@ public class Lists
             {
                 return x;
             }
-            
+
         }, list);
     }
 }

@@ -74,7 +74,7 @@ public class Copy
     }
 
     public static void copy(Reader in, File dest)
-	throws IOException
+        throws IOException
     {
         Writer out = new FileWriter(dest);
         try {

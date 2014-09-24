@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import com.google.common.base.Function;
+
 import net.lshift.java.lang.Types;
 import net.lshift.java.util.Transform;
 
@@ -52,22 +54,22 @@ public class Mock
         public Object getProperty(String name);
         public void setProperty(String name, Object value);
     }
-    
+
     public interface Factory<T>
     extends Serializable
     {
         public T bean(final Store store);
         public T bean(Map<String,Object> map);
         public T bean();
-        
+
         /**
          * Transform which applies copy.
          * @see #copy(Object)
          * @param <U>
          * @return
          */
-        public <U extends T> Transform<U, T> copy();
-        
+        public <U extends T> Function<U, T> copy();
+
         /**
          * Create a bean by copying a bean that implements the
          * interface this factory supports. Equivalent to bean(describe(other)).
@@ -79,7 +81,7 @@ public class Mock
          * @return
          */
         public <U extends T> T copy(U other);
-        
+
         /**
          * Describe a bean. Only fields with getters in T
          * will be included in the description. The bean has already
@@ -91,7 +93,7 @@ public class Mock
          * @return
          */
         public <U extends T> Map<String,Object> describe(U bean);
-        
+
         /**
          * Selectively assign one bean from another. The fields assigned
          * are those specified in the interface of this factory.
@@ -100,19 +102,19 @@ public class Mock
          * @param assignTo
          * @param assignFrom
          */
-        public <U extends T, V extends T> void assign(U assignTo, V assignFrom); 
+        public <U extends T, V extends T> void assign(U assignTo, V assignFrom);
     }
-    
+
     private enum MethodType {
         READER, WRITER, OTHER
     }
-    
+
     public interface BeanInvocationHandler
     extends Serializable
     {
         public Object invoke(Store store, Method method, Object[] args)
             throws Throwable;
-        
+
         /**
          * Get the name of the relevant property, if applicable.
          * @return the property name, or null if the method type is
@@ -124,13 +126,13 @@ public class Mock
          * The type of method. We use this to find getters and setters.
          */
         public MethodType getMethodType();
-        
+
         /**
          * If this method is a reader, get the writer method
          */
         public Method getWriter();
     }
-    
+
     private static final class EqualsHandler
     implements BeanInvocationHandler
     {
@@ -147,7 +149,7 @@ public class Mock
         throws Throwable
         {
             MockInvocationHandler mockInvocationHandler = mockOf(args[0]);
-            if(mockInvocationHandler != null && 
+            if(mockInvocationHandler != null &&
                mockInvocationHandler.getInterface() == bean) {
                 return mockInvocationHandler.getStore().equals(store);
             }
@@ -180,19 +182,19 @@ public class Mock
     {
         private static final long serialVersionUID = 1L;
         protected final String name;
-        
+
         private PropertyHandler(String name)
         {
             this.name = name;
         }
-        
+
         @Override
         public String getPropertyName()
         {
             return name;
         }
     }
-    
+
     private static class Reader
     extends PropertyHandler
     implements BeanInvocationHandler
@@ -224,7 +226,7 @@ public class Mock
             return writer;
         }
     }
-    
+
     private static final class PrimitiveReader
     extends Reader
     implements BeanInvocationHandler
@@ -232,7 +234,7 @@ public class Mock
         private static final long serialVersionUID = 1L;
 
         final Object defaultValue;
-    
+
         private PrimitiveReader(String name, Method writer, Object defaultValue)
         {
             super(name, writer);
@@ -279,9 +281,9 @@ public class Mock
     }
 
 
-    private static Map<Class<?>,Map<Method,BeanInvocationHandler>> cache = 
+    private static Map<Class<?>,Map<Method,BeanInvocationHandler>> cache =
         new WeakHashMap<Class<?>, Map<Method,BeanInvocationHandler>>();
-    
+
     private static final Method [] STORE_DELEGATE_METHODS = Object.class.getMethods();
     private static final Method EQUALS_METHOD;
     static {
@@ -300,7 +302,7 @@ public class Mock
             public Object invoke(Store store, Method method, Object[] args)
                 throws Throwable
             {
-                try {                   
+                try {
                     return method.invoke(store, args);
                 }
                 catch(InvocationTargetException e) {
@@ -324,19 +326,19 @@ public class Mock
             public Method getWriter()
             {
                 return null;
-            }  
+            }
     };
-    
+
     private static boolean addPropertyMethods(
-        Map <Method,BeanInvocationHandler> methods, 
-        final Class<?> bean) 
+        Map <Method,BeanInvocationHandler> methods,
+        final Class<?> bean)
         throws IntrospectionException
     {
         boolean copyable = true;
 
         if(!bean.isInterface())
             throw new IllegalArgumentException("Not an interface");
-        
+
         BeanInfo info = Introspector.getBeanInfo(bean);
         for(PropertyDescriptor pinfo: info.getPropertyDescriptors()) {
             final String name = pinfo.getName();
@@ -356,7 +358,7 @@ public class Mock
             else {
                 copyable = false;
             }
-            
+
             if(writeMethod != null) {
                 if(!writeMethod.isAccessible())
                     writeMethod.setAccessible(true);
@@ -372,10 +374,10 @@ public class Mock
 
         for(Class<?> superinterface: bean.getInterfaces())
             copyable &= addPropertyMethods(methods, superinterface);
-        
+
         return copyable;
     }
-    
+
     private static MockInvocationHandler mockOf(Object instance)
     {
         if(Proxy.isProxyClass(instance.getClass())) {
@@ -384,12 +386,12 @@ public class Mock
                 return (MockInvocationHandler)handler;
             }
         }
-        
+
         return null;
     }
-    
+
     private static synchronized Map<Method,BeanInvocationHandler> methods(
-        final Class<?> bean) 
+        final Class<?> bean)
         throws IntrospectionException
     {
         Map<Method,BeanInvocationHandler> methods = cache.get(bean);
@@ -401,10 +403,10 @@ public class Mock
             cache.put(bean, methods);
             methods.put(EQUALS_METHOD, new EqualsHandler(bean));
         }
-        
+
         return methods;
     }
-    
+
 
     /**
      * Return a bean implementation using a property store
@@ -416,19 +418,19 @@ public class Mock
      * @return
      * @throws IntrospectionException
      */
-    public static <T> T bean(Class<T> iface, final Store store) 
+    public static <T> T bean(Class<T> iface, final Store store)
     {
         return factory(iface).bean(store);
     }
 
     public interface MockInvocationHandler
-    extends InvocationHandler, Serializable 
-    { 
+    extends InvocationHandler, Serializable
+    {
         public Class<?> getInterface();
 
         public Object getStore();
     }
-    
+
     public static class FactoryImpl<T>
     implements Factory<T>, Serializable
     {
@@ -437,8 +439,8 @@ public class Mock
         private transient Class<T> interfaceClass;
         private transient Map<Method,BeanInvocationHandler> methods;
         private String interfaceName;
-        
-        public FactoryImpl(Class<T> iface) 
+
+        public FactoryImpl(Class<T> iface)
             throws IntrospectionException
         {
             this.interfaceClass = iface;
@@ -450,8 +452,8 @@ public class Mock
         public T bean(final Store store)
         {
             T instance = (T)Proxy.newProxyInstance(
-                interfaceClass.getClassLoader(), 
-                new Class [] { interfaceClass }, 
+                interfaceClass.getClassLoader(),
+                new Class [] { interfaceClass },
                 new MockInvocationHandler() {
 
                     private static final long serialVersionUID = 1L;
@@ -489,7 +491,7 @@ public class Mock
         {
             return bean(store(new HashMap<String, Object>()));
         }
-        
+
         @SuppressWarnings("unchecked")
         private void readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException
@@ -505,7 +507,7 @@ public class Mock
         }
 
         @Override
-        public <U extends T> Transform<U, T> copy()
+        public <U extends T> Function<U, T> copy()
         {
             return new Transform<U, T>() {
                 public T apply(U x) {
@@ -515,7 +517,7 @@ public class Mock
         }
 
         private RuntimeException invalidBeanException(
-            String field, 
+            String field,
             Object bean,
             Exception cause)
         {
@@ -527,21 +529,21 @@ public class Mock
             }
             else {
                 throw new IllegalArgumentException(bean + " does not implement " +
-                    interfaceClass.getCanonicalName() + 
+                    interfaceClass.getCanonicalName() +
                     " and that should be impossible if you have honoured the " +
                     " type parameters for this factory. If you recompile, you " +
                     " will probably find a compilation error", cause);
             }
         }
-        
+
         public <U extends T> Map<String,Object> describe(U bean)
         {
             // FIXME: this could be more efficient, if I kept a list
             // of readers, rather than a list of all the methods handled.
-            
+
             // NOTE: this method does not use assign, below, hence it works
             // for interfaces that don't have a full complement of setters
- 
+
             Map<String,Object> description = new HashMap<String,Object>();
             for(Map.Entry<Method, BeanInvocationHandler> method: methods.entrySet()) {
                 if(MethodType.READER.equals(method.getValue().getMethodType())) {
@@ -550,7 +552,7 @@ public class Mock
                     description.put(name, invokePropertyMethod(bean, name, readMethod));
                 }
             }
-            
+
             return description;
         }
 
@@ -577,7 +579,7 @@ public class Mock
                     throw invalidBeanException(name, bean,e);
             }
         }
-        
+
         @Override
         public <U extends T> T copy(U other)
         {
@@ -595,18 +597,18 @@ public class Mock
                     if(writeMethod == null)
                         throw new IllegalArgumentException(
                             "No setter for " + name +
-                            "in " + interfaceClass.getCanonicalName() + 
+                            "in " + interfaceClass.getCanonicalName() +
                             ". To use assign, there must be a set method " +
                             "corresponding to every get method");
 
-                    this.invokePropertyMethod(assignTo, name, writeMethod, 
+                    this.invokePropertyMethod(assignTo, name, writeMethod,
                         invokePropertyMethod(assignFrom, name, readMethod));
                 }
             }
-            
+
         }
     }
-    
+
     public static <T> Factory<T> factory(Class<T> iface)
     {
         try {
@@ -615,19 +617,19 @@ public class Mock
             throw new MockIntrospectionException(e);
         }
     }
-    
+
     public static class MapStore
     implements Store, Serializable
     {
         private static final long serialVersionUID = 1L;
 
         Map<String,Object> map;
-        
+
         public MapStore(Map<String,Object> map)
         {
             this.map = map;
         }
-        
+
         public Object getProperty(String name)
         {
             return map.get(name);
@@ -637,12 +639,12 @@ public class Mock
         {
             map.put(name, value);
         }
-        
+
         public String toString()
         {
             return map.toString();
         }
-        
+
         public boolean equals(Object o)
         {
             if(o.getClass() == this.getClass()) {
@@ -653,29 +655,29 @@ public class Mock
                 return false;
             }
         }
-        
+
         public int hashCode()
         {
             return map.hashCode();
         }
 
     }
-    
+
     public static Store store(final Map<String,Object> map)
     {
         return new MapStore(map);
     }
-    
-    public static <T> T bean(Class<T> iface, Map<String,Object> map) 
+
+    public static <T> T bean(Class<T> iface, Map<String,Object> map)
     {
         return bean(iface, store(map));
     }
-    
-    public static <T> T bean(Class<T> iface) 
+
+    public static <T> T bean(Class<T> iface)
     {
         return bean(iface, store(new HashMap<String, Object>()));
     }
-    
+
     public static <T> T copy(Class<T> iface, T source)
     {
         return factory(iface).copy(source);

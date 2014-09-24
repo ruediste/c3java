@@ -29,7 +29,7 @@ public class DocumentHelper {
     {
         return TransformerFactory.newInstance().newTransformer();
     }
-    
+
     public static void xmlCopy(Source document, Result out)
         throws TransformerConfigurationException, TransformerException
     {
@@ -41,14 +41,14 @@ public class DocumentHelper {
     {
         xmlCopy(new DOMSource(document), new StreamResult(out));
     }
-    
+
     public static Document newDocument()
         throws ParserConfigurationException
     {
         return DocumentBuilderFactory.newInstance()
             .newDocumentBuilder().newDocument();
     }
-    
+
     public static Element newDocumentRoot(String rootname)
         throws ParserConfigurationException
     {
@@ -57,24 +57,24 @@ public class DocumentHelper {
         d.appendChild(res);
         return res;
     }
-    
+
     public interface NodeFactory
     {
         public List<? extends Node> asNodes(Object x);
     }
-    
+
     public static class NodeFactoryImpl
     implements NodeFactory
     {
         private final Document document;
         private final NodeFactory delegate;
-        
+
         public NodeFactoryImpl(Document document, NodeFactory delegate)
         {
             this.document = document;
             this.delegate = delegate;
         }
-        
+
         @Override
         public List<? extends Node> asNodes(Object x)
         {
@@ -92,10 +92,10 @@ public class DocumentHelper {
                         element.appendChild(node);
                     return element;
                 }
-                
+
             }, map.entrySet());
         }
-        
+
         public <E> List<? extends Node> asNodes(List<E> list)
         {
             return Lists.map(new Transform<E,Node>() {
@@ -108,7 +108,7 @@ public class DocumentHelper {
                 }
             }, list);
         }
-        
+
         public List<? extends Node> asNodes(String s)
         {
             return Lists.list(document.createTextNode(s));

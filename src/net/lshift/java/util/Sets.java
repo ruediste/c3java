@@ -13,12 +13,12 @@ public class Sets
     {
         return new HashSet<E>();
     }
-    
+
     public static <E> Set<E> set(E ... en)
     {
         return new HashSet<E>(Arrays.asList(en));
     }
-    
+
     public static <E> Set<E> union(Collection<E> ... cn)
     {
         Set<E> result = new HashSet<E>();
@@ -26,7 +26,7 @@ public class Sets
             result.addAll(c);
         return result;
     }
-    
+
     public static <E> Set<E> union(Collection<E> c1)
     {
         Set<E> result = new HashSet<E>();
@@ -43,7 +43,7 @@ public class Sets
     }
 
     public static <E> Set<E> union(
-        Collection<E> c1, 
+        Collection<E> c1,
         Collection<E> c2,
         Collection<E> c3)
     {
@@ -53,7 +53,7 @@ public class Sets
         result.addAll(c3);
         return result;
     }
-    
+
     public static <E> Set<E> union(E [] ... cn)
     {
         Set<E> result = new HashSet<E>();
@@ -61,7 +61,7 @@ public class Sets
             result.addAll(Arrays.asList(c));
         return result;
     }
-    
+
     public static <E> Set<E> union(Iterable<E> ... cn)
     {
         Set<E> result = new HashSet<E>();
@@ -76,7 +76,7 @@ public class Sets
     {
         if(cn.length < 1)
             return java.util.Collections.emptySet();
-        
+
         Set<E> result = new HashSet<E>();
         java.util.Collections.sort(Arrays.asList(cn), SIZE_INCREASING);
         result.addAll(cn[0]);
@@ -84,7 +84,7 @@ public class Sets
             result.retainAll(cn[i]);
         return result;
     }
-    
+
     @SuppressWarnings("unchecked")
     public static final <E> Set<E> symmetricDifference(Set<E> a, Set<E> b)
     {
@@ -92,7 +92,7 @@ public class Sets
         result.removeAll(intersection(a, b));
         return result;
     }
-    
+
     public static final <E> Set<E> xor(Set<E> a, Set<E> b)
     {
         return symmetricDifference(a, b);

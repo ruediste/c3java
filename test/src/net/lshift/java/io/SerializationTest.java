@@ -23,11 +23,11 @@ public class SerializationTest
             this.foo = foo;
             this.bar = bar;
         }
-        
+
         String foo;
         String bar;
     }
-    
+
     public static class B
     implements Serializable
     {
@@ -35,10 +35,10 @@ public class SerializationTest
 
         A x = new A("x", "1");
         A y = new A("y", "2");
-        
+
     }
-    
-    public static Transform<Object,Object> INTEGER_TO_STRING = 
+
+    public static Transform<Object,Object> INTEGER_TO_STRING =
         new Transform<Object, Object>() {
         public Object apply(Object x) {
             if(x instanceof String)
@@ -47,7 +47,7 @@ public class SerializationTest
                 return x;
         }
     };
-    
+
     public static Transform<Object,Object> STRING_TO_INTEGER =
         new Transform<Object, Object>() {
         public Object apply(Object x) {
@@ -57,7 +57,7 @@ public class SerializationTest
                 return x;
         }
     };
-    
+
     @SuppressWarnings("unchecked")
     public void testMapOnCollections()
     {
@@ -66,22 +66,22 @@ public class SerializationTest
             source.put(Integer.toString(i), Integer.toString(i));
         Map<String, Integer> converted =
             (Map<String, Integer>) Serialization.map(
-                INTEGER_TO_STRING, 
+                INTEGER_TO_STRING,
                 IDENTITY, source);
 
         for(Integer value: converted.values())
             assert(value instanceof Integer);
-        
+
         Map<String, String> reconverted =
             (Map<String, String>) Serialization.map(
                 STRING_TO_INTEGER, IDENTITY, converted);
-        
+
         assertEquals(source, reconverted);
-        
+
         assertEquals(source, Serialization.map(INTEGER_TO_STRING, STRING_TO_INTEGER, source));
     }
-    
-    public static Transform<Object,Object> DECIMAL_FORMAT = 
+
+    public static Transform<Object,Object> DECIMAL_FORMAT =
         new Transform<Object, Object>() {
         public Object apply(Object x) {
             if(x instanceof String) {
@@ -94,8 +94,8 @@ public class SerializationTest
             return x;
         }
     };
-    
-    public static Transform<Object,Object> DECIMAL_UNFORMAT = 
+
+    public static Transform<Object,Object> DECIMAL_UNFORMAT =
         new Transform<Object, Object>() {
         public Object apply(Object x) {
             if(x instanceof String) {
@@ -106,23 +106,23 @@ public class SerializationTest
             }
         }
     };
-    
+
     public void testMapOnObjects()
     {
         B source = new B();
-        B converted = 
+        B converted =
             (B)Serialization.map(DECIMAL_FORMAT, IDENTITY, source);
 
         Float.parseFloat(source.x.bar);
         Float.parseFloat(source.y.bar);
-        
+
         B reconverted =
             (B)Serialization.map(DECIMAL_FORMAT, IDENTITY, converted);
-        
+
         assertTrue(EqualsHelper.equals(source, reconverted));
-        
+
         assertTrue(EqualsHelper.equals(
-            source, 
+            source,
             Serialization.map(DECIMAL_FORMAT,DECIMAL_UNFORMAT, source)));
     }
 

@@ -109,7 +109,7 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
         return offerHaveWriteLock(event);
     }
 
-    public final boolean tryOffer(E event, long time, TimeUnit unit) 
+    public final boolean tryOffer(E event, long time, TimeUnit unit)
         throws InterruptedException {
         if(stateWriteLock.tryLock(time, unit)) {
             return offerHaveWriteLock(event);
@@ -131,7 +131,7 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
         } finally {
             stateWriteLock.unlock();
         }
-        
+
         try {
             StateChangeEvent<S, E> changeEvent = newStateChangeEvent(event, transition);
             for(Action action: transition.actions)
@@ -140,7 +140,7 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
         } finally {
              stateReadLock.unlock();
         }
-        
+
         return true;
     }
 
@@ -150,12 +150,12 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
     }
 
     private void notifyStateChangeEvent(StateChangeEvent<S, E> changeEvent) {
-       
+
         List<StateChangeListener<S, E>> listenersSnapshot;
         synchronized(listeners) {
             listenersSnapshot = new ArrayList<StateChangeListener<S, E>>(listeners);
         }
-        
+
         for(StateChangeListener<S, E> listener: listenersSnapshot)
             listener.stateChange(changeEvent);
     }
@@ -186,7 +186,7 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
                 }
             }
         };
-        
+
         this.addStateChangeListener(listener);
         try {
             if(event != null) {
@@ -205,7 +205,7 @@ public class StateMachine<S extends Enum<S>, E extends Enum<E>> {
     public S waitFor(S ... stateList) throws InterruptedException {
         return triggerAndWaitFor(null, stateList);
     }
-    
+
     public boolean addStateChangeListener(StateChangeListener<S, E> e) {
         synchronized(listeners) {
             return listeners.add(e);

@@ -16,7 +16,7 @@ public class LiteralTest
         System.out.println(Literal.literal(new Integer [] { 1, 2, 3 }));
         System.out.println(Literal.literal(new short [] { 1, 2, 3 }));
     }
-    
+
     public void test2D()
     {
         System.out.println(Literal.literal(new int [][] { new int [] {1, 2, 3 }}));

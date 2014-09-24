@@ -14,7 +14,7 @@ public class RemoteCollectionAdaptor<E>
     {
         this.collection = collection;
     }
-    
+
     public boolean add(E o)
     {
         try {
@@ -134,7 +134,7 @@ public class RemoteCollectionAdaptor<E>
             throw new RemoteExceptionWrapper(e);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T [] array)
     {

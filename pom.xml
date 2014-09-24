@@ -5,7 +5,6 @@
   <groupId>net.lshift</groupId>
   <artifactId>java</artifactId>
   <packaging>jar</packaging>
-  <version>2.6.0</version>
   <name>LShift Java library</name>
   <url>http://www.lshift.net</url>
   <scm>
@@ -21,7 +20,7 @@
     <dependency>
     	<groupId>com.google.guava</groupId>
     	<artifactId>guava</artifactId>
-    	<version>14.0.1</version>
+    	<version>17.0</version>
     </dependency>
   </dependencies>
   <build>
@@ -68,4 +67,5 @@
       <url>dav:http://hc.lshift.net/hc/mvn</url>
     </repository> -->
   </distributionManagement>
+  <version>3.0</version>
 </project>

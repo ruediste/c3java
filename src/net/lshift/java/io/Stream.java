@@ -13,11 +13,10 @@ public class Stream
      * but if you don't need to, its wasteful.
      */
     public CharSequence read(Reader in)
-	throws IOException
+        throws IOException
     {
         StringWriter out = new StringWriter();
         copy(in, out);
         return out.getBuffer();
     }
 }
-

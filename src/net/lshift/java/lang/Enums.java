@@ -10,7 +10,7 @@ public class Enums {
             }
         };
     }
-    
+
     public static <T extends Enum<T>> Transform<String,T> valueOf(final Class<T> enumType) {
         return new Transform<String,T>() {
             public T apply(String x) {

@@ -26,7 +26,7 @@ public class Futures
             super(e);
         }
     }
-    
+
     public static <T> Transform<Future<T>,T> get()
     {
         return new Transform<Future<T>,T>() {

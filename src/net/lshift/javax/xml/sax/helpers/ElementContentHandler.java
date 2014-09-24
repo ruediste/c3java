@@ -16,7 +16,7 @@ public interface ElementContentHandler {
         String name,
         Attributes atts)
     throws SAXException;
-    
+
     public void endElement(
         String uri,
         String localName,

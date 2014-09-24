@@ -26,12 +26,12 @@ public class SortedSets
     {
 
         private final Comparator<T> comparator;
-        
+
         public EmptySortedSet(Comparator<T> comparator)
         {
             this.comparator = comparator;
         }
-        
+
         @Override
         public Iterator<T> iterator()
         {
@@ -54,7 +54,7 @@ public class SortedSets
                 {
                     throw new UnsupportedOperationException();
                 }
-                
+
             };
         }
 
@@ -101,9 +101,9 @@ public class SortedSets
         }
 
     }
-    
+
     // ------------------------------------------------------------------------
-    
+
     public static <E> SortedSet<E> union(Collection<E> ... cn)
     {
         SortedSet<E> result = new TreeSet<E>();
@@ -111,9 +111,9 @@ public class SortedSets
             result.addAll(c);
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(
-        Comparator<E> comparator, 
+        Comparator<E> comparator,
         Collection<E> ... cn)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
@@ -123,16 +123,16 @@ public class SortedSets
     }
 
     public static <E> SortedSet<E> union(
-        Comparator<E> comparator, 
+        Comparator<E> comparator,
         Collection<E> a)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
         result.addAll(a);
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(
-        Comparator<E> comparator, 
+        Comparator<E> comparator,
         Collection<E> a,
         Collection<E> b)
     {
@@ -141,9 +141,9 @@ public class SortedSets
         result.addAll(b);
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(
-        Comparator<E> comparator, 
+        Comparator<E> comparator,
         Collection<E> a,
         Collection<E> b,
         Collection<E> c)
@@ -154,7 +154,7 @@ public class SortedSets
         result.addAll(c);
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(E [] ... cn)
     {
         SortedSet<E> result = new TreeSet<E>();
@@ -162,7 +162,7 @@ public class SortedSets
             result.addAll(Arrays.asList(c));
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(Comparator<E> comparator, E [] ... cn)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
@@ -170,14 +170,14 @@ public class SortedSets
             result.addAll(Arrays.asList(c));
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(Comparator<E> comparator, E [] a)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
         result.addAll(Arrays.asList(a));
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(Comparator<E> comparator, E [] a, E [] b)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
@@ -185,7 +185,7 @@ public class SortedSets
         result.addAll(Arrays.asList(b));
         return result;
     }
-    
+
     public static <E> SortedSet<E> union(Comparator<E> comparator, E [] a, E [] b, E [] c)
     {
         SortedSet<E> result = new TreeSet<E>(comparator);
@@ -194,7 +194,7 @@ public class SortedSets
         result.addAll(Arrays.asList(c));
         return result;
     }
-    
+
     public static <E> Set<E> union(Iterable<E> ... cn)
     {
         SortedSet<E> result = new TreeSet<E>();
@@ -218,8 +218,8 @@ public class SortedSets
         Comparator<? super E> comparator = cn[0].comparator();
         SortedSet<E> result = new TreeSet<E>(comparator);
         for(SortedSet<E> c: cn) {
-            if(!(comparator == null 
-                 ? result.comparator() == null 
+            if(!(comparator == null
+                 ? result.comparator() == null
                  : comparator.equals(result.comparator())))
                 throw new IllegalArgumentException(
                     "The comparators of all the sets must match");
@@ -228,14 +228,14 @@ public class SortedSets
 
         return result;
     }
-    
-    
-    
+
+
+
     public static <E> SortedSet<E> intersection(Set<E> ... cn)
     {
         if(cn.length < 1)
             return emptySortedSet();
-        
+
         SortedSet<E> result = new TreeSet<E>();
         java.util.Collections.sort(Arrays.asList(cn), SIZE_INCREASING);
         result.addAll(cn[0]);
@@ -243,7 +243,7 @@ public class SortedSets
             result.retainAll(cn[i]);
         return result;
     }
-    
+
     public static <E> SortedSet<E> emptySortedSet()
     {
         return new EmptySortedSet<E>(null);
@@ -261,25 +261,25 @@ public class SortedSets
         result.removeAll(intersection(a, b));
         return result;
     }
-    
+
     /**
      * The symmetricDifference of two sorted sets.
      * The two sorted sets must use the same comparator.
      * @param <E>
-     * @param a 
+     * @param a
      * @param b
      * @return a sorted set, with the same sort order as the parameters
      */
     @SuppressWarnings("unchecked")
     public static final <E> SortedSet<E> symmetricDifference(
-        SortedSet<E> a, 
+        SortedSet<E> a,
         SortedSet<E> b)
     {
         SortedSet<E> result = union(a,b);
         result.removeAll(intersection(a, b));
         return result;
     }
-    
+
     public static final <E> SortedSet<E> xor(Set<E> a, Set<E> b)
     {
         return symmetricDifference(a, b);

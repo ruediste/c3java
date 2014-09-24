@@ -9,10 +9,10 @@ public interface RemoteCollection<E>
 {
     public int size()
         throws RemoteException;
-    
+
     public boolean isEmpty()
         throws RemoteException;
-    
+
     public boolean contains(Object o)
         throws RemoteException;
 
@@ -24,7 +24,7 @@ public interface RemoteCollection<E>
 
     public boolean add(E o)
         throws RemoteException;
-    
+
     public boolean remove(Object o)
         throws RemoteException;
 

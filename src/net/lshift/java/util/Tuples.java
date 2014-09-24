@@ -66,7 +66,7 @@ public abstract class Tuples
     }
 
     public static <T,U,V,W> Iterator<TwoTuple<T,U>> zip(
-        TwoTuple<Iterable<T>, Iterable<U>> tl, 
+        TwoTuple<Iterable<T>, Iterable<U>> tl,
         Transform<Iterator<Object>, FourTuple<T, U, V, W>> factory)
     {
         List<Iterable<Object>> l = (List<Iterable<Object>>)((List<?>)tl);
@@ -87,7 +87,7 @@ public abstract class Tuples
     }
 
     public static <T,U,V,W> Iterator<ThreeTuple<T,U,V>> zip(
-        ThreeTuple<Iterable<T>, Iterable<U>, Iterable<V>> tl, 
+        ThreeTuple<Iterable<T>, Iterable<U>, Iterable<V>> tl,
         Transform<Iterator<Object>, FourTuple<T, U, V, W>> factory) {
         List<Iterable<Object>> l = (List<Iterable<Object>>)((List<?>)tl);
         return Iterators.zip(l, Tuples.<T,U,V>threeTuple());
@@ -110,7 +110,7 @@ public abstract class Tuples
     }
 
     public static <T,U,V,W> Iterator<FourTuple<T,U,V,W>> zip(
-        FourTuple<Iterable<T>, Iterable<U>, Iterable<V>, Iterable<W>> tl, 
+        FourTuple<Iterable<T>, Iterable<U>, Iterable<V>, Iterable<W>> tl,
         Transform<Iterator<Object>, FourTuple<T, U, V, W>> factory) {
         List<Iterable<Object>> l = (List<Iterable<Object>>)((List<?>)tl);
         return Iterators.zip(l, Tuples.<T, U, V, W>fourTuple());

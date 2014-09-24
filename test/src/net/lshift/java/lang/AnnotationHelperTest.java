@@ -31,13 +31,13 @@ public class AnnotationHelperTest
         @TestMethodAnnotation(value="1")
         public void a();
     }
-    
+
     public class TestAImpl1
         implements TestA
     {
         public void a() { }
     }
-    
+
     @TestTypeAnnotation(value="2")
     public class TestAImpl2
         implements TestA
@@ -45,42 +45,42 @@ public class AnnotationHelperTest
         @TestMethodAnnotation(value="2")
         public void a() { }
     }
-    
+
     public class TestAImpl2x
         extends TestAImpl2
         {
-        
+
         }
-    
+
     public void testMethodAnnotation()
         throws Exception
     {
             assertEquals(AnnotationHelper.getAnnotation
-                            (TestMethodAnnotation.class, 
+                            (TestMethodAnnotation.class,
                              TestAImpl1.class.getMethod
                                  ("a", new Class [] {})).value(),
                             "1");
             assertEquals(AnnotationHelper.getAnnotation
-                            (TestMethodAnnotation.class, 
+                            (TestMethodAnnotation.class,
                              TestAImpl2.class.getMethod
                                  ("a", new Class [] {})).value(),
                             "2");
     }
-    
+
     public void testTypeAnnotation()
         throws Exception
     {
-            assertEquals("1", 
+            assertEquals("1",
                 AnnotationHelper.getAnnotation(
-                    TestTypeAnnotation.class, 
+                    TestTypeAnnotation.class,
                     TestAImpl1.class).value());
-            assertEquals("2", 
+            assertEquals("2",
                 AnnotationHelper.getAnnotation(
-                    TestTypeAnnotation.class, 
+                    TestTypeAnnotation.class,
                     TestAImpl2.class).value());
-            assertEquals("2", 
+            assertEquals("2",
                 AnnotationHelper.getAnnotation(
-                    TestTypeAnnotation.class, 
+                    TestTypeAnnotation.class,
                     TestAImpl2x.class).value());
     }
 
@@ -91,7 +91,7 @@ public class AnnotationHelperTest
             AnnotationHelper.getAnnotations(
                 TestTypeAnnotation.class,
                 type).iterator();
-        
+
         for (String expected : expectedAnnotations)
         {
             assertTrue(annotations.hasNext());
@@ -124,7 +124,7 @@ public class AnnotationHelperTest
     {
         @TestInjectorA
         public String a = "a";
-        
+
         @TestInjectorB
         public String b = "b";
     }
@@ -133,20 +133,20 @@ public class AnnotationHelperTest
     {
         @TestInjectorA
         public String x;
-        
+
         @TestInjectorB
         public CharSequence y;
 
         @TestInjectorA
         public String z;
     }
-    
+
     public void testInjector()
     {
-        AnnotationHelper.Injector<InjectorSrc, InjectorDst> injecter = 
+        AnnotationHelper.Injector<InjectorSrc, InjectorDst> injecter =
             AnnotationHelper.injector(
-                InjectorSrc.class, 
-                InjectorDst.class, 
+                InjectorSrc.class,
+                InjectorDst.class,
                 Procedures.<Annotation>any());
         System.out.println(injecter);
         InjectorDst dst = new InjectorDst();

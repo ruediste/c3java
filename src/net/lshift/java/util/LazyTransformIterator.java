@@ -15,13 +15,13 @@ public class LazyTransformIterator<I, O> implements Iterator<O> {
 
     Iterator<I> it;
     Transform<I, O> trans;
-    
+
     public LazyTransformIterator(Iterator<I> it, Transform<I, O> trans)
     {
         this.it = it;
         this.trans = trans;
     }
-    
+
     @Override
     public boolean hasNext() {
         return it.hasNext();

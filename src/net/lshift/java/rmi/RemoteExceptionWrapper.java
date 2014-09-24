@@ -11,7 +11,7 @@ public class RemoteExceptionWrapper
     {
         super(e);
     }
-    
+
     public RemoteException getRemoteException()
     {
         return (RemoteException)getCause();

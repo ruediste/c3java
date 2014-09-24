@@ -7,7 +7,7 @@ public class Classes
 {
     public static final <E> Transform<Class<E>,String> getName() {
         return new Transform<Class<E>,String>() {
-    
+
             public String apply(Class<E> x) {
                 return x.getName();
             }
@@ -16,17 +16,17 @@ public class Classes
 
 
 
-    public static final Transform<Class<?>,String> CANONICAL_NAME = 
+    public static final Transform<Class<?>,String> CANONICAL_NAME =
         new Transform<Class<?>,String>() {
-    
+
         public String apply(Class<?> x) {
             return x.getCanonicalName();
         }
     };
 
-    public static final Transform<Class<?>,String> SIMPLE_NAME = 
+    public static final Transform<Class<?>,String> SIMPLE_NAME =
         new Transform<Class<?>,String>() {
-    
+
         public String apply(Class<?> x) {
             return x.getSimpleName();
         }
@@ -37,7 +37,7 @@ public class Classes
         return new Predicate<Class<?>>() {
             public Boolean apply(Class<?> x) {
                 return dst.isAssignableFrom(x);
-            }  
+            }
         };
     }
 }

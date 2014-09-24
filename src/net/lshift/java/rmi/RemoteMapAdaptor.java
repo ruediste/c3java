@@ -9,7 +9,7 @@ public class RemoteMapAdaptor<K,V>
     implements Map<K,V>
 {
     private final RemoteMap<K,V> map;
-    
+
     // These _could_ be weak references, but it doesn't seem very important
     private Set<K> keySet = null;
     private Set<Entry<K,V>> entrySet = null;
@@ -19,7 +19,7 @@ public class RemoteMapAdaptor<K,V>
     {
         this.map = map;
     }
-    
+
     public void clear()
     {
         try {
@@ -60,7 +60,7 @@ public class RemoteMapAdaptor<K,V>
                 throw  new RemoteExceptionWrapper(e);
             }
         }
-        
+
         return entrySet;
     }
 
@@ -94,7 +94,7 @@ public class RemoteMapAdaptor<K,V>
                 throw  new RemoteExceptionWrapper(e);
             }
         }
-        
+
         return keySet;
     }
 
@@ -149,7 +149,7 @@ public class RemoteMapAdaptor<K,V>
                 throw  new RemoteExceptionWrapper(e);
             }
         }
-        
+
         return values;
     }
 

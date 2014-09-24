@@ -34,8 +34,8 @@ public class Serialization
      * @throws IOException
      */
     public static ObjectOutputStream mapOutputStream(
-        final Transform<Object,Object> transform, 
-        OutputStream out) 
+        final Transform<Object,Object> transform,
+        OutputStream out)
     throws IOException
     {
         // This is so simple you wonder if there is any point defining it,
@@ -43,7 +43,7 @@ public class Serialization
         return new ObjectOutputStream(out) {
 
             { this.enableReplaceObject(true); }
-            
+
             @Override
             protected Object replaceObject(Object obj)
                 throws IOException
@@ -52,29 +52,29 @@ public class Serialization
             }
         };
     }
-    
+
     public static ObjectInputStream mapInputStream(
-        final InputStream in, 
-        final Transform<Object,Object> transform) 
+        final InputStream in,
+        final Transform<Object,Object> transform)
     throws IOException
     {
-        
+
         ObjectInputStream mappedIn = new ObjectInputStream(in) {
-            
+
             { this.enableResolveObject(true); }
-            
+
             @Override
             protected Object resolveObject(Object obj)
                 throws IOException
             {
                 return transform.apply(obj);
             }
-            
+
         };
-        
+
         return mappedIn;
     }
-    
+
     /**
      * Apply a transforms during clone.
      * @param marshalTransform applied while serialising the object
@@ -90,17 +90,21 @@ public class Serialization
     {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
-            ObjectOutputStream out = 
-                marshalTransform == null 
-                    ? new ObjectOutputStream(buffer) 
+            ObjectOutputStream out =
+                marshalTransform == null
+                    ? new ObjectOutputStream(buffer)
                     : mapOutputStream(marshalTransform, buffer);
-            out.writeObject(source);
-            out.flush();
-            InputStream bufferIn = new ByteArrayInputStream(buffer.toByteArray());
-            return (unmarshalTransform == null 
+            try {
+                out.writeObject(source);
+                out.flush();
+                InputStream bufferIn = new ByteArrayInputStream(buffer.toByteArray());
+                return (unmarshalTransform == null
                             ? new ObjectInputStream(bufferIn)
                             : mapInputStream(bufferIn, unmarshalTransform)
                    ).readObject();
+            } finally {
+                out.close();
+            }
         }
         catch(IOException e) {
             // This probably means source, or something transform.apply returned
@@ -116,6 +120,6 @@ public class Serialization
             throw new IllegalArgumentException(e);
         }
     }
-    
+
 
 }

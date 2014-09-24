@@ -11,22 +11,22 @@ extends TwoTuple<String,String>
     {
         super(namespaceUri, localName);
     }
-    
+
     public String toString()
     {
         return "{" + this.first + "}" + this.second;
     }
-    
+
     public String getNamespaceUri()
     {
         return first;
     }
-    
+
     public String getLocalName()
     {
         return second;
     }
-    
+
     public static QName qname(String namespaceUri, String localName)
     {
         return new QName(namespaceUri, localName);

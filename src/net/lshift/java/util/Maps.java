@@ -29,7 +29,7 @@ public class Maps
         public V setValue(V value) {
             throw new UnsupportedOperationException();
         }
-        
+
         public boolean equals(Object o) {
             if (!(o instanceof Map.Entry))
                 return false;
@@ -45,7 +45,7 @@ public class Maps
             }
             return false;
         }
-        
+
         public int hashCode() {
             return (k==null   ? 0 : k.hashCode()) ^
                    (v==null ? 0 : v.hashCode());
@@ -63,7 +63,7 @@ public class Maps
             result.put(entry.getValue(), entry.getKey());
         return result;
     }
-    
+
     public static <K,V> Map<K,V> map(Iterable<Map.Entry<? extends K, ? extends V>> c)
     {
         Map<K,V> m = new HashMap<K,V>();
@@ -71,7 +71,7 @@ public class Maps
             m.put(e.getKey(), e.getValue());
         return m;
     }
-    
+
     /**
      * Create a map entry
      * @see #map(java.util.Map.Entry...)
@@ -147,7 +147,7 @@ public class Maps
         Map.Entry<? extends K, ? extends V> e4) {
         return map(Arrays.asList(e1, e2, e3, e4));
     }
-    
+
     /**
      * Fill a map.
      * @param <K>

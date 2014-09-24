@@ -18,23 +18,23 @@ public class EqualsHelper
 {
 
     public static class EqualsHelperError
-	extends Error
+        extends Error
     {
 
         private static final long serialVersionUID = 1L;
 
         public EqualsHelperError(Throwable cause)
-	{
-	    super(cause);
-	}
+        {
+            super(cause);
+        }
     }
-    
+
     public static class NoNonTransientFieldsException
     extends RuntimeException
     {
         private static final long serialVersionUID = 1L;
         private final Class<?> type;
-        
+
         public NoNonTransientFieldsException(Class<?> type)
         {
             super(type.getName() + " has no non-transient fields");
@@ -56,9 +56,9 @@ public class EqualsHelper
      */
     private static boolean equals(Object a, Object b, Class<?> c, Equality equality)
     {
-	if(c == Object.class) {
-	    return true;
-	}
+        if(c == Object.class) {
+            return true;
+        }
         else if(c.isArray()) {
             int length = Array.getLength(a);
             boolean equals = length == Array.getLength(b);
@@ -66,45 +66,45 @@ public class EqualsHelper
                 equals = equality.equals(Array.get(a, index), Array.get(b, index));
             return equals;
         }
-	else {
-	    Field [] fields = c.getDeclaredFields();
-	    boolean result = true;
-	    int usedFields = 0;
-	    for(int i = 0; i != fields.length && result; ++i) {
-		final Field field = fields[i];
-		AccessibleObject.setAccessible(fields, true);
-		if((field.getModifiers()&
-		    (Modifier.TRANSIENT|Modifier.STATIC)) == 0) {
-		    try {
-			Class<?> type = field.getType();
-			Object fielda = field.get(a);
-			Object fieldb = field.get(b);
-			
-			
-			result =
-			    (type.isPrimitive() 
-                             ? fielda.equals(fieldb) 
+        else {
+            Field [] fields = c.getDeclaredFields();
+            boolean result = true;
+            int usedFields = 0;
+            for(int i = 0; i != fields.length && result; ++i) {
+                final Field field = fields[i];
+                AccessibleObject.setAccessible(fields, true);
+                if((field.getModifiers()&
+                    (Modifier.TRANSIENT|Modifier.STATIC)) == 0) {
+                    try {
+                        Class<?> type = field.getType();
+                        Object fielda = field.get(a);
+                        Object fieldb = field.get(b);
+
+
+                        result =
+                            (type.isPrimitive()
+                             ? fielda.equals(fieldb)
                              : ((fielda == fieldb) || equality.equals(fielda, fieldb)));
-			usedFields++;
-		    }
-		    catch(Exception e) {
-			throw new EqualsHelperError(e);
-		    }
-		    
-		    if(usedFields == 0)
-		        throw new NoNonTransientFieldsException(c);
-		}
-	    }
-	    
-	    return result && equals(a, b, c.getSuperclass(), equality);
-	}
+                        usedFields++;
+                    }
+                    catch(Exception e) {
+                        throw new EqualsHelperError(e);
+                    }
+
+                    if(usedFields == 0)
+                        throw new NoNonTransientFieldsException(c);
+                }
+            }
+
+            return result && equals(a, b, c.getSuperclass(), equality);
+        }
     }
 
     public static boolean equals(Object a, Object b, Equality e)
     {
-        
-        return (a == b) || (a != null && b != null 
-                            && a.getClass() == b.getClass() 
+
+        return (a == b) || (a != null && b != null
+                            && a.getClass() == b.getClass()
                             && equals(a, b, a.getClass(), e));
     }
 
@@ -114,12 +114,12 @@ public class EqualsHelper
      */
     public static boolean equals(List<?> a, List<?> b, Equality e)
     {
-	boolean result = (a.size() == b.size());
-	Iterator<?> ai = a.iterator();
-	Iterator<?> bi = b.iterator();
-	for(; ai.hasNext() && bi.hasNext() && result;)
-	    result = e.equals(ai.next(), bi.next());
-	return result && !ai.hasNext() && !bi.hasNext();
+        boolean result = (a.size() == b.size());
+        Iterator<?> ai = a.iterator();
+        Iterator<?> bi = b.iterator();
+        for(; ai.hasNext() && bi.hasNext() && result;)
+            result = e.equals(ai.next(), bi.next());
+        return result && !ai.hasNext() && !bi.hasNext();
     }
 
     /**
@@ -129,27 +129,27 @@ public class EqualsHelper
      * This operation is O(N^2)
      */
     private static boolean unorderedEquals
-        (Collection<Object> a, 
-         Collection<Object> b, 
+        (Collection<Object> a,
+         Collection<Object> b,
          Equality e)
     {
-	if(a.size() == b.size()) {
-	    Collection<?> copy = new LinkedList<Object>(b);
-	    boolean result = true;
-	    for(Iterator<?> ai = a.iterator(); result && ai.hasNext();) {
-		result = false;
-		Object itema = ai.next();
-		for(Iterator<?> bi = copy.iterator(); !result && bi.hasNext();) {
-		    result = e.equals(itema, bi.next());
-		    if(result) bi.remove();
-		}
-	    }
+        if(a.size() == b.size()) {
+            Collection<?> copy = new LinkedList<Object>(b);
+            boolean result = true;
+            for(Iterator<?> ai = a.iterator(); result && ai.hasNext();) {
+                result = false;
+                Object itema = ai.next();
+                for(Iterator<?> bi = copy.iterator(); !result && bi.hasNext();) {
+                    result = e.equals(itema, bi.next());
+                    if(result) bi.remove();
+                }
+            }
 
-	    return result;
-	}
-	else {
-	    return false;
-	}
+            return result;
+        }
+        else {
+            return false;
+        }
     }
 
     public static boolean equals(Set<Object> a, Set<Object> b, Equality e)
@@ -183,8 +183,8 @@ public class EqualsHelper
 
     /**
      * Equality using the following:
-     * @return 
-     *   when a and b are CharSequence - a.equals(b) 
+     * @return
+     *   when a and b are CharSequence - a.equals(b)
      *   when a and b are Bag, Set - unorderCollectionEquals
      *   when a and b are List, SortedSet - orderedCollectionEquals
      *   when a and b are Map - use natural equality for keys,
@@ -193,7 +193,7 @@ public class EqualsHelper
      */
     public static final boolean equals(Object a, Object b)
     {
-	return INDUCTIVE_DEFAULT.equals(a, b);
+        return INDUCTIVE_DEFAULT.equals(a, b);
     }
 
 }

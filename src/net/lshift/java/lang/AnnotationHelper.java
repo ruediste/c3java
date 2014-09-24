@@ -31,7 +31,7 @@ public class AnnotationHelper
      * @return
      */
     public static <T extends Annotation> T getAnnotation
-        (final Class<T> annotationClass, 
+        (final Class<T> annotationClass,
          Method method,
          JavaC3.DirectSuperclasses superclasses)
     {
@@ -50,22 +50,22 @@ public class AnnotationHelper
                     return null;
                 }
             }
-            
+
         }, JavaC3.allSuperclasses(method.getDeclaringClass(), superclasses));
     }
- 
+
     public static <T extends Annotation> T getAnnotation
-        (final Class<T> annotationClass, 
+        (final Class<T> annotationClass,
          final Method method)
     {
         return getAnnotation
-            (annotationClass, 
-             method, 
+            (annotationClass,
+             method,
              DefaultDirectSuperclasses.SUPERCLASSES);
     }
-    
+
     public static <T extends Annotation> T getAnnotation(
-        final Class<T> annotationClass, 
+        final Class<T> annotationClass,
         final Class<?> type,
         JavaC3.DirectSuperclasses superclasses)
     {
@@ -75,7 +75,7 @@ public class AnnotationHelper
             {
                 return c.getAnnotation(annotationClass);
             }
-            
+
         }, JavaC3.allSuperclasses(type, superclasses));
     }
 
@@ -124,7 +124,7 @@ public class AnnotationHelper
      * @return
      */
     public static Class<?> getAnnotatedClass(
-        final Class<? extends Annotation> annotationClass, 
+        final Class<? extends Annotation> annotationClass,
         final Class<?> type,
         JavaC3.DirectSuperclasses superclasses)
     {
@@ -137,17 +137,17 @@ public class AnnotationHelper
 
         }, JavaC3.allSuperclasses(type, superclasses));
     }
-    
+
     public static <T extends Annotation> T getAnnotation(
-                    final Class<T> annotationClass, 
+                    final Class<T> annotationClass,
                     final Class<?> type)
     {
         return getAnnotation(
-            annotationClass, 
-            type, 
+            annotationClass,
+            type,
             DefaultDirectSuperclasses.SUPERCLASSES);
     }
-    
+
     /**
      * Tell me which of my superclasses has the named annotation.
      * direct superclasses is the default.
@@ -155,12 +155,12 @@ public class AnnotationHelper
      * @see #getAnnotatedClass(Class, Class, net.lshift.java.dispatch.JavaC3.DirectSuperclasses)
      */
     public static Class<?> getAnnotatedClass(
-        final Class<? extends Annotation> annotationClass, 
+        final Class<? extends Annotation> annotationClass,
         final Class<?> type)
     {
         return getAnnotatedClass(
-            annotationClass, 
-            type, 
+            annotationClass,
+            type,
             DefaultDirectSuperclasses.SUPERCLASSES);
     }
 
@@ -188,8 +188,8 @@ public class AnnotationHelper
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <S, D> Injector<S,D> injector( 
-        final Class<? extends S> a, 
+    public static <S, D> Injector<S,D> injector(
+        final Class<? extends S> a,
         final Class<? extends D> b,
         Predicate<Annotation> include)
     {
@@ -198,15 +198,15 @@ public class AnnotationHelper
         Field[] dstFields = b.getFields();
         for(Field srcField: a.getFields()) {
             for(Annotation srcAnnotation: filter(include, srcField.getAnnotations())) {
-                assignments.put(srcField, 
+                assignments.put(srcField,
                     filter(
                         and(
-                            hasAnnotation(srcAnnotation.annotationType()), 
-                            isAssignableFrom(srcField.getType())), 
+                            hasAnnotation(srcAnnotation.annotationType()),
+                            isAssignableFrom(srcField.getType())),
                         dstFields));
             }
         }
-        
+
         return new Injector<S,D>() {
 
             @Override
@@ -229,16 +229,16 @@ public class AnnotationHelper
                     }
                 }
             }
-            
+
             public String toString()
             {
                 return assignments.toString();
             }
-            
+
         };
     }
 
-    
+
     private static Predicate<Field> isAssignableFrom(final Class<?> type)
     {
         return new Predicate<Field>() {
@@ -262,10 +262,10 @@ public class AnnotationHelper
             public Boolean apply(Field x) {
                 return x.getAnnotation(annotation) != null;
             }
-            
+
         };
     }
-    
+
     /**
      * Use an annotation to restrict the fields used in injection.
      * The annotation will typically reflect a single cross cutting concern
@@ -275,8 +275,8 @@ public class AnnotationHelper
      * @param b
      * @return
      */
-    public static <A, B> Injector<A,B> injector( 
-        final Class<A> a, 
+    public static <A, B> Injector<A,B> injector(
+        final Class<A> a,
         final Class<B> b)
     {
         return injector(a, b, Procedures.<Annotation>any());

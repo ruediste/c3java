@@ -18,21 +18,21 @@ public class Pair<E>
 
     private Pair(E car, Pair<E> cdr)
     {
-	this.car = car;
-	this.cdr = (Pair<E>)cdr;
+        this.car = car;
+        this.cdr = (Pair<E>)cdr;
     }
 
     public E head() {
-	return car;
+        return car;
     }
 
     public Pair<E> tail() {
-	return cdr;
+        return cdr;
     }
 
     public static <U> Pair<U> pair(U car, Pair<U> cdr)
     {
-	return new Pair<U>(car, cdr);
+        return new Pair<U>(car, cdr);
     }
 
     public static <U> Pair<U> pair(U car, List<U> cdr)
@@ -60,35 +60,35 @@ public class Pair<E>
 
     public Iterator<E> iterator()
     {
-	return new Iterator<E>() {
+        return new Iterator<E>() {
 
-	    Pair<E> pair = Pair.this;
+            Pair<E> pair = Pair.this;
 
-	    public boolean hasNext()
-	    {
-	        return pair != null;
-	    }
+            public boolean hasNext()
+            {
+                return pair != null;
+            }
 
-	    public E next()
-	    {
-	        E car = pair.head();
-	        pair = pair.tail();
-	        return car;
-	    }
+            public E next()
+            {
+                E car = pair.head();
+                pair = pair.tail();
+                return car;
+            }
 
-	    public void remove()
-	    {
-	        throw new UnsupportedOperationException();
-	    }
-	};
+            public void remove()
+            {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
     public int size()
     {
         int size = 0;
-	for(Pair<E> pair = this; pair != null; pair = pair.cdr)
+        for(Pair<E> pair = this; pair != null; pair = pair.cdr)
             size++;
-	return size;
+        return size;
     }
 
     @Override

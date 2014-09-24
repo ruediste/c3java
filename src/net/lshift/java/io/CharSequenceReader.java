@@ -17,99 +17,99 @@ public class CharSequenceReader extends Reader {
 
     public CharSequenceReader(CharSequence s)
     {
-	this.sequence = s;
-	this.length = s.length();
+        this.sequence = s;
+        this.length = s.length();
     }
 
-    private void ensureOpen() 
-	throws IOException 
+    private void ensureOpen()
+        throws IOException
     {
-	if (sequence == null)
-	    throw new IOException("Sequenceeam closed");
+        if (sequence == null)
+            throw new IOException("Sequenceeam closed");
     }
 
-    public int read() 
-	throws IOException 
+    public int read()
+        throws IOException
     {
-	synchronized (lock) {
-	    ensureOpen();
-	    if (next >= length)
-		return -1;
-	    return sequence.charAt(next++);
-	}
+        synchronized (lock) {
+            ensureOpen();
+            if (next >= length)
+                return -1;
+            return sequence.charAt(next++);
+        }
     }
 
     public int read(char cbuf[], int off, int len)
-	throws IOException 
+        throws IOException
     {
-	synchronized (lock) {
-	    ensureOpen();
+        synchronized (lock) {
+            ensureOpen();
             if ((off < 0) || (off > cbuf.length) || (len < 0) ||
                 ((off + len) > cbuf.length) || ((off + len) < 0)) {
                 throw new IndexOutOfBoundsException();
             } else if (len == 0) {
                 return 0;
             }
-	    if (next >= length)
-		return -1;
-	    int n = Math.min(length - next, len);
-	    for(int i = off; i != off + n; ++i)
-		cbuf[i] = sequence.charAt(next++);
-	    return n;
-	}
-    }
-
-    public long skip(long ns) 
-	throws IOException 
-    {
-	synchronized (lock) {
-	    ensureOpen();
-	    if (next >= length)
-		return 0;
-	    long n = Math.min(length - next, ns);
-	    next += n;
-	    return n;
-	}
-    }
-
-    public boolean ready() 
-	throws IOException 
-    {
-        synchronized (lock) {
-	    ensureOpen();
-	    return true;
+            if (next >= length)
+                return -1;
+            int n = Math.min(length - next, len);
+            for(int i = off; i != off + n; ++i)
+                cbuf[i] = sequence.charAt(next++);
+            return n;
         }
     }
 
-    public boolean markSupported() 
+    public long skip(long ns)
+        throws IOException
     {
-	return true;
+        synchronized (lock) {
+            ensureOpen();
+            if (next >= length)
+                return 0;
+            long n = Math.min(length - next, ns);
+            next += n;
+            return n;
+        }
     }
 
-    public void mark(int readAheadLimit) 
-	throws IOException 
+    public boolean ready()
+        throws IOException
     {
-	if (readAheadLimit < 0){
-	    throw new IllegalArgumentException("Read-ahead limit < 0");
-	}
-	synchronized (lock) {
-	    ensureOpen();
-	    mark = next;
-	}
+        synchronized (lock) {
+            ensureOpen();
+            return true;
+        }
     }
 
-    public void reset() 
-	throws IOException 
+    public boolean markSupported()
     {
-	synchronized (lock) {
-	    ensureOpen();
-	    next = mark;
-	}
+        return true;
     }
 
-    public void close() 
+    public void mark(int readAheadLimit)
+        throws IOException
     {
-	sequence = null;
+        if (readAheadLimit < 0){
+            throw new IllegalArgumentException("Read-ahead limit < 0");
+        }
+        synchronized (lock) {
+            ensureOpen();
+            mark = next;
+        }
+    }
+
+    public void reset()
+        throws IOException
+    {
+        synchronized (lock) {
+            ensureOpen();
+            next = mark;
+        }
+    }
+
+    public void close()
+    {
+        sequence = null;
     }
 
 }

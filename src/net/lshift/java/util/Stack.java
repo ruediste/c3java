@@ -14,17 +14,17 @@ import java.util.List;
 public interface Stack<E>
     extends List<E>
 {
-    /** 
+    /**
      * append an item to the list
      */
     public void push(E item);
-    
+
     /**
      * Remove the last item from the list, returning it
      * @return get(size() - 1)
      */
     public E pop();
-    
+
     /**
      * Look at the item at the top of the stack.
      * Thats the last item in the list...

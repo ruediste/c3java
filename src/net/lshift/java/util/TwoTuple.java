@@ -19,7 +19,7 @@ implements Serializable
     private static final long serialVersionUID = 1L;
 
     public U second;
-    
+
     public TwoTuple(T first, U second) {
         super(first);
         this.second = second;
@@ -47,7 +47,7 @@ implements Serializable
     {
         return 2;
     }
-    
+
     public U getSecond()
     {
         return second;

@@ -7,7 +7,7 @@ public class RemoteIteratorAdaptor<E>
     implements Iterator<E>
 {
     private final RemoteIterator<E> iterator;
-    
+
     public RemoteIteratorAdaptor(RemoteIterator<E> iterator)
     {
         this.iterator = iterator;
@@ -42,6 +42,6 @@ public class RemoteIteratorAdaptor<E>
             throw new RemoteExceptionWrapper(e);
         }
     }
-    
-    
+
+
 }

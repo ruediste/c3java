@@ -11,7 +11,7 @@ public class Collections
 {
     public static class Procedures
     {
-        public static Transform<Object,Object> IDENTITY = 
+        public static Transform<Object,Object> IDENTITY =
             new Transform<Object,Object>() {
 
             @Override
@@ -89,7 +89,7 @@ public class Collections
             }
         };
 
-        public static final Comparator<Collection<?>> SIZE_INCREASING = 
+        public static final Comparator<Collection<?>> SIZE_INCREASING =
             new Comparator<Collection<?>>() {
 
             @Override
@@ -100,7 +100,7 @@ public class Collections
 
         };
 
-        public static final Comparator<Collection<?>> SIZE_DECREASING = 
+        public static final Comparator<Collection<?>> SIZE_DECREASING =
             new Comparator<Collection<?>>() {
 
             @Override
