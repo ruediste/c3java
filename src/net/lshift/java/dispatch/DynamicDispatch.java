@@ -18,6 +18,7 @@ import java.util.Set;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -175,17 +176,13 @@ public class DynamicDispatch
         final Class<? extends T> constraint,
         Iterable<Object> closuresList)
     {
-        final MultiClass genclass =
-            dispatcher(constraint, Iterables.transform(closuresList, new Function<Object, Class<Object>>() {
-                public Class<Object> apply(Object x) {
-                    return (Class<Object>) x.getClass();
-                }
-            }));
-
-        final Map<Class<?>,Object> closures = new HashMap<Class<?>,Object>();
-        for(Object closure: ImmutableList.of(closuresList).reverse()) {
-            closures.put(closure.getClass(), closure);
+        final Map<Class<Object>,Object> closures = Maps.newLinkedHashMap();
+        for(Object closure: Lists.reverse(Lists.newArrayList(closuresList))) {
+            closures.put((Class<Object>)closure.getClass(), closure);
         }
+
+        final MultiClass genclass = dispatcher(constraint, Lists.reverse(Lists.newArrayList(closures.keySet())));
+
 
         return (T)Proxy.newProxyInstance
             (constraint.getClassLoader(),
@@ -479,6 +476,8 @@ public class DynamicDispatch
 
         public ClosureMethod(Class<?> declaredBy, Method method)
         {
+            Preconditions.checkNotNull(declaredBy);
+            Preconditions.checkNotNull(method);
             this.declaredBy = declaredBy;
             this.method = method;
         }

@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
@@ -52,11 +54,10 @@ public class JavaC3Test
     public void testDirectSuperClasses()
     {
         assertEquals
-            (Arrays.asList
-             (new Class [] { AbstractSet.class,
+            (ImmutableList.of(AbstractSet.class,
                              Set.class,
                              Cloneable.class,
-                             Serializable.class }),
+                             Serializable.class),
              DefaultDirectSuperclasses.SUPERCLASSES.directSuperclasses(HashSet.class));
     }
 

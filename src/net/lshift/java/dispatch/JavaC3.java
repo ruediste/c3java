@@ -2,13 +2,20 @@
 package net.lshift.java.dispatch;
 
 import static com.google.common.base.Predicates.equalTo;
+import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Iterables.all;
 import static com.google.common.collect.Iterables.any;
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.singletonList;
+
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import net.lshift.java.lang.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -86,27 +93,29 @@ public class JavaC3
         extends Error
     {
         private static final long serialVersionUID = 1L;
-        private Iterable<Class<?>> partialResult;
-        private Iterable<List<Class<?>>> remainingInputs;
+        private final Iterable<Class<?>> partialResult;
+        private final Iterable<List<Class<?>>> remainingInputs;
+        private final DirectSuperclasses dsc;
 
         protected JavaC3Exception
-            (Iterable<Class<?>> reversedPartialResult,
+            (DirectSuperclasses dsc, Iterable<Class<?>> partialResult,
              Iterable<List<Class<?>>> remainingInputs)
         {
             super("inconsistent precedence");
-            this.partialResult = reversedPartialResult;
+            this.dsc = dsc;
+            this.partialResult = partialResult;
             this.remainingInputs = remainingInputs;
         }
 
 
         /**
-         * Gets the value of reversedPartialResult
+         * Gets the value of partialResult
          * This is really for expert use only. Its
-         * the value of reversedPartialResult at the
+         * the value of partialResult at the
          * point the linearization failed.
-         * @return the value of reversedPartialResult
+         * @return the value of partialResult
          */
-        public Iterable<Class<?>> getReversedPartialResult()  {
+        public Iterable<Class<?>> getPartialResult()  {
             return this.partialResult;
         }
 
@@ -121,11 +130,15 @@ public class JavaC3
             return this.remainingInputs;
         }
 
-        public String toString()
-        {
-            return "inconsistent precendence: " +
-                partialResult +
-                " " + remainingInputs;
+        public String toString() {
+            List<String> superclasses = Lists.newArrayListWithCapacity(Iterables.size(partialResult));
+            for(Class<?> c: partialResult) {
+                superclasses.add(MessageFormat.format("    {0}: {1}", c, dsc.directSuperclasses(c)));
+            }
+            return MessageFormat.format(
+                    "inconsistent precendence:\nsuperclasses:\n {0}\nremaining:\n   {1}", 
+                    Strings.join(superclasses, "\n"), 
+                    remainingInputs);
         }
     }
 
@@ -133,8 +146,8 @@ public class JavaC3
 
 
     protected static Iterable<Class<?>> mergeLists(
-         Iterable<Class<?>> partialResult,
-         final Iterable<List<Class<?>>> remainingInputs,
+         List<Class<?>> partialResult,
+         final List<List<Class<?>>> remainingInputs,
          final DirectSuperclasses dsc)
         throws JavaC3Exception
     {
@@ -142,25 +155,26 @@ public class JavaC3
             return partialResult;
         }
 
-        Optional<Class<?>> next = Optional.absent();
-        for(Class<?> c: partialResult) {
-            next = Iterables.tryFind(dsc.directSuperclasses(c), isCandidate(remainingInputs));
-            if(next.isPresent()) break;
+        Optional<Class<?>> nextOption = Optional.absent();
+        for(Class<?> c: Lists.reverse(partialResult)) {
+            nextOption = Iterables.tryFind(dsc.directSuperclasses(c), isCandidate(remainingInputs));
+            if(nextOption.isPresent()) break;
         }
 
-        if(next.isPresent()) {
+        if(nextOption.isPresent()) {
             List<List<Class<?>>> newRemainingInputs = Lists.newArrayList();
+            Class<?> next = nextOption.get();
             for(List<Class<?>> input: remainingInputs) {
-                newRemainingInputs.add(input.indexOf(next.get()) == 0 ? input.subList(1, input.size()) : input);
+                newRemainingInputs.add(input.indexOf(next) == 0 ? input.subList(1, input.size()) : input);
             }
 
             return mergeLists(
-                Iterables.concat(singletonList(next.get()), partialResult),
+                newArrayList(concat(partialResult, singletonList(next))),
                 newRemainingInputs,
                 dsc);
         }
         else {
-            throw new JavaC3Exception(partialResult, remainingInputs);
+            throw new JavaC3Exception(dsc, partialResult, remainingInputs);
         }
     }
 
@@ -173,7 +187,7 @@ public class JavaC3
     private static <X> Predicate<X> isCandidate(final Iterable<List<X>> remainingInputs) {
         return new Predicate<X>() {
 
-            Predicate<List<X>> isHead(final X c) {
+            Predicate<List<X>> headIs(final X c) {
                 return new Predicate<List<X>>() {
                     public boolean apply(List<X> input) {
                         return !input.isEmpty() && c.equals(input.get(0));
@@ -190,8 +204,8 @@ public class JavaC3
              }
 
              public boolean apply(final X c) {
-                 return any(remainingInputs, isHead(c)) &&
-                       !any(remainingInputs, tailContains(c));
+                 return any(remainingInputs, headIs(c)) &&
+                       all(remainingInputs, not(tailContains(c)));
              }
         };
     }
@@ -206,15 +220,15 @@ public class JavaC3
         Function<Class<?>,List<Class<?>>> cplList =
             new Function<Class<?>,List<Class<?>>>() {
             public List<Class<?>> apply(Class<?> c) {
-                return Lists.newArrayList(allSuperclasses(c, dsc));
+                return newArrayList(allSuperclasses(c, dsc));
             }
         };
 
         return mergeLists(
             Collections.<Class<?>>singletonList(c),
-            Iterables.concat(
+            newArrayList(concat(
                  Lists.transform(cDirectSuperclasses, cplList),
-                 singletonList(cDirectSuperclasses)),
+                 singletonList(cDirectSuperclasses))),
              dsc);
     }
 

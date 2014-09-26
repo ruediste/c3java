@@ -1,13 +1,20 @@
 
 package net.lshift.java.dispatch;
 
-import java.lang.reflect.Array;
-import java.util.*;
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Lists.newArrayList;
+
 import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
-
-import net.lshift.java.util.Lists;
 
 /**
  * Default implementation of default superclasses.
@@ -72,19 +79,20 @@ public class DefaultDirectSuperclasses
             return arrayDirectSuperclasses(0, c);
         }
         else {
-            Class<?> [] interfaces = c.getInterfaces();
+            List<Class<?>> interfaces = Arrays.asList(c.getInterfaces());
             Class<?> superclass = c.getSuperclass();
 
             if(c == Object.class) {
                 return ImmutableList.of();
-            } else if(superclass == null && interfaces.length == 0) {
+            } else if(superclass == null && interfaces.isEmpty()) {
                 return classList(Object.class);
             } else if(superclass == Object.class) {
-                return Lists.concatenate(Arrays.asList(interfaces), classList(Object.class));
+                return newArrayList(concat(interfaces, classList(Object.class)));
             } else if(superclass == null) {
-                return Arrays.asList(interfaces);
+                return interfaces;
             } else {
-                return Lists.concatenate(classList(superclass), Arrays.asList(interfaces));
+                System.out.println("default: " + newArrayList(concat(classList(superclass), interfaces)));
+                return newArrayList(concat(classList(superclass), interfaces));
             }
         }
     }

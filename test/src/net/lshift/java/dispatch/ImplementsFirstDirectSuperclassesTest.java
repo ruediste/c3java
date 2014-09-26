@@ -21,6 +21,7 @@ package net.lshift.java.dispatch;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,13 +49,21 @@ public class ImplementsFirstDirectSuperclassesTest
              SUPERCLASSES.directSuperclasses(HashSet.class));
     }
 
-    public void testSet()
-        throws Exception
+    public void testCollection()
+    throws Exception
     {
         Iterable<Class<?>> linearization = JavaC3.allSuperclasses
-            (Set.class,ImplementsFirstDirectSuperclasses.SUPERCLASSES);
-        System.out.println("Set: " + linearization);
+                (Collection.class,ImplementsFirstDirectSuperclasses.SUPERCLASSES);
+        System.out.println("Collection: " + linearization);
     }
+
+    public void testSet()
+            throws Exception
+        {
+            Iterable<Class<?>> linearization = JavaC3.allSuperclasses
+                    (Set.class,ImplementsFirstDirectSuperclasses.SUPERCLASSES);
+            System.out.println("Set: " + linearization);
+        }
 
     public void testAbstractSet()
         throws Exception
