@@ -20,15 +20,13 @@ package net.lshift.java.dispatch;
 
 import java.io.Serializable;
 import java.util.AbstractSet;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
-import com.google.common.collect.ImmutableList;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import com.google.common.collect.ImmutableList;
 
 public class JavaC3Test
     extends TestCase
@@ -95,10 +93,10 @@ public class JavaC3Test
     public void testArrays()
         throws Exception
     {
-        HashSet [] array1 = new HashSet[0];
+        Set<?> [] array1 = new HashSet[0];
         Iterable<Class<?>> linearization = JavaC3.allSuperclasses(array1.getClass());
         System.out.println("HashSet[]: " + linearization);
-        HashSet [][] array2 = new HashSet[0][0];
+        Set<?> [][] array2 = new HashSet[0][0];
         linearization = JavaC3.allSuperclasses(array2.getClass());
         System.out.println("HashSet[][]: " + linearization);
     }

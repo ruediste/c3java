@@ -15,9 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import net.lshift.java.lang.Strings;
-
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -137,7 +136,7 @@ public class JavaC3
             }
             return MessageFormat.format(
                     "inconsistent precendence:\nsuperclasses:\n {0}\nremaining:\n   {1}", 
-                    Strings.join(superclasses, "\n"), 
+                    Joiner.on("\n").join(superclasses, "\n"), 
                     remainingInputs);
         }
     }
