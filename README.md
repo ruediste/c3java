@@ -1,5 +1,15 @@
 
-DYNAMIC DISPATCH FOR JAVA
+Multiple Dynamic Dispatch for Java
+==================================
+Licensing
+---------
+
+see NOTICE.
+
+To build from source
+--------------------
+
+This is a maven 2 project. See http://maven.apache.org/
 
 Quick start
 -----------
