@@ -1,5 +1,5 @@
 
-package net.lshift.java.dispatch;
+package com.github.ruediste1.c3java;
 
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Lists.newArrayList;
@@ -17,20 +17,29 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Default implementation of default superclasses.
+ * Default implementation of {@link DirectParentTypesReader}.
+ * 
+ * <p>
  * C3 needs an ordering of the direct superclasses.
+ * </p>
+ * 
+ * <p> 
  * We can get one using reflection, but there are at least 2 sensible
- * ways to do this. Also, you may not want to rely on the ordering that
- * reflection gives to the set of implemented interfaces. Testing
- * suggests the order is sane - ie. its the order in which they are
- * declared, but I can't find that documented anywhere, and
- * in the case of other peoples classes, that may not be acceptable
- * anyway. There are a few intersecting concerns involved - like basic
+ * ways to do this. This implementation puts the superclass first, followed
+ * by the interfaces in declaration order, except if the superclass is {@link Object},
+ * which is always put last in the direct parent type list.
+ * </p>
+ * 
+ * <p>
+ * There are a few intersecting concerns involved - like basic
  * type ordering, array handling, and in future, generics, so you
  * are going to want to subclass this in most cases.
+ * Also, in the case of other peoples classes, the declared
+ * order may not be acceptable anyway.
+ * </p>
  */
-public class DefaultDirectSuperclasses
-    implements JavaC3.DirectSuperclasses
+public class DefaultDirectParentTypesReader
+    implements DirectParentTypesReader
 {
     private static final Map<Class<?>,List<Class<?>>> PRIMITIVE_SUPERCLASSES;
 
@@ -55,8 +64,8 @@ public class DefaultDirectSuperclasses
         return Collections.unmodifiableList(Arrays.asList(class1));
     }
 
-    public static final JavaC3.DirectSuperclasses SUPERCLASSES =
-        new DefaultDirectSuperclasses();
+    public static final DirectParentTypesReader INSTANCE =
+        new DefaultDirectParentTypesReader();
 
     /**
      * Get the direct superclasses of a class.
@@ -70,13 +79,14 @@ public class DefaultDirectSuperclasses
      * This seems a bit arbitrary, but works, and gives sensible
      * results in most cases.
      */
-    public List<Class<?>> directSuperclasses(Class<?> c)
+    @Override
+    public List<Class<?>> directParentTypes(Class<?> c)
     {
         if(c.isPrimitive()) {
             return primitiveSuperclasses(c);
         }
         else if(c.isArray()) {
-            return arrayDirectSuperclasses(0, c);
+            return arrayDirectSuperclasses(0, c, this);
         }
         else {
             List<Class<?>> interfaces = Arrays.asList(c.getInterfaces());
@@ -91,13 +101,12 @@ public class DefaultDirectSuperclasses
             } else if(superclass == null) {
                 return interfaces;
             } else {
-                System.out.println("default: " + newArrayList(concat(classList(superclass), interfaces)));
                 return newArrayList(concat(classList(superclass), interfaces));
             }
         }
     }
 
-    public List<Class<?>> primitiveSuperclasses(Class<?> c)
+    static public List<Class<?>> primitiveSuperclasses(Class<?> c)
     {
             return PRIMITIVE_SUPERCLASSES.get(c);
     }
@@ -108,15 +117,15 @@ public class DefaultDirectSuperclasses
     protected static List<Class<?>> ARRAY_SUPERCLASSES =
         classList(Serializable.class, Cloneable.class, Object.class);
 
-    public List<Class<?>> arrayDirectSuperclasses(int level, Class<?> c)
+    public static List<Class<?>> arrayDirectSuperclasses(int level, Class<?> c, DirectParentTypesReader parentTypeReader)
     {
         List<Class<?>> classes;
 
         if(c.isArray()) {
-            classes = arrayDirectSuperclasses(level + 1, c.getComponentType());
+            classes = arrayDirectSuperclasses(level + 1, c.getComponentType(), parentTypeReader);
         }
         else {
-            List<Class<?>> componentSuperclasses = directSuperclasses(c);
+            List<Class<?>> componentSuperclasses = parentTypeReader.directParentTypes(c);
             if(componentSuperclasses.isEmpty() && !c.isInterface()) {
                 classes = (level == 1) ? new LinkedList<Class<?>>(ARRAY_SUPERCLASSES) :
                     makeArrayClasses(ARRAY_SUPERCLASSES, level - 1);

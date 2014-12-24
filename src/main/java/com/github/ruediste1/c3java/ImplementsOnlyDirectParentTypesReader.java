@@ -1,32 +1,32 @@
 
-package net.lshift.java.dispatch;
+package com.github.ruediste1.c3java;
 
 import java.util.*;
 
 /**
- * Implementation of direct superclasses with 'implements' before
- * 'extends'.  Although this appears to make more sense than the
- * default, it doesn't work on the concrete collections classes in
- * java.util.
+ * Implementation of {@link DirectParentTypesReader} which only includes
+ * interfaces and java.lang.Object. Note: it includes all the
+ * interfaces implemented by all its super classes as directly
+ * implemented.
  */
-public class ImplementsFirstDirectSuperclasses
-    extends DefaultDirectSuperclasses
+public class ImplementsOnlyDirectParentTypesReader
+    extends DefaultDirectParentTypesReader
 {
-    public static final JavaC3.DirectSuperclasses SUPERCLASSES =
-        new ImplementsFirstDirectSuperclasses();
+    public static final DirectParentTypesReader INSTANCE =
+        new ImplementsOnlyDirectParentTypesReader();
 
     /**
      * Get the direct superclasses of a class.
      * Interfaces, followed by the superclasses. Interfaces with
      * no super interfaces extend Object.
      */
-    public List<Class<?>> directSuperclasses(Class<?> c)
+    public List<Class<?>> directParentTypes(Class<?> c)
     {
         if(c.isPrimitive()) {
             return primitiveSuperclasses(c);
         }
         else if(c.isArray()) {
-            return arrayDirectSuperclasses(0, c);
+            return arrayDirectSuperclasses(0, c, this);
         }
         else {
             Class<?> [] interfaces = c.getInterfaces();

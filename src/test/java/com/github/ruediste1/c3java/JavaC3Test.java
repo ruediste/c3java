@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package net.lshift.java.dispatch;
+package com.github.ruediste1.c3java;
 
 import java.io.Serializable;
 import java.util.AbstractSet;
@@ -26,6 +26,8 @@ import java.util.Set;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.github.ruediste1.c3java.DefaultDirectParentTypesReader;
+import com.github.ruediste1.c3java.JavaC3;
 import com.google.common.collect.ImmutableList;
 
 public class JavaC3Test
@@ -56,7 +58,7 @@ public class JavaC3Test
                              Set.class,
                              Cloneable.class,
                              Serializable.class),
-             DefaultDirectSuperclasses.SUPERCLASSES.directSuperclasses(HashSet.class));
+             DefaultDirectParentTypesReader.INSTANCE.directParentTypes(HashSet.class));
     }
 
     public void testSet()

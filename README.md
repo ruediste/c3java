@@ -1,6 +1,10 @@
 
-Multiple Dynamic Dispatch for Java
+C3 Linearization Implementation for Java
 ==================================
+This library implements the [C3 Linearization algorithm](http://en.wikipedia.org/wiki/C3_linearization). It is used to flatten the inheritance graph of a class. The superclass and the interfaces of a class are retrieved using reflection. The exact way of ordering the superclasses and interfaces can be customized. 
+
+The code has been forked from [lshift](https://bitbucket.org/lshift/java-multimethods/), stripped of the dynamic dispatch code, refactored and cleaned up.
+
 Licensing
 ---------
 
@@ -9,55 +13,8 @@ see NOTICE.
 To build from source
 --------------------
 
-This is a maven 2 project. See http://maven.apache.org/
+This is a maven project. See http://maven.apache.org/
 
-Quick start
------------
-
-Outline:
-
- - Define an interface for the methods you want to dynamically
- dispatch.
-
- - Write a class which implements those methods for each type
- signature you want to support.
-
- - Get dynamic dispatch to create a dispatcher
-
-For example:
-
-    import net.lshift.java.dispatch.DynamicDispatch;
-
-    // define an interface
-
-    public interface NumberPredicate
-    {
-        public boolean evaluate(Number n);
-    }
-
-    // implement it for some argument types
-
-    public class Exact
-    {
-        public boolean evaluate(Float f)
-        {
-            return false;
-        }
-
-        public boolean evaluate(Double f)
-        {
-            return false;
-        }
-
-        public boolean evaluate(Number n)
-        {
-            return true;
-        }
-    }
-
-    // create a dynamic dispatcher
-
-    NumberPredicate exact = (NumberPredicate)DynamicDispatch.proxy(NumberPredicate.class, new Exact());
 
 C3 and Java
 -----------

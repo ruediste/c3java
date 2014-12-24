@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.lshift</groupId>
-  <artifactId>java</artifactId>
+  <artifactId>c3java</artifactId>
   <packaging>jar</packaging>
   <name>LShift Java library</name>
   <url>http://www.lshift.net</url>
@@ -24,14 +24,6 @@
     </dependency>
   </dependencies>
   <build>
-    <extensions>
-      <!--  this is how we publish components internally -->
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-webdav</artifactId>
-        <version>1.0-beta-2</version>
-      </extension>
-    </extensions>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -50,22 +42,6 @@
             <artifactId>maven-source-plugin</artifactId>
       </plugin>
     </plugins>
-    <sourceDirectory>${basedir}/src</sourceDirectory>
-    <testSourceDirectory>${basedir}/test/src</testSourceDirectory>
-    <outputDirectory>${basedir}/build/classes</outputDirectory>
-    <testOutputDirectory>${basedir}/build/test/classes</testOutputDirectory>
   </build>
-  <distributionManagement>
-    <repository>
-      <id>lshift</id>
-      <name>LShift Internal Repository</name>
-      <url>dav:https://mvn.lshift.net/mvn</url>
-    </repository>
-    <!-- <repository>
-      <id>hc</id>
-      <name>LShift Internal Repository</name>
-      <url>dav:http://hc.lshift.net/hc/mvn</url>
-    </repository> -->
-  </distributionManagement>
   <version>3.0</version>
 </project>

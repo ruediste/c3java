@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package net.lshift.java.dispatch;
+package com.github.ruediste1.c3java;
 
 import java.io.Serializable;
 import java.util.AbstractSet;
@@ -25,17 +25,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import com.github.ruediste1.c3java.JavaC3;
 
-public class ImplementsFirstDirectSuperclassesTest
+import junit.framework.TestCase;
+
+public class ImplementsFirstDirectParentTypesReaderTest
     extends TestCase
 {
 
-    public static TestSuite suite()
-    {
-        return new TestSuite(ImplementsFirstDirectSuperclassesTest.class);
-    }
 
     public void testDirectSuperClasses()
     {
@@ -45,15 +42,14 @@ public class ImplementsFirstDirectSuperclassesTest
                              Cloneable.class,
                              Serializable.class,
                              AbstractSet.class }),
-             ImplementsFirstDirectSuperclasses.
-             SUPERCLASSES.directSuperclasses(HashSet.class));
+                             ImplementsFirstDirectParentTypesReader.INSTANCE.directParentTypes(HashSet.class));
     }
 
     public void testCollection()
     throws Exception
     {
         Iterable<Class<?>> linearization = JavaC3.allSuperclasses
-                (Collection.class,ImplementsFirstDirectSuperclasses.SUPERCLASSES);
+                (Collection.class,ImplementsFirstDirectParentTypesReader.INSTANCE);
         System.out.println("Collection: " + linearization);
     }
 
@@ -61,7 +57,7 @@ public class ImplementsFirstDirectSuperclassesTest
             throws Exception
         {
             Iterable<Class<?>> linearization = JavaC3.allSuperclasses
-                    (Set.class,ImplementsFirstDirectSuperclasses.SUPERCLASSES);
+                    (Set.class,ImplementsFirstDirectParentTypesReader.INSTANCE);
             System.out.println("Set: " + linearization);
         }
 
@@ -69,7 +65,7 @@ public class ImplementsFirstDirectSuperclassesTest
         throws Exception
     {
         Iterable<Class<?>> linearization = JavaC3.allSuperclasses
-            (AbstractSet.class, ImplementsFirstDirectSuperclasses.SUPERCLASSES);
+            (AbstractSet.class, ImplementsFirstDirectParentTypesReader.INSTANCE);
         System.out.println("AbstractSet: " + linearization);
 
     }
