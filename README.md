@@ -1,35 +1,28 @@
 
 C3 Linearization Implementation for Java
 ==================================
-This library implements the [C3 Linearization algorithm](http://en.wikipedia.org/wiki/C3_linearization). It is used to flatten the inheritance graph of a class. The superclass and the interfaces of a class are retrieved using reflection. The exact way of ordering the superclasses and interfaces can be customized. 
+This library implements the [C3 Linearization algorithm](http://en.wikipedia.org/wiki/C3_linearization). It is used to flatten the inheritance graph of a class in the presence of multiple inheritance (interfaces in java). This can be used to determine which type introduced a member (method, property, etc) first in an inheritance graph. 
+
+The superclass and the interfaces of a class are retrieved using reflection. The exact way of ordering the super classes and interfaces can be customized. 
 
 The code has been forked from [lshift](https://bitbucket.org/lshift/java-multimethods/), stripped of the dynamic dispatch code, refactored and cleaned up.
 
-Licensing
----------
-
-see NOTICE.
-
-To build from source
---------------------
-
-This is a maven project. See http://maven.apache.org/
-
+To get the linearized class hierarchy of a type simply use
+    
+    Iterable<Class<?>> linearization = JavaC3.allSuperclasses(<your type>.class);
 
 C3 and Java
 -----------
 
-I use the C3 linearization to determine the most specific method.
-
-see
-http://www.webcom.com/haahr/dylan/linearization-oopsla96.html. JavaC3.java
-is a translation of the dylan example at the end of this paper,
+JavaC3.java is a translation of the dylan example at the end of [this paper](http://www.webcom.com/haahr/dylan/linearization-oopsla96.html),
 although its pretty hard to recognise, since it doesn't translate
 readily into an imperative language.
 
 To use the algorithm, everything must be a type - classes, interfaces,
 and primitive types are all types. We need to generate a list of
-super-types for all types in the system.  2.1.1 Supertypes for objects
+super-types for all types in the system. 
+
+### Supertypes for objects
 
 In dylan, you list your superclasses, and its this order that the
 linearization uses. In java, you list the interfaces you implement,
@@ -62,9 +55,19 @@ For any super-class other than Object, the super-class goes first in
 the list of super-types. If the super-class is Object, it gets pushed
 to the end. This works in an intuitive way in lots of cases.
 
-Supertypes for arrays and primitive types
------------------------------------------
-
+### Supertypes for arrays and primitive types
 Arrays work exactly as assignability would suggest they do.
 
 Primitive types work through java's notion of a widening conversion.
+
+To build from source
+--------------------
+
+This is a maven project. See http://maven.apache.org/
+
+
+Licensing
+---------
+
+see NOTICE.
+

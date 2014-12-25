@@ -2,25 +2,27 @@
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>net.lshift</groupId>
+  <groupId>com.github.ruediste1</groupId>
   <artifactId>c3java</artifactId>
-  <packaging>jar</packaging>
-  <name>LShift Java library</name>
-  <url>http://www.lshift.net</url>
+  <name>C3 Linearization Implementation for Java</name>
+  <version>1.0</version><packaging>jar</packaging>
+  <url>https://github.com/ruediste1/c3java</url>
+  
   <scm>
-    <url>http://hg.opernsource.lshift.net/java</url>
+    <url>https://github.com/ruediste1/c3java.git</url>
   </scm>
+  
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>com.google.guava</groupId>
     	<artifactId>guava</artifactId>
-    	<version>17.0</version>
+    	<version>18.0</version>
     </dependency>
   </dependencies>
   <build>
@@ -43,5 +45,5 @@
       </plugin>
     </plugins>
   </build>
-  <version>3.0</version>
+  
 </project>

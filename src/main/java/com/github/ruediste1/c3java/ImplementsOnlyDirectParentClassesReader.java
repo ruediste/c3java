@@ -4,28 +4,29 @@ package com.github.ruediste1.c3java;
 import java.util.*;
 
 /**
- * Implementation of {@link DirectParentTypesReader} with 'implements' before
- * 'extends'.  Although this appears to make more sense than the
- * default, it doesn't work on the concrete collections classes in
- * java.util.
+ * Implementation of {@link DirectParentClassesReader} which only includes
+ * interfaces and java.lang.Object. Note: it includes all the
+ * interfaces implemented by all its super classes as directly
+ * implemented.
  */
-public class ImplementsFirstDirectParentTypesReader implements DirectParentTypesReader
+public class ImplementsOnlyDirectParentClassesReader
+    implements DirectParentClassesReader
 {
-    public static final DirectParentTypesReader INSTANCE =
-        new ImplementsFirstDirectParentTypesReader();
+    public static final DirectParentClassesReader INSTANCE =
+        new ImplementsOnlyDirectParentClassesReader();
 
     /**
      * Get the direct superclasses of a class.
      * Interfaces, followed by the superclasses. Interfaces with
      * no super interfaces extend Object.
      */
-    public List<Class<?>> directParentTypes(Class<?> c)
+    public List<Class<?>> directParentClasses(Class<?> c)
     {
         if(c.isPrimitive()) {
-            return DefaultDirectParentTypesReader.primitiveSuperclasses(c);
+            return DefaultDirectParentClassesReader.primitiveSuperclasses(c);
         }
         else if(c.isArray()) {
-            return DefaultDirectParentTypesReader.arrayDirectSuperclasses(0, c, this);
+            return DefaultDirectParentClassesReader.arrayDirectSuperclasses(0, c, this);
         }
         else {
             Class<?> [] interfaces = c.getInterfaces();

@@ -17,6 +17,7 @@ import java.util.WeakHashMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -34,14 +35,14 @@ public class JavaC3
 {
     private static class LinearizationKey
     {
-        public DirectParentTypesReader directSuperclasses;
+        public DirectParentClassesReader directParentClassesReader;
         public Class<?> type;
 
         public  LinearizationKey
-            (DirectParentTypesReader directSuperclasses,
+            (DirectParentClassesReader directParentClassesReader,
              Class<?> type)
         {
-            this.directSuperclasses = directSuperclasses;
+            this.directParentClassesReader = directParentClassesReader;
             this.type = type;
         }
 
@@ -57,13 +58,13 @@ public class JavaC3
             else {
                 LinearizationKey other = (LinearizationKey)o;
                 return type.equals(other.type) &&
-                    directSuperclasses.equals(other.directSuperclasses);
+                    directParentClassesReader.equals(other.directParentClassesReader);
             }
         }
 
         public int hashCode()
         {
-            return type.hashCode();
+        	return Objects.hashCode(type, directParentClassesReader);
         }
     }
 
@@ -81,10 +82,10 @@ public class JavaC3
         private static final long serialVersionUID = 1L;
         private final Iterable<Class<?>> partialResult;
         private final Iterable<List<Class<?>>> remainingInputs;
-        private final DirectParentTypesReader dsc;
+        private final DirectParentClassesReader dsc;
 
         protected JavaC3Exception
-            (DirectParentTypesReader dsc, Iterable<Class<?>> partialResult,
+            (DirectParentClassesReader dsc, Iterable<Class<?>> partialResult,
              Iterable<List<Class<?>>> remainingInputs)
         {
             super("inconsistent precedence");
@@ -119,7 +120,7 @@ public class JavaC3
         public String toString() {
             List<String> superclasses = Lists.newArrayListWithCapacity(Iterables.size(partialResult));
             for(Class<?> c: partialResult) {
-                superclasses.add(MessageFormat.format("    {0}: {1}", c, dsc.directParentTypes(c)));
+                superclasses.add(MessageFormat.format("    {0}: {1}", c, dsc.directParentClasses(c)));
             }
             return MessageFormat.format(
                     "inconsistent precendence:\nsuperclasses:\n {0}\nremaining:\n   {1}", 
@@ -131,10 +132,10 @@ public class JavaC3
 
 
 
-    protected static Iterable<Class<?>> mergeLists(
+    private static Iterable<Class<?>> mergeLists(
          List<Class<?>> partialResult,
          final List<List<Class<?>>> remainingInputs,
-         final DirectParentTypesReader dsc)
+         final DirectParentClassesReader directParentClassesReader)
         throws JavaC3Exception
     {
         if(all(remainingInputs, equalTo(Collections.<Class<?>>emptyList()))) {
@@ -143,7 +144,7 @@ public class JavaC3
 
         Optional<Class<?>> nextOption = Optional.absent();
         for(Class<?> c: Lists.reverse(partialResult)) {
-            nextOption = Iterables.tryFind(dsc.directParentTypes(c), isCandidate(remainingInputs));
+            nextOption = Iterables.tryFind(directParentClassesReader.directParentClasses(c), isCandidate(remainingInputs));
             if(nextOption.isPresent()) break;
         }
 
@@ -157,10 +158,10 @@ public class JavaC3
             return mergeLists(
                 newArrayList(concat(partialResult, singletonList(next))),
                 newRemainingInputs,
-                dsc);
+                directParentClassesReader);
         }
         else {
-            throw new JavaC3Exception(dsc, partialResult, remainingInputs);
+            throw new JavaC3Exception(directParentClassesReader, partialResult, remainingInputs);
         }
     }
 
@@ -196,12 +197,12 @@ public class JavaC3
         };
     }
 
-    protected static Iterable<Class<?>> computeClassLinearization
+    private static Iterable<Class<?>> computeClassLinearization
         (Class<?> c,
-         final DirectParentTypesReader dsc)
+         final DirectParentClassesReader dsc)
         throws JavaC3Exception
     {
-        List<Class<?>> cDirectSuperclasses = dsc.directParentTypes(c);
+        List<Class<?>> cDirectSuperclasses = dsc.directParentClasses(c);
 
         Function<Class<?>,List<Class<?>>> cplList =
             new Function<Class<?>,List<Class<?>>>() {
@@ -221,16 +222,16 @@ public class JavaC3
     public static Iterable<Class<?>> allSuperclasses(Class<?> c)
         throws JavaC3Exception
     {
-        return allSuperclasses(c, DefaultDirectParentTypesReader.INSTANCE);
+        return allSuperclasses(c, DefaultDirectParentClassesReader.INSTANCE);
     }
 
-    public static Iterable<Class<?>> allSuperclasses(Class<?> c, DirectParentTypesReader dsc)
+    public static Iterable<Class<?>> allSuperclasses(Class<?> c, DirectParentClassesReader directParentClassesReader)
         throws JavaC3Exception
     {
-        LinearizationKey key = new LinearizationKey(dsc, c);
+        LinearizationKey key = new LinearizationKey(directParentClassesReader, c);
         Iterable<Class<?>> linearization = linearizations.get(key);
         if(linearization == null) {
-            linearization = computeClassLinearization(c, dsc);
+            linearization = computeClassLinearization(c, directParentClassesReader);
             linearizations.put(key, linearization);
         }
 
