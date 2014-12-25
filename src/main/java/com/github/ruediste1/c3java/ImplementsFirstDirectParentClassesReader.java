@@ -1,4 +1,3 @@
-
 package com.github.ruediste1.c3java;
 
 import java.util.*;
