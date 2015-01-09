@@ -1,17 +1,18 @@
-package com.github.ruediste1.c3java;
+package com.github.ruediste.c3java.linearization;
 
 import java.util.*;
 
 /**
- * Implementation of {@link DirectParentClassesReader} with 'implements' before
- * 'extends'.  Although this appears to make more sense than the
- * default, it doesn't work on the concrete collections classes in
- * java.util.
+ * Implementation of {@link DirectSuperclassesInspector} which only includes
+ * interfaces and java.lang.Object. Note: it includes all the
+ * interfaces implemented by all its super classes as directly
+ * implemented.
  */
-public class ImplementsFirstDirectParentClassesReader implements DirectParentClassesReader
+public class ImplementsOnlyDirectSuperclassesInspector
+    implements DirectSuperclassesInspector
 {
-    public static final DirectParentClassesReader INSTANCE =
-        new ImplementsFirstDirectParentClassesReader();
+    public static final DirectSuperclassesInspector INSTANCE =
+        new ImplementsOnlyDirectSuperclassesInspector();
 
     /**
      * Get the direct superclasses of a class.
@@ -21,10 +22,10 @@ public class ImplementsFirstDirectParentClassesReader implements DirectParentCla
     public List<Class<?>> directParentClasses(Class<?> c)
     {
         if(c.isPrimitive()) {
-            return DefaultDirectParentClassesReader.primitiveSuperclasses(c);
+            return DefaultDirectSuperclassesInspector.primitiveSuperclasses(c);
         }
         else if(c.isArray()) {
-            return DefaultDirectParentClassesReader.arrayDirectSuperclasses(0, c, this);
+            return DefaultDirectSuperclassesInspector.arrayDirectSuperclasses(0, c, this);
         }
         else {
             Class<?> [] interfaces = c.getInterfaces();

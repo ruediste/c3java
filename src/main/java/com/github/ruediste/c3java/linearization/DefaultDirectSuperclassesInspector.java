@@ -1,4 +1,4 @@
-package com.github.ruediste1.c3java;
+package com.github.ruediste.c3java.linearization;
 
 import static com.google.common.collect.Iterables.concat;
 import static com.google.common.collect.Lists.newArrayList;
@@ -16,7 +16,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Default implementation of {@link DirectParentClassesReader}.
+ * Default implementation of {@link DirectSuperclassesInspector}.
  * 
  * <p>
  * C3 needs an ordering of the direct superclasses.
@@ -37,8 +37,8 @@ import com.google.common.collect.ImmutableList;
  * order may not be acceptable anyway.
  * </p>
  */
-public class DefaultDirectParentClassesReader
-    implements DirectParentClassesReader
+public class DefaultDirectSuperclassesInspector
+    implements DirectSuperclassesInspector
 {
     private static final Map<Class<?>,List<Class<?>>> PRIMITIVE_SUPERCLASSES;
 
@@ -63,8 +63,8 @@ public class DefaultDirectParentClassesReader
         return Collections.unmodifiableList(Arrays.asList(class1));
     }
 
-    public static final DirectParentClassesReader INSTANCE =
-        new DefaultDirectParentClassesReader();
+    public static final DirectSuperclassesInspector INSTANCE =
+        new DefaultDirectSuperclassesInspector();
 
     /**
      * Get the direct superclasses of a class.
@@ -116,7 +116,7 @@ public class DefaultDirectParentClassesReader
     protected static List<Class<?>> ARRAY_SUPERCLASSES =
         classList(Serializable.class, Cloneable.class, Object.class);
 
-    public static List<Class<?>> arrayDirectSuperclasses(int level, Class<?> c, DirectParentClassesReader parentTypeReader)
+    public static List<Class<?>> arrayDirectSuperclasses(int level, Class<?> c, DirectSuperclassesInspector parentTypeReader)
     {
         List<Class<?>> classes;
 

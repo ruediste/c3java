@@ -1,4 +1,4 @@
-package com.github.ruediste1.c3java;
+package com.github.ruediste.c3java.linearization;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
  * @author ruedi
  *
  */
-public interface DirectParentClassesReader
+public interface DirectSuperclassesInspector
 {
     /**
      * Get the direct parent types

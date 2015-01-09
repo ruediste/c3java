@@ -1,4 +1,4 @@
-package com.github.ruediste1.c3java;
+package com.github.ruediste.c3java.linearization;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,8 +11,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.github.ruediste1.c3java.DefaultDirectParentClassesReader;
-import com.github.ruediste1.c3java.JavaC3;
+import com.github.ruediste.c3java.linearization.DefaultDirectSuperclassesInspector;
+import com.github.ruediste.c3java.linearization.JavaC3;
 import com.google.common.collect.ImmutableList;
 
 public class JavaC3Test {
@@ -35,7 +35,7 @@ public class JavaC3Test {
 	public void testDirectSuperClasses() {
 		assertEquals(ImmutableList.of(AbstractSet.class, Set.class,
 				Cloneable.class, Serializable.class),
-				DefaultDirectParentClassesReader.INSTANCE
+				DefaultDirectSuperclassesInspector.INSTANCE
 						.directParentClasses(HashSet.class));
 	}
 

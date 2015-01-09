@@ -1,4 +1,4 @@
-package com.github.ruediste1.c3java;
+package com.github.ruediste.c3java.linearization;
 
 import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.base.Predicates.not;
@@ -34,11 +34,11 @@ public class JavaC3
 {
     private static class LinearizationKey
     {
-        public DirectParentClassesReader directParentClassesReader;
+        public DirectSuperclassesInspector directParentClassesReader;
         public Class<?> type;
 
         public  LinearizationKey
-            (DirectParentClassesReader directParentClassesReader,
+            (DirectSuperclassesInspector directParentClassesReader,
              Class<?> type)
         {
             this.directParentClassesReader = directParentClassesReader;
@@ -81,10 +81,10 @@ public class JavaC3
         private static final long serialVersionUID = 1L;
         private final Iterable<Class<?>> partialResult;
         private final Iterable<List<Class<?>>> remainingInputs;
-        private final DirectParentClassesReader dsc;
+        private final DirectSuperclassesInspector dsc;
 
         protected JavaC3Exception
-            (DirectParentClassesReader dsc, Iterable<Class<?>> partialResult,
+            (DirectSuperclassesInspector dsc, Iterable<Class<?>> partialResult,
              Iterable<List<Class<?>>> remainingInputs)
         {
             super("inconsistent precedence");
@@ -134,7 +134,7 @@ public class JavaC3
     private static Iterable<Class<?>> mergeLists(
          List<Class<?>> partialResult,
          final List<List<Class<?>>> remainingInputs,
-         final DirectParentClassesReader directParentClassesReader)
+         final DirectSuperclassesInspector directParentClassesReader)
         throws JavaC3Exception
     {
         if(all(remainingInputs, equalTo(Collections.<Class<?>>emptyList()))) {
@@ -198,7 +198,7 @@ public class JavaC3
 
     private static Iterable<Class<?>> computeClassLinearization
         (Class<?> c,
-         final DirectParentClassesReader dsc)
+         final DirectSuperclassesInspector dsc)
         throws JavaC3Exception
     {
         List<Class<?>> cDirectSuperclasses = dsc.directParentClasses(c);
@@ -221,10 +221,10 @@ public class JavaC3
     public static Iterable<Class<?>> allSuperclasses(Class<?> c)
         throws JavaC3Exception
     {
-        return allSuperclasses(c, DefaultDirectParentClassesReader.INSTANCE);
+        return allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE);
     }
 
-    public static Iterable<Class<?>> allSuperclasses(Class<?> c, DirectParentClassesReader directParentClassesReader)
+    public static Iterable<Class<?>> allSuperclasses(Class<?> c, DirectSuperclassesInspector directParentClassesReader)
         throws JavaC3Exception
     {
         LinearizationKey key = new LinearizationKey(directParentClassesReader, c);
