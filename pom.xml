@@ -4,8 +4,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.ruediste1</groupId>
   <artifactId>c3java</artifactId>
+  <version>1.0</version>
   <name>C3 Linearization Implementation for Java</name>
-  <version>1.0</version><packaging>jar</packaging>
+  
+  <packaging>jar</packaging>
   <url>https://github.com/ruediste1/c3java</url>
   
   <scm>

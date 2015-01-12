@@ -2,6 +2,7 @@ package com.github.ruediste.c3java.properties;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 
 import com.google.common.base.Objects;
 
@@ -21,12 +22,18 @@ public class PropertyDeclaration {
 	private final Method getter;
 	private final Method setter;
 	private final Field backingField;
+	private final Type propertyType;
+
+	public PropertyDeclaration(String name, Class<?> declaringType) {
+		this(name, declaringType, null, null, null, null);
+	}
 
 	public PropertyDeclaration(String name, Class<?> declaringType,
-			Method getter, Method setter, Field backingField) {
+			Type propertyType, Method getter, Method setter, Field backingField) {
 		super();
 		this.name = name;
 		this.declaringType = declaringType;
+		this.propertyType = propertyType;
 		this.getter = getter;
 		this.setter = setter;
 		this.backingField = backingField;
@@ -83,18 +90,38 @@ public class PropertyDeclaration {
 	}
 
 	public PropertyDeclaration withGetter(Method getter) {
-		return new PropertyDeclaration(name, declaringType, getter, setter,
-				backingField);
+		Type returnType = getter.getGenericReturnType();
+		if (propertyType != null && !propertyType.equals(returnType))
+			throw new RuntimeException("return type of " + getter
+					+ " does not match property type " + propertyType);
+		return new PropertyDeclaration(name, declaringType, returnType, getter,
+				setter, backingField);
 	}
 
 	public PropertyDeclaration withSetter(Method setter) {
-		return new PropertyDeclaration(name, declaringType, getter, setter,
-				backingField);
+		Type valueType = setter.getGenericParameterTypes()[0];
+		if (propertyType != null && !propertyType.equals(valueType))
+			throw new RuntimeException("value argument type of " + setter
+					+ " does not match property type " + propertyType);
+		return new PropertyDeclaration(name, declaringType, valueType, getter,
+				setter, backingField);
 	}
 
 	public PropertyDeclaration withBackingField(Field backingField) {
-		return new PropertyDeclaration(name, declaringType, getter, setter,
-				backingField);
+		Type fieldType = backingField.getGenericType();
+		if (propertyType != null && !propertyType.equals(fieldType))
+			throw new RuntimeException("field type of " + backingField
+					+ " does not match property type " + propertyType);
+		return new PropertyDeclaration(name, declaringType, fieldType, getter,
+				setter, backingField);
+	}
+
+	public PropertyInfo toInfo() {
+		return new PropertyInfo(name, propertyType, getter, setter);
+	}
+
+	public Type getPropertyType() {
+		return propertyType;
 	}
 
 }
