@@ -19,11 +19,11 @@ import com.google.common.reflect.TypeToken;
  */
 public class InvocationRecorder {
 
-	private final ArrayList<RecordedMethodInvocation<?>> invocations=new ArrayList<>();
-	
+	private final ArrayList<RecordedMethodInvocation<Object>> invocations = new ArrayList<>();
+
 	@SuppressWarnings("unchecked")
-	public <T> T record(TypeToken<T> type){
-		
+	public <T> T record(TypeToken<T> type) {
+
 		Enhancer e = new Enhancer();
 		e.setSuperclass(type.getRawType());
 		e.setCallback(new MethodInterceptor() {
@@ -31,9 +31,11 @@ public class InvocationRecorder {
 			@Override
 			public Object intercept(Object obj, Method method, Object[] args,
 					MethodProxy proxy) throws Throwable {
-				invocations.add(new RecordedMethodInvocation<Object>(type, method, Arrays.asList(args)));
+				invocations.add(new RecordedMethodInvocation<Object>(type,
+						method, Arrays.asList(args)));
 
-				TypeToken<?> returnType = type.resolveType(method.getGenericReturnType());
+				TypeToken<?> returnType = type.resolveType(method
+						.getGenericReturnType());
 				if (isTerminal(returnType)) {
 					return Defaults.defaultValue(returnType.getRawType());
 				}
@@ -44,14 +46,14 @@ public class InvocationRecorder {
 
 		return (T) e.create();
 	}
-	
+
 	private boolean isTerminal(TypeToken<?> returnType) {
 		Class<?> clazz = returnType.getRawType();
 		return clazz.isPrimitive() || String.class.equals(clazz)
 				|| Date.class.equals(clazz);
 	}
 
-	public List<RecordedMethodInvocation<?>> getInvocations() {
+	public List<RecordedMethodInvocation<Object>> getInvocations() {
 		return Collections.unmodifiableList(invocations);
 	}
 

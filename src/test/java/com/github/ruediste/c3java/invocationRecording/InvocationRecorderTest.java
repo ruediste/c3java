@@ -45,9 +45,8 @@ public class InvocationRecorderTest {
 		}, recorder.getInvocations().get(0).getInstanceType());
 		assertEquals("getT", recorder.getInvocations().get(0).getMethod()
 				.getName());
-		assertEquals(
-				"capture#2-of ? extends class java.lang.Object",
-				recorder.getInvocations().get(1).getInstanceType().toString());
+		assertEquals("capture#2-of ? extends class java.lang.Object", recorder
+				.getInvocations().get(1).getInstanceType().toString());
 		assertEquals("hashCode", recorder.getInvocations().get(1).getMethod()
 				.getName());
 	}
@@ -58,10 +57,8 @@ public class InvocationRecorderTest {
 		}).getT().getT().hashCode();
 
 		assertEquals(3, recorder.getInvocations().size());
-		assertEquals(
-				new TypeToken<TestClass<TestClass<?>>>() {
-				}	,
-				recorder.getInvocations().get(0).getInstanceType());
+		assertEquals(new TypeToken<TestClass<TestClass<?>>>() {
+		}, recorder.getInvocations().get(0).getInstanceType());
 		assertEquals("getT", recorder.getInvocations().get(0).getMethod()
 				.getName());
 		assertEquals("getT", recorder.getInvocations().get(1).getMethod()
@@ -69,4 +66,5 @@ public class InvocationRecorderTest {
 		assertEquals("hashCode", recorder.getInvocations().get(2).getMethod()
 				.getName());
 	}
+
 }
