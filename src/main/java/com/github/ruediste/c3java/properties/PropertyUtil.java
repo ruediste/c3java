@@ -19,195 +19,196 @@ import com.google.common.collect.Lists;
 
 public class PropertyUtil {
 
-	/**
-	 * Helper class used to simplify repeated map.put calls
-	 */
-	private static class Putter {
+    /**
+     * Helper class used to simplify repeated map.put calls
+     */
+    private static class Putter {
 
-		private Map<String, PropertyDeclaration> map;
-		private Class<?> type;
+        private Map<String, PropertyDeclaration> map;
+        private Class<?> type;
 
-		private Putter(Map<String, PropertyDeclaration> map, Class<?> type) {
-			this.map = map;
-			this.type = type;
-		}
+        private Putter(Map<String, PropertyDeclaration> map, Class<?> type) {
+            this.map = map;
+            this.type = type;
+        }
 
-		private void put(String key,
-				Function<PropertyDeclaration, PropertyDeclaration> func) {
-			PropertyDeclaration property = map.get(key);
-			if (property == null) {
-				property = new PropertyDeclaration(key, type);
-			}
-			map.put(key, func.apply(property));
-		}
-	}
+        private void put(String key,
+                Function<PropertyDeclaration, PropertyDeclaration> func) {
+            PropertyDeclaration property = map.get(key);
+            if (property == null) {
+                property = new PropertyDeclaration(key, type);
+            }
+            map.put(key, func.apply(property));
+        }
+    }
 
-	/**
-	 * Create an accessor from the given method, or null if the method is no
-	 * accessor
-	 */
-	public PropertyAccessor getAccessor(Method method) {
-		if (Modifier.isPrivate(method.getModifiers())
-				|| Modifier.isStatic(method.getModifiers())) {
-			return null;
-		}
+    /**
+     * Create an accessor from the given method, or null if the method is no
+     * accessor
+     */
+    public PropertyAccessor getAccessor(Method method) {
+        if (Modifier.isPrivate(method.getModifiers())
+                || Modifier.isStatic(method.getModifiers())) {
+            return null;
+        }
 
-		// check for getters
-		if (method.getName().startsWith("get")) {
-			String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
-					method.getName().substring("get".length()));
+        // check for getters
+        if (method.getName().startsWith("get")) {
+            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
+                    method.getName().substring("get".length()));
 
-			// getFoo()
-			if (method.getParameterCount() == 0) {
-				return new PropertyAccessor(name, AccessorType.GETTER, method);
-			}
+            // getFoo()
+            if (method.getParameterCount() == 0) {
+                return new PropertyAccessor(name, AccessorType.GETTER, method);
+            }
 
-		}
+        }
 
-		// check for setters
+        // check for setters
 
-		if (method.getName().startsWith("set")) {
-			String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
-					method.getName().substring("set".length()));
-			// setFoo()
-			if (method.getParameterCount() == 1) {
-				return new PropertyAccessor(name, AccessorType.SETTER, method);
-			}
+        if (method.getName().startsWith("set")) {
+            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
+                    method.getName().substring("set".length()));
+            // setFoo()
+            if (method.getParameterCount() == 1) {
+                return new PropertyAccessor(name, AccessorType.SETTER, method);
+            }
 
-		}
-		return null;
-	}
+        }
+        return null;
+    }
 
-	/**
-	 * Return all properties which are directly declared on the provided type
-	 */
-	public Map<String, PropertyDeclaration> getDeclaredProperties(Class<?> type) {
-		Map<String, PropertyDeclaration> result = new HashMap<>();
+    /**
+     * Return all properties which are directly declared on the provided type
+     */
+    public Map<String, PropertyDeclaration> getDeclaredProperties(Class<?> type) {
+        Map<String, PropertyDeclaration> result = new HashMap<>();
 
-		// scan methods
-		for (Method method : type.getDeclaredMethods()) {
-			PropertyAccessor accessor = getAccessor(method);
-			if (accessor == null)
-				continue;
+        // scan methods
+        for (Method method : type.getDeclaredMethods()) {
+            PropertyAccessor accessor = getAccessor(method);
+            if (accessor == null)
+                continue;
 
-			Putter putter = new Putter(result, type);
+            Putter putter = new Putter(result, type);
 
-			switch (accessor.getType()) {
-			case GETTER:
-				putter.put(accessor.getName(), p -> p.withGetter(method));
-				break;
-			case SETTER:
-				putter.put(accessor.getName(), p -> p.withSetter(method));
-				break;
-			default:
-				throw new RuntimeException("should not happen");
-			}
-		}
-		// fill backing fields
-		for (Field f : type.getDeclaredFields()) {
-			String name = f.getName();
-			PropertyDeclaration property = result.get(name);
-			if (property != null) {
-				result.put(name, property.withBackingField(f));
-			}
-		}
-		return result;
-	}
+            switch (accessor.getType()) {
+            case GETTER:
+                putter.put(accessor.getName(), p -> p.withGetter(method));
+                break;
+            case SETTER:
+                putter.put(accessor.getName(), p -> p.withSetter(method));
+                break;
+            default:
+                throw new RuntimeException("should not happen");
+            }
+        }
+        // fill backing fields
+        for (Field f : type.getDeclaredFields()) {
+            String name = f.getName();
+            PropertyDeclaration property = result.get(name);
+            if (property != null) {
+                result.put(name, property.withBackingField(f));
+            }
+        }
+        return result;
+    }
 
-	/**
-	 * Return all types the given type is assignable to. The returned set is
-	 * ordered.
-	 * 
-	 */
-	public Set<Class<?>> getTypes(Class<?> type) {
-		LinkedHashSet<Class<?>> result = new LinkedHashSet<>();
-		fillTypes(type, result);
-		return result;
-	}
+    /**
+     * Return all types the given type is assignable to. The returned set is
+     * ordered.
+     * 
+     */
+    public Set<Class<?>> getTypes(Class<?> type) {
+        LinkedHashSet<Class<?>> result = new LinkedHashSet<>();
+        fillTypes(type, result);
+        return result;
+    }
 
-	private void fillTypes(Class<?> type, Set<Class<?>> result) {
-		if (type == null)
-			return;
+    private void fillTypes(Class<?> type, Set<Class<?>> result) {
+        if (type == null)
+            return;
 
-		// reinsert
-		result.remove(type);
-		result.add(type);
+        // reinsert
+        result.remove(type);
+        result.add(type);
 
-		fillTypes(type.getSuperclass(), result);
-		for (Class<?> t : type.getInterfaces()) {
-			fillTypes(t, result);
-		}
-	}
+        fillTypes(type.getSuperclass(), result);
+        for (Class<?> t : type.getInterfaces()) {
+            fillTypes(t, result);
+        }
+    }
 
 	public PropertyInfo getPropertyInfo(Class<?> type, String name) {
 		return getPropertyInfoMap(type).get(name);
 	}
 
-	public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
-		Map<String, PropertyInfo> result = new HashMap<>();
-		if (type == null || type == Object.class)
-			return result;
+    public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
+        Map<String, PropertyInfo> result = new HashMap<>();
+        if (type == null || type == Object.class)
+            return result;
 
-		// copy map from superclass
-		result.putAll(getPropertyInfoMap(type.getSuperclass()));
+        // copy map from superclass
+        result.putAll(getPropertyInfoMap(type.getSuperclass()));
 
-		// merge with all interfaces
-		for (Class<?> t : type.getInterfaces()) {
-			Map<String, PropertyInfo> map = getPropertyInfoMap(t);
-			for (PropertyInfo info : map.values()) {
-				PropertyInfo existingInfo = result.get(info.getName());
-				if (existingInfo == null)
-					result.put(info.getName(), info);
-				else {
-					result.put(info.getName(), existingInfo.mergedWith(info));
-				}
-			}
-		}
+        // merge with all interfaces
+        for (Class<?> t : type.getInterfaces()) {
+            Map<String, PropertyInfo> map = getPropertyInfoMap(t);
+            for (PropertyInfo info : map.values()) {
+                PropertyInfo existingInfo = result.get(info.getName());
+                if (existingInfo == null)
+                    result.put(info.getName(), info);
+                else {
+                    result.put(info.getName(), existingInfo.mergedWith(info));
+                }
+            }
+        }
 
-		// merge with declarations
-		for (PropertyDeclaration decl : getDeclaredProperties(type).values()) {
-			PropertyInfo existingInfo = result.get(decl.getName());
-			if (existingInfo == null) {
-				result.put(decl.getName(), decl.toInfo());
-			}
-		}
-		return result;
-	}
+        // merge with declarations
+        for (PropertyDeclaration decl : getDeclaredProperties(type).values()) {
+            PropertyInfo existingInfo = result.get(decl.getName());
+            if (existingInfo == null) {
+                result.put(decl.getName(), decl.toInfo());
+            }
+        }
+        return result;
+    }
 
-	public PropertyDeclaration getPropertyIntroduction(Class<?> type,
-			String name) {
-		return getPropertyIntroductionMap(type).get(name);
-	}
+    public PropertyDeclaration getPropertyIntroduction(Class<?> type,
+            String name) {
+        return getPropertyIntroductionMap(type).get(name);
+    }
 
-	/**
-	 * Return the {@link Property}s of the given type. For each property, the
-	 * property declaration which introduced the property is returned.
-	 */
-	public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
-			Class<?> type) {
-		Map<String, PropertyDeclaration> result = new HashMap<>();
+    /**
+     * Return the {@link PropertyDeclaration}s of the given type. For each
+     * property, the property declaration which introduced the property is
+     * returned.
+     */
+    public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
+            Class<?> type) {
+        Map<String, PropertyDeclaration> result = new HashMap<>();
 
-		for (Class<?> cls : Lists.reverse(Lists.newArrayList(JavaC3
-				.allSuperclasses(type)))) {
-			if (Object.class.equals(cls)) {
-				continue;
-			}
-			for (PropertyDeclaration prop : getDeclaredProperties(cls).values()) {
-				result.putIfAbsent(prop.getName(), prop);
-			}
-		}
+        for (Class<?> cls : Lists.reverse(Lists.newArrayList(JavaC3
+                .allSuperclasses(type)))) {
+            if (Object.class.equals(cls)) {
+                continue;
+            }
+            for (PropertyDeclaration prop : getDeclaredProperties(cls).values()) {
+                result.putIfAbsent(prop.getName(), prop);
+            }
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	public PropertyHandle toHandle(
+    public PropertyHandle toHandle(
 			List<RecordedMethodInvocation<Object>> invocations) {
 		PropertyInfo info = getAccessedProperty(invocations);
 
 		return new PropertyHandle(new TargetResolver() {
 
-			@Override
-			public Object getValue(Object root) {
+            @Override
+            public Object getValue(Object root) {
 				Object value = root;
 				for (int i = 0; i < invocations.size() - 1; i++) {
 					RecordedMethodInvocation<Object> invocation = invocations.get(i);
@@ -250,5 +251,5 @@ public class PropertyUtil {
 					+ accessor.getName() + " found on "
 					+ accessorInvocation.getInstanceType());
 		return info;
-	}
+    }
 }
