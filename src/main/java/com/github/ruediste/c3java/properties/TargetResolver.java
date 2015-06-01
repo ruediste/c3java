@@ -5,5 +5,5 @@ package com.github.ruediste.c3java.properties;
  * root object.
  */
 public interface TargetResolver {
-	Object getValue(Object root);
+    Object getValue(Object root);
 }

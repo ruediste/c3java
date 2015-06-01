@@ -139,9 +139,9 @@ public class PropertyUtil {
         }
     }
 
-	public PropertyInfo getPropertyInfo(Class<?> type, String name) {
-		return getPropertyInfoMap(type).get(name);
-	}
+    public PropertyInfo getPropertyInfo(Class<?> type, String name) {
+        return getPropertyInfoMap(type).get(name);
+    }
 
     public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
         Map<String, PropertyInfo> result = new HashMap<>();
@@ -202,54 +202,54 @@ public class PropertyUtil {
     }
 
     public PropertyHandle toHandle(
-			List<RecordedMethodInvocation<Object>> invocations) {
-		PropertyInfo info = getAccessedProperty(invocations);
+            List<RecordedMethodInvocation<Object>> invocations) {
+        PropertyInfo info = getAccessedProperty(invocations);
 
-		return new PropertyHandle(new TargetResolver() {
+        return new PropertyHandle(new TargetResolver() {
 
             @Override
             public Object getValue(Object root) {
-				Object value = root;
-				for (int i = 0; i < invocations.size() - 1; i++) {
-					RecordedMethodInvocation<Object> invocation = invocations.get(i);
-					try {
-						value = invocation.getMethod().invoke(value,
-								invocation.getArguments().toArray());
-					} catch (IllegalAccessException | IllegalArgumentException e) {
-						throw new RuntimeException(e);
-					} catch (InvocationTargetException e) {
-						throw new RuntimeException(e.getCause());
-					}
-				}
-				return value;
-			}
-		}, info);
-	}
+                Object value = root;
+                for (int i = 0; i < invocations.size() - 1; i++) {
+                    RecordedMethodInvocation<Object> invocation = invocations.get(i);
+                    try {
+                        value = invocation.getMethod().invoke(value,
+                                invocation.getArguments().toArray());
+                    } catch (IllegalAccessException | IllegalArgumentException e) {
+                        throw new RuntimeException(e);
+                    } catch (InvocationTargetException e) {
+                        throw new RuntimeException(e.getCause());
+                    }
+                }
+                return value;
+            }
+        }, info);
+    }
 
-	public PropertyInfo getAccessedProperty(
-			List<RecordedMethodInvocation<Object>> invocations) {
-		RecordedMethodInvocation<Object> last = invocations.get(invocations
-				.size() - 1);
+    public PropertyInfo getAccessedProperty(
+            List<RecordedMethodInvocation<Object>> invocations) {
+        RecordedMethodInvocation<Object> last = invocations.get(invocations
+                .size() - 1);
 
-		return getAccessedProperty(last);
-	}
+        return getAccessedProperty(last);
+    }
 
-	public PropertyInfo getAccessedProperty(
-			RecordedMethodInvocation<Object> accessorInvocation) {
-		PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
+    public PropertyInfo getAccessedProperty(
+            RecordedMethodInvocation<Object> accessorInvocation) {
+        PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 
-		if (accessor == null)
-			throw new RuntimeException("method "
-					+ accessorInvocation.getMethod()
-					+ " is no property accessor");
+        if (accessor == null)
+            throw new RuntimeException("method "
+                    + accessorInvocation.getMethod()
+                    + " is no property accessor");
 
-		PropertyInfo info = getPropertyInfo(accessorInvocation
-				.getInstanceType().getRawType(), accessor.getName());
+        PropertyInfo info = getPropertyInfo(accessorInvocation
+                .getInstanceType().getRawType(), accessor.getName());
 
-		if (info == null)
-			throw new RuntimeException("no property named "
-					+ accessor.getName() + " found on "
-					+ accessorInvocation.getInstanceType());
-		return info;
+        if (info == null)
+            throw new RuntimeException("no property named "
+                    + accessor.getName() + " found on "
+                    + accessorInvocation.getInstanceType());
+        return info;
     }
 }

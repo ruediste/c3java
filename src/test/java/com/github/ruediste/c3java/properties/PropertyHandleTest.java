@@ -16,58 +16,58 @@ import com.google.common.reflect.TypeToken;
 @SuppressWarnings("serial")
 public class PropertyHandleTest {
 
-	static interface TestClass<T> {
-		T getT();
+    static interface TestClass<T> {
+        T getT();
 
-		String getString();
+        String getString();
 
-		void setString(String value);
+        void setString(String value);
 
-		T funkyMethod(String dummy, int foo);
-	}
+        T funkyMethod(String dummy, int foo);
+    }
 
-	InvocationRecorder recorder;
-	PropertyUtil util;
+    InvocationRecorder recorder;
+    PropertyUtil util;
 
-	TestClass<?> object;
+    TestClass<?> object;
 
-	@Before
-	public void setup() {
-		recorder = new InvocationRecorder();
-		util = new PropertyUtil();
-		object = Mockito.mock(TestClass.class);
-		Mockito.<Object> when(object.getT()).thenReturn(object);
-		Mockito.<Object> when(object.funkyMethod(anyString(), anyInt()))
-				.thenReturn(object);
-	}
+    @Before
+    public void setup() {
+        recorder = new InvocationRecorder();
+        util = new PropertyUtil();
+        object = Mockito.mock(TestClass.class);
+        Mockito.<Object> when(object.getT()).thenReturn(object);
+        Mockito.<Object> when(object.funkyMethod(anyString(), anyInt()))
+                .thenReturn(object);
+    }
 
-	@Test
-	public void testSimple() {
-		recorder.record(TypeToken.of(TestClass.class)).setString("null");
-		PropertyHandle handle = util.toHandle(recorder.getInvocations());
-		handle.setValue(object, "bar");
-		verify(object).setString("bar");
-	}
+    @Test
+    public void testSimple() {
+        recorder.record(TypeToken.of(TestClass.class)).setString("null");
+        PropertyHandle handle = util.toHandle(recorder.getInvocations());
+        handle.setValue(object, "bar");
+        verify(object).setString("bar");
+    }
 
-	@Test
-	public void testNested() {
-		recorder.record(new TypeToken<TestClass<TestClass<Double>>>() {
-		}).getT().setString(null);
-		PropertyHandle handle = util.toHandle(recorder.getInvocations());
-		handle.getValue(object);
-		InOrder order = inOrder(object);
-		order.verify(object).getT();
-		order.verify(object).getString();
-	}
+    @Test
+    public void testNested() {
+        recorder.record(new TypeToken<TestClass<TestClass<Double>>>() {
+        }).getT().setString(null);
+        PropertyHandle handle = util.toHandle(recorder.getInvocations());
+        handle.getValue(object);
+        InOrder order = inOrder(object);
+        order.verify(object).getT();
+        order.verify(object).getString();
+    }
 
-	@Test
-	public void testNestedWithMethod() {
-		recorder.record(new TypeToken<TestClass<TestClass<Double>>>() {
-		}).funkyMethod(null, 3).getString();
-		PropertyHandle handle = util.toHandle(recorder.getInvocations());
-		handle.getValue(object);
-		InOrder order = inOrder(object);
-		order.verify(object).funkyMethod(null, 3);
-		order.verify(object).getString();
-	}
+    @Test
+    public void testNestedWithMethod() {
+        recorder.record(new TypeToken<TestClass<TestClass<Double>>>() {
+        }).funkyMethod(null, 3).getString();
+        PropertyHandle handle = util.toHandle(recorder.getInvocations());
+        handle.getValue(object);
+        InOrder order = inOrder(object);
+        order.verify(object).funkyMethod(null, 3);
+        order.verify(object).getString();
+    }
 }

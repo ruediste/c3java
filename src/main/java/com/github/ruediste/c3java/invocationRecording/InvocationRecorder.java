@@ -19,42 +19,42 @@ import com.google.common.reflect.TypeToken;
  */
 public class InvocationRecorder {
 
-	private final ArrayList<RecordedMethodInvocation<Object>> invocations = new ArrayList<>();
+    private final ArrayList<RecordedMethodInvocation<Object>> invocations = new ArrayList<>();
 
-	@SuppressWarnings("unchecked")
-	public <T> T record(TypeToken<T> type) {
+    @SuppressWarnings("unchecked")
+    public <T> T record(TypeToken<T> type) {
 
-		Enhancer e = new Enhancer();
-		e.setSuperclass(type.getRawType());
-		e.setCallback(new MethodInterceptor() {
+        Enhancer e = new Enhancer();
+        e.setSuperclass(type.getRawType());
+        e.setCallback(new MethodInterceptor() {
 
-			@Override
-			public Object intercept(Object obj, Method method, Object[] args,
-					MethodProxy proxy) throws Throwable {
-				invocations.add(new RecordedMethodInvocation<Object>(type,
-						method, Arrays.asList(args)));
+            @Override
+            public Object intercept(Object obj, Method method, Object[] args,
+                    MethodProxy proxy) throws Throwable {
+                invocations.add(new RecordedMethodInvocation<Object>(type,
+                        method, Arrays.asList(args)));
 
-				TypeToken<?> returnType = type.resolveType(method
-						.getGenericReturnType());
-				if (isTerminal(returnType)) {
-					return Defaults.defaultValue(returnType.getRawType());
-				}
-				return record(returnType);
-			}
+                TypeToken<?> returnType = type.resolveType(method
+                        .getGenericReturnType());
+                if (isTerminal(returnType)) {
+                    return Defaults.defaultValue(returnType.getRawType());
+                }
+                return record(returnType);
+            }
 
-		});
+        });
 
-		return (T) e.create();
-	}
+        return (T) e.create();
+    }
 
-	private boolean isTerminal(TypeToken<?> returnType) {
-		Class<?> clazz = returnType.getRawType();
-		return clazz.isPrimitive() || String.class.equals(clazz)
-				|| Date.class.equals(clazz);
-	}
+    private boolean isTerminal(TypeToken<?> returnType) {
+        Class<?> clazz = returnType.getRawType();
+        return clazz.isPrimitive() || String.class.equals(clazz)
+                || Date.class.equals(clazz);
+    }
 
-	public List<RecordedMethodInvocation<Object>> getInvocations() {
-		return Collections.unmodifiableList(invocations);
-	}
+    public List<RecordedMethodInvocation<Object>> getInvocations() {
+        return Collections.unmodifiableList(invocations);
+    }
 
 }

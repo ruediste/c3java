@@ -11,35 +11,35 @@ package com.github.ruediste.c3java.properties;
  */
 public class PropertyHandle {
 
-	private TargetResolver target;
-	private PropertyInfo info;
+    private TargetResolver target;
+    private PropertyInfo info;
 
-	/**
-	 * Create a new property handle which uses the root as the target value.
-	 */
-	public PropertyHandle(PropertyInfo info) {
-		this(new RootHandleTarget(), info);
-	}
+    /**
+     * Create a new property handle which uses the root as the target value.
+     */
+    public PropertyHandle(PropertyInfo info) {
+        this(new RootHandleTarget(), info);
+    }
 
-	/**
-	 * Create a property handle for the given target and property.
-	 */
-	public PropertyHandle(TargetResolver target, PropertyInfo info) {
-		this.target = target;
-		this.info = info;
-	}
+    /**
+     * Create a property handle for the given target and property.
+     */
+    public PropertyHandle(TargetResolver target, PropertyInfo info) {
+        this.target = target;
+        this.info = info;
+    }
 
-	/**
-	 * Get the value of the property.
-	 */
-	public Object getValue(Object root) {
-		return info.getValue(target.getValue(root));
-	}
+    /**
+     * Get the value of the property.
+     */
+    public Object getValue(Object root) {
+        return info.getValue(target.getValue(root));
+    }
 
-	/**
-	 * Set the value of the property.
-	 */
-	public void setValue(Object root, Object value) {
-		info.setValue(target.getValue(root), value);
-	}
+    /**
+     * Set the value of the property.
+     */
+    public void setValue(Object root, Object value) {
+        info.setValue(target.getValue(root), value);
+    }
 }

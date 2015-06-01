@@ -4,31 +4,31 @@ import java.lang.reflect.Method;
 
 public class PropertyAccessor {
 
-	public enum AccessorType {
-		GETTER, SETTER
-	}
+    public enum AccessorType {
+        GETTER, SETTER
+    }
 
-	private final String name;
-	private final AccessorType type;
-	private final Method method;
+    private final String name;
+    private final AccessorType type;
+    private final Method method;
 
-	public PropertyAccessor(String name, AccessorType type, Method method) {
-		super();
-		this.name = name;
-		this.type = type;
-		this.method = method;
-	}
+    public PropertyAccessor(String name, AccessorType type, Method method) {
+        super();
+        this.name = name;
+        this.type = type;
+        this.method = method;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public AccessorType getType() {
-		return type;
-	}
+    public AccessorType getType() {
+        return type;
+    }
 
-	public Method getMethod() {
-		return method;
-	}
+    public Method getMethod() {
+        return method;
+    }
 
 }
