@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/ruediste/c3java.svg?branch=master)](https://travis-ci.org/ruediste/c3java)
 
 C3 Linearization Implementation for Java
 ==================================
