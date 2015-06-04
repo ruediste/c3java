@@ -8,7 +8,7 @@ import org.junit.Test;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
-public class InvocationRecorderTest {
+public class MethodInvocationRecorderTest {
 
     static interface TestClass<T> {
         T getT();
@@ -16,11 +16,11 @@ public class InvocationRecorderTest {
         String getString();
     }
 
-    InvocationRecorder recorder;
+    MethodInvocationRecorder recorder;
 
     @Before
     public void setup() {
-        recorder = new InvocationRecorder();
+        recorder = new MethodInvocationRecorder();
     }
 
     @Test

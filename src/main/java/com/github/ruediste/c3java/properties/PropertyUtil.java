@@ -12,8 +12,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.github.ruediste.c3java.invocationRecording.InvocationRecorder;
 import com.github.ruediste.c3java.invocationRecording.MethodInvocation;
+import com.github.ruediste.c3java.invocationRecording.MethodInvocationRecorder;
 import com.github.ruediste.c3java.linearization.JavaC3;
 import com.github.ruediste.c3java.properties.PropertyAccessor.AccessorType;
 import com.github.ruediste.c3java.properties.PropertyPath.PropertyPathNode;
@@ -50,7 +50,7 @@ public class PropertyUtil {
      * Create an accessor from the given method, or null if the method is no
      * accessor
      */
-    public PropertyAccessor getAccessor(Method method) {
+    static public PropertyAccessor getAccessor(Method method) {
         if (Modifier.isPrivate(method.getModifiers())
                 || Modifier.isStatic(method.getModifiers())) {
             return null;
@@ -85,7 +85,8 @@ public class PropertyUtil {
     /**
      * Return all properties which are directly declared on the provided type
      */
-    public Map<String, PropertyDeclaration> getDeclaredProperties(Class<?> type) {
+    static public Map<String, PropertyDeclaration> getDeclaredProperties(
+            Class<?> type) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
 
         // scan methods
@@ -123,13 +124,13 @@ public class PropertyUtil {
      * ordered.
      * 
      */
-    public Set<Class<?>> getTypes(Class<?> type) {
+    static public Set<Class<?>> getTypes(Class<?> type) {
         LinkedHashSet<Class<?>> result = new LinkedHashSet<>();
         fillTypes(type, result);
         return result;
     }
 
-    private void fillTypes(Class<?> type, Set<Class<?>> result) {
+    static private void fillTypes(Class<?> type, Set<Class<?>> result) {
         if (type == null)
             return;
 
@@ -143,11 +144,11 @@ public class PropertyUtil {
         }
     }
 
-    public PropertyInfo getPropertyInfo(Class<?> type, String name) {
+    static public PropertyInfo getPropertyInfo(Class<?> type, String name) {
         return getPropertyInfoMap(type).get(name);
     }
 
-    public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
+    static public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
         Map<String, PropertyInfo> result = new HashMap<>();
         if (type == null || type == Object.class)
             return result;
@@ -178,7 +179,7 @@ public class PropertyUtil {
         return result;
     }
 
-    public PropertyDeclaration getPropertyIntroduction(Class<?> type,
+    static public PropertyDeclaration getPropertyIntroduction(Class<?> type,
             String name) {
         return getPropertyIntroductionMap(type).get(name);
     }
@@ -188,7 +189,7 @@ public class PropertyUtil {
      * property, the property declaration which introduced the property is
      * returned.
      */
-    public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
+    static public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
             Class<?> type) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
 
@@ -205,7 +206,11 @@ public class PropertyUtil {
         return result;
     }
 
-    public PropertyPath toPath(List<MethodInvocation<Object>> invocations) {
+    static public PropertyPath toPath(MethodInvocationRecorder recorder) {
+        return toPath(recorder.getInvocations());
+    }
+
+    static public PropertyPath toPath(List<MethodInvocation<Object>> invocations) {
         PropertyPath result = new PropertyPath();
         for (MethodInvocation<Object> invocation : invocations) {
             result.nodes.add(getPathNode(invocation));
@@ -213,33 +218,34 @@ public class PropertyUtil {
         return result;
     }
 
-    public <T> PropertyPath getPropertyPath(Class<T> type,
+    static public <T> PropertyPath getPropertyPath(Class<T> type,
             Consumer<T> pathAccessor) {
         return getPropertyPath(TypeToken.of(type), pathAccessor);
     }
 
-    public <T> PropertyPath getPropertyPath(TypeToken<T> type,
+    static public <T> PropertyPath getPropertyPath(TypeToken<T> type,
             Consumer<T> pathAccessor) {
-        InvocationRecorder recorder = new InvocationRecorder();
+        MethodInvocationRecorder recorder = new MethodInvocationRecorder();
         pathAccessor.accept(recorder.getProxy(type));
         return toPath(recorder.getInvocations());
     }
 
-    public PropertyPathNode getPathNode(MethodInvocation<Object> invocation) {
+    static public PropertyPathNode getPathNode(
+            MethodInvocation<Object> invocation) {
         return tryGetAccessedProperty(invocation).<PropertyPathNode> map(
                 p -> new PropertyPath.PropertyNode(p)).orElseGet(
                 () -> new PropertyPath.MethodNode(invocation));
 
     }
 
-    public PropertyInfo getAccessedProperty(
+    static public PropertyInfo getAccessedProperty(
             List<MethodInvocation<Object>> invocations) {
         MethodInvocation<Object> last = invocations.get(invocations.size() - 1);
 
         return getAccessedProperty(last);
     }
 
-    public Optional<PropertyInfo> tryGetAccessedProperty(
+    static public Optional<PropertyInfo> tryGetAccessedProperty(
             MethodInvocation<Object> accessorInvocation) {
         PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 
@@ -254,7 +260,7 @@ public class PropertyUtil {
         return Optional.of(info);
     }
 
-    public PropertyInfo getAccessedProperty(
+    static public PropertyInfo getAccessedProperty(
             MethodInvocation<Object> accessorInvocation) {
         PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 

@@ -38,11 +38,11 @@ public class PropertyInfo {
         }
     }
 
-    public boolean canRead() {
+    public boolean isReadable() {
         return getter != null;
     }
 
-    public boolean canWrite() {
+    public boolean isWriteable() {
         return setter != null;
     }
 

@@ -70,11 +70,27 @@ public class PropertyPath {
         return ((PropertyNode) lastNode).property;
     }
 
+    /**
+     * Invoke all nodes of this path in order
+     */
     public Object evaluate(Object target) {
         Object result = target;
         for (PropertyPathNode node : nodes) {
             result = node.evaluate(result);
         }
         return result;
+    }
+
+    /**
+     * Evaluate all nodes of this path except for the last. The last node needs
+     * to be a {@link PropertyNode}. The represented property will be set to the
+     * specified value
+     */
+    public void set(Object target, Object value) {
+        Object current = target;
+        for (int i = 0; i < nodes.size() - 1; i++) {
+            current = nodes.get(i).evaluate(current);
+        }
+        getAccessedProperty().setValue(current, value);
     }
 }

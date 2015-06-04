@@ -13,7 +13,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.github.ruediste.c3java.invocationRecording.InvocationRecorder;
+import com.github.ruediste.c3java.invocationRecording.MethodInvocationRecorder;
 import com.github.ruediste.c3java.properties.PropertyPath.PropertyNode;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -49,7 +49,7 @@ public class PropertyPathTest {
         }
     }
 
-    InvocationRecorder recorder;
+    MethodInvocationRecorder recorder;
 
     PropertyUtil util = new PropertyUtil();
 
@@ -60,7 +60,7 @@ public class PropertyPathTest {
 
     @Before
     public void before() {
-        recorder = new InvocationRecorder();
+        recorder = new MethodInvocationRecorder();
         b = new B();
         b.a = a;
         when(a.getInt()).thenReturn(5);

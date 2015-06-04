@@ -9,7 +9,7 @@ import org.junit.Test;
 
 public class MethodInvocationTest {
 
-    private InvocationRecorder recorder;
+    private MethodInvocationRecorder recorder;
 
     interface A {
         void a();
@@ -19,7 +19,7 @@ public class MethodInvocationTest {
 
     @Before
     public void before() {
-        recorder = new InvocationRecorder();
+        recorder = new MethodInvocationRecorder();
     }
 
     @Test

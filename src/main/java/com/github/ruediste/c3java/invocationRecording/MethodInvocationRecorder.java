@@ -12,12 +12,13 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 import com.google.common.base.Defaults;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 /**
  * Records invocations of methods to a proxy.
  */
-public class InvocationRecorder {
+public class MethodInvocationRecorder {
 
     private final ArrayList<MethodInvocation<Object>> invocations = new ArrayList<>();
 
@@ -59,6 +60,10 @@ public class InvocationRecorder {
 
     public List<MethodInvocation<Object>> getInvocations() {
         return Collections.unmodifiableList(invocations);
+    }
+
+    public MethodInvocation<Object> getLastInvocation() {
+        return Iterables.getLast(invocations);
     }
 
 }
