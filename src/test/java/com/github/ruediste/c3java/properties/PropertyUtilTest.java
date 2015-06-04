@@ -17,6 +17,8 @@ import java.util.RandomAccess;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.ruediste.c3java.properties.PropertyPath.PropertyNode;
+
 public class PropertyUtilTest {
 
     PropertyUtil util;
@@ -63,7 +65,7 @@ public class PropertyUtilTest {
         }
     }
 
-    class ClassA {
+    static class ClassA {
         public int getA() {
             return 0;
         }
@@ -205,5 +207,11 @@ public class PropertyUtilTest {
                 new PropertyInfo("b1", int.class,
                         InterfaceB.class.getDeclaredMethod("getB1"), null),
                 props.get("b1"));
+    }
+
+    @Test
+    public void testGetPropertyPath() {
+        PropertyPath path = util.getPropertyPath(ClassA.class, x -> x.getA());
+        assertEquals("a", ((PropertyNode) path.nodes.get(0)).property.getName());
     }
 }

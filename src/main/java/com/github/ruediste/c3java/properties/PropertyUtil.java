@@ -1,21 +1,25 @@
 package com.github.ruediste.c3java.properties;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.github.ruediste.c3java.invocationRecording.RecordedMethodInvocation;
+import com.github.ruediste.c3java.invocationRecording.InvocationRecorder;
+import com.github.ruediste.c3java.invocationRecording.MethodInvocation;
 import com.github.ruediste.c3java.linearization.JavaC3;
 import com.github.ruediste.c3java.properties.PropertyAccessor.AccessorType;
+import com.github.ruediste.c3java.properties.PropertyPath.PropertyPathNode;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 public class PropertyUtil {
 
@@ -201,41 +205,57 @@ public class PropertyUtil {
         return result;
     }
 
-    public PropertyHandle toHandle(
-            List<RecordedMethodInvocation<Object>> invocations) {
-        PropertyInfo info = getAccessedProperty(invocations);
+    public PropertyPath toPath(List<MethodInvocation<Object>> invocations) {
+        PropertyPath result = new PropertyPath();
+        for (MethodInvocation<Object> invocation : invocations) {
+            result.nodes.add(getPathNode(invocation));
+        }
+        return result;
+    }
 
-        return new PropertyHandle(new TargetResolver() {
+    public <T> PropertyPath getPropertyPath(Class<T> type,
+            Consumer<T> pathAccessor) {
+        return getPropertyPath(TypeToken.of(type), pathAccessor);
+    }
 
-            @Override
-            public Object getValue(Object root) {
-                Object value = root;
-                for (int i = 0; i < invocations.size() - 1; i++) {
-                    RecordedMethodInvocation<Object> invocation = invocations.get(i);
-                    try {
-                        value = invocation.getMethod().invoke(value,
-                                invocation.getArguments().toArray());
-                    } catch (IllegalAccessException | IllegalArgumentException e) {
-                        throw new RuntimeException(e);
-                    } catch (InvocationTargetException e) {
-                        throw new RuntimeException(e.getCause());
-                    }
-                }
-                return value;
-            }
-        }, info);
+    public <T> PropertyPath getPropertyPath(TypeToken<T> type,
+            Consumer<T> pathAccessor) {
+        InvocationRecorder recorder = new InvocationRecorder();
+        pathAccessor.accept(recorder.getProxy(type));
+        return toPath(recorder.getInvocations());
+    }
+
+    public PropertyPathNode getPathNode(MethodInvocation<Object> invocation) {
+        return tryGetAccessedProperty(invocation).<PropertyPathNode> map(
+                p -> new PropertyPath.PropertyNode(p)).orElseGet(
+                () -> new PropertyPath.MethodNode(invocation));
+
     }
 
     public PropertyInfo getAccessedProperty(
-            List<RecordedMethodInvocation<Object>> invocations) {
-        RecordedMethodInvocation<Object> last = invocations.get(invocations
-                .size() - 1);
+            List<MethodInvocation<Object>> invocations) {
+        MethodInvocation<Object> last = invocations.get(invocations.size() - 1);
 
         return getAccessedProperty(last);
     }
 
+    public Optional<PropertyInfo> tryGetAccessedProperty(
+            MethodInvocation<Object> accessorInvocation) {
+        PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
+
+        if (accessor == null)
+            return Optional.empty();
+
+        PropertyInfo info = getPropertyInfo(accessorInvocation
+                .getInstanceType().getRawType(), accessor.getName());
+
+        if (info == null)
+            return Optional.empty();
+        return Optional.of(info);
+    }
+
     public PropertyInfo getAccessedProperty(
-            RecordedMethodInvocation<Object> accessorInvocation) {
+            MethodInvocation<Object> accessorInvocation) {
         PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 
         if (accessor == null)

@@ -25,7 +25,7 @@ public class InvocationRecorderTest {
 
     @Test
     public void testSingle() {
-        recorder.record(new TypeToken<TestClass<?>>() {
+        recorder.getProxy(new TypeToken<TestClass<?>>() {
         }).getString();
 
         assertEquals(1, recorder.getInvocations().size());
@@ -37,7 +37,7 @@ public class InvocationRecorderTest {
 
     @Test
     public void testGeneric() {
-        recorder.record(new TypeToken<TestClass<?>>() {
+        recorder.getProxy(new TypeToken<TestClass<?>>() {
         }).getT().hashCode();
 
         assertEquals(2, recorder.getInvocations().size());
@@ -53,7 +53,7 @@ public class InvocationRecorderTest {
 
     @Test
     public void testGeneric2() {
-        recorder.record(new TypeToken<TestClass<TestClass<?>>>() {
+        recorder.getProxy(new TypeToken<TestClass<TestClass<?>>>() {
         }).getT().getT().hashCode();
 
         assertEquals(3, recorder.getInvocations().size());

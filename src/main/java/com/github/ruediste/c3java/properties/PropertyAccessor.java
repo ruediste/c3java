@@ -2,6 +2,9 @@ package com.github.ruediste.c3java.properties;
 
 import java.lang.reflect.Method;
 
+/**
+ * An accessor of a property. Accessors are combined to {@link PropertyInfo}s
+ */
 public class PropertyAccessor {
 
     public enum AccessorType {

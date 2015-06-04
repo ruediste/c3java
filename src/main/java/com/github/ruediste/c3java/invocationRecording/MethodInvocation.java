@@ -2,7 +2,11 @@ package com.github.ruediste.c3java.invocationRecording;
 
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
@@ -12,21 +16,21 @@ import com.google.common.reflect.TypeToken;
 /**
  * The record of a method invocation
  */
-public class RecordedMethodInvocation<T> {
+public class MethodInvocation<T> {
 
     private final List<T> arguments;
     final private TypeToken<?> instanceType;
     final private Method method;
 
-    public RecordedMethodInvocation(TypeToken<?> instanceType, Method method,
+    public MethodInvocation(TypeToken<?> instanceType, Method method,
             List<T> arguments) {
         this.instanceType = instanceType;
         this.method = method;
         this.arguments = new ArrayList<>(arguments);
     }
 
-    public <X> RecordedMethodInvocation<X> withArguments(List<X> arguments) {
-        return new RecordedMethodInvocation<>(instanceType, method, arguments);
+    public <X> MethodInvocation<X> withArguments(List<X> arguments) {
+        return new MethodInvocation<>(instanceType, method, arguments);
     }
 
     /**
@@ -36,7 +40,7 @@ public class RecordedMethodInvocation<T> {
         return Collections.unmodifiableList(arguments);
     }
 
-    public <O> boolean isCallToSameMethod(RecordedMethodInvocation<O> other,
+    public <O> boolean isCallToSameMethod(MethodInvocation<O> other,
             BiPredicate<? super T, ? super O> comparator) {
         if (method != other.method) {
             return false;
@@ -77,7 +81,7 @@ public class RecordedMethodInvocation<T> {
         return instanceType;
     }
 
-    public <R> RecordedMethodInvocation<R> map(
+    public <R> MethodInvocation<R> map(
             BiFunction<AnnotatedType, ? super T, R> func) {
         ArrayList<R> args = new ArrayList<>();
         Iterator<AnnotatedType> pit = Arrays.asList(

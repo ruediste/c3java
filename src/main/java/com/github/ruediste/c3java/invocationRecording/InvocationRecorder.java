@@ -19,10 +19,14 @@ import com.google.common.reflect.TypeToken;
  */
 public class InvocationRecorder {
 
-    private final ArrayList<RecordedMethodInvocation<Object>> invocations = new ArrayList<>();
+    private final ArrayList<MethodInvocation<Object>> invocations = new ArrayList<>();
+
+    public <T> T getProxy(Class<T> type) {
+        return getProxy(TypeToken.of(type));
+    }
 
     @SuppressWarnings("unchecked")
-    public <T> T record(TypeToken<T> type) {
+    public <T> T getProxy(TypeToken<T> type) {
 
         Enhancer e = new Enhancer();
         e.setSuperclass(type.getRawType());
@@ -31,15 +35,15 @@ public class InvocationRecorder {
             @Override
             public Object intercept(Object obj, Method method, Object[] args,
                     MethodProxy proxy) throws Throwable {
-                invocations.add(new RecordedMethodInvocation<Object>(type,
-                        method, Arrays.asList(args)));
+                invocations.add(new MethodInvocation<Object>(type, method,
+                        Arrays.asList(args)));
 
                 TypeToken<?> returnType = type.resolveType(method
                         .getGenericReturnType());
                 if (isTerminal(returnType)) {
                     return Defaults.defaultValue(returnType.getRawType());
                 }
-                return record(returnType);
+                return getProxy(returnType);
             }
 
         });
@@ -53,7 +57,7 @@ public class InvocationRecorder {
                 || Date.class.equals(clazz);
     }
 
-    public List<RecordedMethodInvocation<Object>> getInvocations() {
+    public List<MethodInvocation<Object>> getInvocations() {
         return Collections.unmodifiableList(invocations);
     }
 
