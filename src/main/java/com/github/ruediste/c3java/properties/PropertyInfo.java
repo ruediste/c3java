@@ -11,13 +11,15 @@ public class PropertyInfo {
     private final Type propertyType;
     private final Method getter;
     private final Method setter;
+    private final Class<?> declaringType;
 
     public PropertyInfo(String name, Type propertyType, Method getter,
-            Method setter) {
+            Method setter, Class<?> declaringType) {
         this.name = name;
         this.propertyType = propertyType;
         this.getter = getter;
         this.setter = setter;
+        this.declaringType = declaringType;
     }
 
     public Object getValue(Object target) {
@@ -55,11 +57,13 @@ public class PropertyInfo {
     }
 
     public PropertyInfo withGetter(Method getter) {
-        return new PropertyInfo(name, propertyType, getter, setter);
+        return new PropertyInfo(name, propertyType, getter, setter,
+                declaringType);
     }
 
     public PropertyInfo withSetter(Method setter) {
-        return new PropertyInfo(name, propertyType, getter, setter);
+        return new PropertyInfo(name, propertyType, getter, setter,
+                declaringType);
     }
 
     public PropertyInfo mergedWith(PropertyInfo info) {
@@ -74,8 +78,15 @@ public class PropertyInfo {
             result = result.withGetter(info.getGetter());
         if (setter == null && info.getSetter() != null)
             result = result.withSetter(info.getSetter());
-
+        if (declaringType.isAssignableFrom(info.declaringType)) {
+            result = result.withDeclaringType(info.declaringType);
+        }
         return result;
+    }
+
+    private PropertyInfo withDeclaringType(Class<?> declaringType) {
+        return new PropertyInfo(name, propertyType, getter, setter,
+                declaringType);
     }
 
     public Method getGetter() {
@@ -88,7 +99,7 @@ public class PropertyInfo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, propertyType, getter, setter);
+        return Objects.hash(name, propertyType, getter, setter, declaringType);
     }
 
     @Override
@@ -103,7 +114,8 @@ public class PropertyInfo {
         return Objects.equals(name, other.name)
                 && Objects.equals(propertyType, other.propertyType)
                 && Objects.equals(getter, other.getter)
-                && Objects.equals(setter, other.setter);
+                && Objects.equals(setter, other.setter)
+                && Objects.equals(declaringType, other.declaringType);
 
     }
 
@@ -111,6 +123,10 @@ public class PropertyInfo {
     public String toString() {
         return "PropertyInfo [name=" + name + ", propertyType=" + propertyType
                 + ", getter=" + getter + ", setter=" + setter + "]";
+    }
+
+    public Class<?> getDeclaringType() {
+        return declaringType;
     }
 
 }

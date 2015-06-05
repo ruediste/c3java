@@ -172,8 +172,8 @@ public class PropertyUtilTest {
         assertEquals(1, props.size());
         assertEquals(
                 new PropertyInfo("a", int.class,
-                        ClassA.class.getDeclaredMethod("getA"), null),
-                props.get("a"));
+                        ClassA.class.getDeclaredMethod("getA"), null,
+                        ClassA.class), props.get("a"));
     }
 
     @Test
@@ -183,12 +183,12 @@ public class PropertyUtilTest {
         assertEquals(2, props.size());
         assertEquals(
                 new PropertyInfo("b", int.class,
-                        InterfaceB.class.getDeclaredMethod("getB"), null),
-                props.get("b"));
+                        InterfaceB.class.getDeclaredMethod("getB"), null,
+                        InterfaceB.class), props.get("b"));
         assertEquals(
                 new PropertyInfo("b1", int.class,
-                        InterfaceB.class.getDeclaredMethod("getB1"), null),
-                props.get("b1"));
+                        InterfaceB.class.getDeclaredMethod("getB1"), null,
+                        InterfaceB.class), props.get("b1"));
     }
 
     @Test
@@ -197,16 +197,16 @@ public class PropertyUtilTest {
         assertEquals(3, props.size());
         assertEquals(
                 new PropertyInfo("a", int.class,
-                        ClassA.class.getDeclaredMethod("getA"), null),
-                props.get("a"));
+                        ClassA.class.getDeclaredMethod("getA"), null,
+                        ClassA.class), props.get("a"));
         assertEquals(
                 new PropertyInfo("b", int.class,
-                        InterfaceB.class.getDeclaredMethod("getB"), null),
-                props.get("b"));
+                        InterfaceB.class.getDeclaredMethod("getB"), null,
+                        InterfaceB.class), props.get("b"));
         assertEquals(
                 new PropertyInfo("b1", int.class,
-                        InterfaceB.class.getDeclaredMethod("getB1"), null),
-                props.get("b1"));
+                        InterfaceB.class.getDeclaredMethod("getB1"), null,
+                        InterfaceB.class), props.get("b1"));
     }
 
     @Test

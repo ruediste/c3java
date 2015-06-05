@@ -7,11 +7,12 @@ import com.github.ruediste.c3java.invocationRecording.MethodInvocation;
 import com.github.ruediste.c3java.invocationRecording.MethodInvocationUtil;
 
 /**
- * Path from a root object to a property.
+ * Path from a root object, traversing method calls or properties.
  * 
  * <p>
- * The difference to the {@link PropertyHandle} is that the path to the property
- * is transparent.
+ * If the last node in the path is a property, it can be retrieved using
+ * {@link #getAccessedProperty()}
+ * 
  */
 public class PropertyPath {
     public final List<PropertyPathNode> nodes = new ArrayList<>();

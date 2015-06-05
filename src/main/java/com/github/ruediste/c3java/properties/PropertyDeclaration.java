@@ -117,7 +117,8 @@ public class PropertyDeclaration {
     }
 
     public PropertyInfo toInfo() {
-        return new PropertyInfo(name, propertyType, getter, setter);
+        return new PropertyInfo(name, propertyType, getter, setter,
+                declaringType);
     }
 
     public Type getPropertyType() {
