@@ -28,6 +28,9 @@ public class MethodInvocationRecorder {
 
     @SuppressWarnings("unchecked")
     public <T> T getProxy(TypeToken<T> type) {
+        if (isTerminal(type)) {
+            return (T) Defaults.defaultValue(type.getRawType());
+        }
 
         Enhancer e = new Enhancer();
         e.setSuperclass(type.getRawType());
@@ -39,12 +42,7 @@ public class MethodInvocationRecorder {
                 invocations.add(new MethodInvocation<Object>(type, method,
                         Arrays.asList(args)));
 
-                TypeToken<?> returnType = type.resolveType(method
-                        .getGenericReturnType());
-                if (isTerminal(returnType)) {
-                    return Defaults.defaultValue(returnType.getRawType());
-                }
-                return getProxy(returnType);
+                return getProxy(type.resolveType(method.getGenericReturnType()));
             }
 
         });

@@ -23,6 +23,9 @@ import com.google.common.reflect.TypeToken;
 
 public class PropertyUtil {
 
+    private PropertyUtil() {
+    }
+
     /**
      * Helper class used to simplify repeated map.put calls
      */
@@ -52,7 +55,8 @@ public class PropertyUtil {
      */
     static public PropertyAccessor getAccessor(Method method) {
         if (Modifier.isPrivate(method.getModifiers())
-                || Modifier.isStatic(method.getModifiers())) {
+                || Modifier.isStatic(method.getModifiers())
+                || method.isAnnotationPresent(NoPropertyAccessor.class)) {
             return null;
         }
 

@@ -52,6 +52,12 @@ public class MethodInvocationRecorderTest {
     }
 
     @Test
+    public void testTerminal() {
+        recorder.getProxy(String.class);
+        assertEquals(0, recorder.getInvocations().size());
+    }
+
+    @Test
     public void testGeneric2() {
         recorder.getProxy(new TypeToken<TestClass<TestClass<?>>>() {
         }).getT().getT().hashCode();
