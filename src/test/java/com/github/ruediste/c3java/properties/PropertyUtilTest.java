@@ -14,24 +14,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.github.ruediste.c3java.properties.PropertyPath.PropertyNode;
 
 public class PropertyUtilTest {
 
-    PropertyUtil util;
-
-    @Before
-    public void setup() {
-        util = new PropertyUtil();
-    }
-
     @Test
     public void testGetTypesList() throws Exception {
         assertArrayEquals(new Object[] { List.class, Collection.class,
-                Iterable.class }, util.getTypes(List.class).toArray());
+                Iterable.class }, PropertyUtil.getTypes(List.class).toArray());
 
     }
 
@@ -42,7 +34,8 @@ public class PropertyUtilTest {
                         AbstractList.class, AbstractCollection.class,
                         Object.class, List.class, Collection.class,
                         Iterable.class, RandomAccess.class, Serializable.class,
-                        Cloneable.class)), util.getTypes(ArrayList.class));
+                        Cloneable.class)),
+                PropertyUtil.getTypes(ArrayList.class));
     }
 
     static class TestClassProperties {
@@ -94,7 +87,7 @@ public class PropertyUtilTest {
 
     @Test
     public void testPropertyIntroductionA() throws Exception {
-        Map<String, PropertyDeclaration> props = util
+        Map<String, PropertyDeclaration> props = PropertyUtil
                 .getPropertyIntroductionMap(ClassA.class);
         assertEquals(1, props.size());
         assertEquals(new PropertyDeclaration("a", ClassA.class, int.class,
@@ -104,7 +97,7 @@ public class PropertyUtilTest {
 
     @Test
     public void testPropertyIntroductionB() throws Exception {
-        Map<String, PropertyDeclaration> props = util
+        Map<String, PropertyDeclaration> props = PropertyUtil
                 .getPropertyIntroductionMap(InterfaceB.class);
         assertEquals(2, props.size());
         assertEquals(new PropertyDeclaration("b", InterfaceB.class, int.class,
@@ -117,7 +110,7 @@ public class PropertyUtilTest {
 
     @Test
     public void testPropertyIntroductionC() throws Exception {
-        Map<String, PropertyDeclaration> props = util
+        Map<String, PropertyDeclaration> props = PropertyUtil
                 .getPropertyIntroductionMap(ClassC.class);
         assertEquals(3, props.size());
         assertEquals(new PropertyDeclaration("a", ClassA.class, int.class,
@@ -133,7 +126,7 @@ public class PropertyUtilTest {
 
     @Test
     public void testGetDeclaredProperties() throws Exception {
-        Map<String, PropertyDeclaration> props = util
+        Map<String, PropertyDeclaration> props = PropertyUtil
                 .getDeclaredProperties(ClassC.class);
         assertEquals(2, props.size());
         assertEquals(new PropertyDeclaration("a", ClassC.class, int.class,
@@ -147,7 +140,7 @@ public class PropertyUtilTest {
 
     @Test
     public void testGetDeclaredProperties1() throws Exception {
-        Map<String, PropertyDeclaration> props = util
+        Map<String, PropertyDeclaration> props = PropertyUtil
                 .getDeclaredProperties(TestClassProperties.class);
         assertEquals(3, props.size());
         assertEquals(new PropertyDeclaration("r", TestClassProperties.class,
@@ -168,7 +161,8 @@ public class PropertyUtilTest {
 
     @Test
     public void testPropertyInfoA() throws Exception {
-        Map<String, PropertyInfo> props = util.getPropertyInfoMap(ClassA.class);
+        Map<String, PropertyInfo> props = PropertyUtil
+                .getPropertyInfoMap(ClassA.class);
         assertEquals(1, props.size());
         assertEquals(
                 new PropertyInfo("a", int.class,
@@ -178,7 +172,7 @@ public class PropertyUtilTest {
 
     @Test
     public void testPropertyInfoB() throws Exception {
-        Map<String, PropertyInfo> props = util
+        Map<String, PropertyInfo> props = PropertyUtil
                 .getPropertyInfoMap(InterfaceB.class);
         assertEquals(2, props.size());
         assertEquals(
@@ -193,7 +187,8 @@ public class PropertyUtilTest {
 
     @Test
     public void testPropertyInfoC() throws Exception {
-        Map<String, PropertyInfo> props = util.getPropertyInfoMap(ClassC.class);
+        Map<String, PropertyInfo> props = PropertyUtil
+                .getPropertyInfoMap(ClassC.class);
         assertEquals(3, props.size());
         assertEquals(
                 new PropertyInfo("a", int.class,
@@ -211,7 +206,8 @@ public class PropertyUtilTest {
 
     @Test
     public void testGetPropertyPath() {
-        PropertyPath path = util.getPropertyPath(ClassA.class, x -> x.getA());
+        PropertyPath path = PropertyUtil.getPropertyPath(ClassA.class,
+                x -> x.getA());
         assertEquals("a", ((PropertyNode) path.nodes.get(0)).property.getName());
     }
 }

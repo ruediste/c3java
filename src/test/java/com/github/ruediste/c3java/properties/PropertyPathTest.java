@@ -51,8 +51,6 @@ public class PropertyPathTest {
 
     MethodInvocationRecorder recorder;
 
-    PropertyUtil util = new PropertyUtil();
-
     @Mock
     A a;
 
@@ -67,7 +65,7 @@ public class PropertyPathTest {
     }
 
     protected PropertyPath toPath() {
-        return util.toPath(recorder.getInvocations());
+        return PropertyUtil.toPath(recorder.getInvocations());
     }
 
     @Test
