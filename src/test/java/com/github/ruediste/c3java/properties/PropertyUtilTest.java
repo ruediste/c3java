@@ -1,42 +1,14 @@
 package com.github.ruediste.c3java.properties;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.io.Serializable;
-import java.util.AbstractCollection;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.RandomAccess;
 
 import org.junit.Test;
 
 import com.github.ruediste.c3java.properties.PropertyPath.PropertyNode;
 
 public class PropertyUtilTest {
-
-    @Test
-    public void testGetTypesList() throws Exception {
-        assertArrayEquals(new Object[] { List.class, Collection.class,
-                Iterable.class }, PropertyUtil.getTypes(List.class).toArray());
-
-    }
-
-    @Test
-    public void testGetTypesArrayList() throws Exception {
-        assertEquals(
-                new LinkedHashSet<>(Arrays.asList(ArrayList.class,
-                        AbstractList.class, AbstractCollection.class,
-                        Object.class, List.class, Collection.class,
-                        Iterable.class, RandomAccess.class, Serializable.class,
-                        Cloneable.class)),
-                PropertyUtil.getTypes(ArrayList.class));
-    }
 
     static class TestClassProperties {
         public int getR() {

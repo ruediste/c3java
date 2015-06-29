@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Consumer;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -62,6 +63,30 @@ public class MethodInvocationRecorder {
 
     public MethodInvocation<Object> getLastInvocation() {
         return Iterables.getLast(invocations);
+    }
+
+    public static <T> List<MethodInvocation<Object>> getInvocations(
+            Class<T> cls, Consumer<T> accessor) {
+        return getInvocations(TypeToken.of(cls), accessor);
+    }
+
+    public static <T> List<MethodInvocation<Object>> getInvocations(
+            TypeToken<T> cls, Consumer<T> accessor) {
+        MethodInvocationRecorder recorder = new MethodInvocationRecorder();
+        accessor.accept(recorder.getProxy(cls));
+        return recorder.getInvocations();
+    }
+
+    public static <T> MethodInvocation<Object> getLastInvocation(Class<T> cls,
+            Consumer<T> accessor) {
+        return getLastInvocation(TypeToken.of(cls), accessor);
+    }
+
+    public static <T> MethodInvocation<Object> getLastInvocation(
+            TypeToken<T> cls, Consumer<T> accessor) {
+        MethodInvocationRecorder recorder = new MethodInvocationRecorder();
+        accessor.accept(recorder.getProxy(cls));
+        return recorder.getLastInvocation();
     }
 
 }

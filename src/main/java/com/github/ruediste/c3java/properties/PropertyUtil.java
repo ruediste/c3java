@@ -4,11 +4,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -123,36 +122,19 @@ public class PropertyUtil {
         return result;
     }
 
-    /**
-     * Return all types the given type is assignable to. The returned set is
-     * ordered.
-     * 
-     */
-    static public Set<Class<?>> getTypes(Class<?> type) {
-        LinkedHashSet<Class<?>> result = new LinkedHashSet<>();
-        fillTypes(type, result);
-        return result;
-    }
-
-    static private void fillTypes(Class<?> type, Set<Class<?>> result) {
-        if (type == null)
-            return;
-
-        // reinsert
-        result.remove(type);
-        result.add(type);
-
-        fillTypes(type.getSuperclass(), result);
-        for (Class<?> t : type.getInterfaces()) {
-            fillTypes(t, result);
-        }
-    }
-
     static public PropertyInfo getPropertyInfo(Class<?> type, String name) {
         return getPropertyInfoMap(type).get(name);
     }
 
+    private static Map<Class<?>, Map<String, PropertyInfo>> propertyInfoMapCache = new ConcurrentHashMap<>();
+
     static public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
+        return propertyInfoMapCache.computeIfAbsent(type,
+                PropertyUtil::calculatePropertyInfoMap);
+    }
+
+    private static Map<String, PropertyInfo> calculatePropertyInfoMap(
+            Class<?> type) {
         Map<String, PropertyInfo> result = new HashMap<>();
         if (type == null || type == Object.class)
             return result;
@@ -188,12 +170,20 @@ public class PropertyUtil {
         return getPropertyIntroductionMap(type).get(name);
     }
 
+    private static Map<Class<?>, Map<String, PropertyDeclaration>> propertyIntroductionMapCache = new ConcurrentHashMap<>();
+
     /**
      * Return the {@link PropertyDeclaration}s of the given type. For each
      * property, the property declaration which introduced the property is
      * returned.
      */
     static public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
+            Class<?> type) {
+        return propertyIntroductionMapCache.computeIfAbsent(type,
+                PropertyUtil::calculatePropertyIntroductionMap);
+    }
+
+    static private Map<String, PropertyDeclaration> calculatePropertyIntroductionMap(
             Class<?> type) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
 
@@ -281,5 +271,10 @@ public class PropertyUtil {
                     + accessor.getName() + " found on "
                     + accessorInvocation.getInstanceType());
         return info;
+    }
+
+    static public void clearCache() {
+        propertyInfoMapCache.clear();
+        propertyIntroductionMapCache.clear();
     }
 }

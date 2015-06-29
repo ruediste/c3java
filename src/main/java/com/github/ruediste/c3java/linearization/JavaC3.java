@@ -42,6 +42,7 @@ public class JavaC3 {
             this.type = type;
         }
 
+        @Override
         public boolean equals(Object o) {
             if (o == null) {
                 // you wouldn't think this could happen, but there
@@ -57,6 +58,7 @@ public class JavaC3 {
             }
         }
 
+        @Override
         public int hashCode() {
             return Objects.hashCode(type, directParentClassesReader);
         }
@@ -104,6 +106,7 @@ public class JavaC3 {
             return this.remainingInputs;
         }
 
+        @Override
         public String toString() {
             List<String> superclasses = Lists
                     .newArrayListWithCapacity(Iterables.size(partialResult));
@@ -166,6 +169,7 @@ public class JavaC3 {
 
             Predicate<List<X>> headIs(final X c) {
                 return new Predicate<List<X>>() {
+                    @Override
                     public boolean apply(List<X> input) {
                         return !input.isEmpty() && c.equals(input.get(0));
                     }
@@ -174,12 +178,14 @@ public class JavaC3 {
 
             Predicate<List<X>> tailContains(final X c) {
                 return new Predicate<List<X>>() {
+                    @Override
                     public boolean apply(List<X> input) {
                         return input.indexOf(c) > 0;
                     }
                 };
             }
 
+            @Override
             public boolean apply(final X c) {
                 return any(remainingInputs, headIs(c))
                         && all(remainingInputs, not(tailContains(c)));
@@ -192,6 +198,7 @@ public class JavaC3 {
         List<Class<?>> cDirectSuperclasses = dsc.directParentClasses(c);
 
         Function<Class<?>, List<Class<?>>> cplList = new Function<Class<?>, List<Class<?>>>() {
+            @Override
             public List<Class<?>> apply(Class<?> c) {
                 return newArrayList(allSuperclasses(c, dsc));
             }
@@ -204,11 +211,20 @@ public class JavaC3 {
                         singletonList(cDirectSuperclasses))), dsc);
     }
 
+    /**
+     * Return the linearization of c, using the
+     * {@link DefaultDirectSuperclassesInspector}. The returned iterable will
+     * start with c, followed by the superclasses of c in linearization order.
+     */
     public static Iterable<Class<?>> allSuperclasses(Class<?> c)
             throws JavaC3Exception {
         return allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE);
     }
 
+    /**
+     * Return the linearization of c. The returned iterable will start with c,
+     * followed by the superclasses of c in linearization order.
+     */
     public static Iterable<Class<?>> allSuperclasses(Class<?> c,
             DirectSuperclassesInspector directParentClassesReader)
             throws JavaC3Exception {
@@ -222,5 +238,13 @@ public class JavaC3 {
         }
 
         return linearization;
+    }
+
+    /**
+     * The class linearizations are cached in a static map. This cache can lead
+     * to classloader leaks. By calling this class, the cache is flushed.
+     */
+    public static void clearCache() {
+        linearizations.clear();
     }
 }
