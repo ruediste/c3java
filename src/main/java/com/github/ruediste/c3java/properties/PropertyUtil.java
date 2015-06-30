@@ -3,6 +3,7 @@ package com.github.ruediste.c3java.properties;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,15 +130,22 @@ public class PropertyUtil {
     private static Map<Class<?>, Map<String, PropertyInfo>> propertyInfoMapCache = new ConcurrentHashMap<>();
 
     static public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
-        return propertyInfoMapCache.computeIfAbsent(type,
-                PropertyUtil::calculatePropertyInfoMap);
+        if (type == null || type == Object.class)
+            return Collections.emptyMap();
+
+        // no synchronization required. In the worst case, a map will
+        // be calculated multiple times
+        Map<String, PropertyInfo> result = propertyInfoMapCache.get(type);
+        if (result == null) {
+            result = calculatePropertyInfoMap(type);
+            propertyInfoMapCache.put(type, result);
+        }
+        return result;
     }
 
     private static Map<String, PropertyInfo> calculatePropertyInfoMap(
             Class<?> type) {
         Map<String, PropertyInfo> result = new HashMap<>();
-        if (type == null || type == Object.class)
-            return result;
 
         // copy map from superclass
         result.putAll(getPropertyInfoMap(type.getSuperclass()));
