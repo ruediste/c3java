@@ -5,12 +5,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.github.ruediste.c3java.invocationRecording.MethodInvocation;
 import com.github.ruediste.c3java.invocationRecording.MethodInvocationRecorder;
@@ -27,29 +28,6 @@ public class PropertyUtil {
     }
 
     /**
-     * Helper class used to simplify repeated map.put calls
-     */
-    private static class Putter {
-
-        private Map<String, PropertyDeclaration> map;
-        private Class<?> type;
-
-        private Putter(Map<String, PropertyDeclaration> map, Class<?> type) {
-            this.map = map;
-            this.type = type;
-        }
-
-        private void put(String key,
-                Function<PropertyDeclaration, PropertyDeclaration> func) {
-            PropertyDeclaration property = map.get(key);
-            if (property == null) {
-                property = new PropertyDeclaration(key, type);
-            }
-            map.put(key, func.apply(property));
-        }
-    }
-
-    /**
      * Create an accessor from the given method, or null if the method is no
      * accessor
      */
@@ -61,13 +39,15 @@ public class PropertyUtil {
         }
 
         // check for getters
-        if (method.getName().startsWith("get")) {
+        if (method.getName().startsWith("get")
+                && method.getReturnType() != null) {
             String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
                     method.getName().substring("get".length()));
 
             // getFoo()
             if (method.getParameterCount() == 0) {
-                return new PropertyAccessor(name, AccessorType.GETTER, method);
+                return new PropertyAccessor(name, AccessorType.GETTER, method,
+                        method.getGenericReturnType());
             }
 
         }
@@ -79,7 +59,8 @@ public class PropertyUtil {
                     method.getName().substring("set".length()));
             // setFoo()
             if (method.getParameterCount() == 1) {
-                return new PropertyAccessor(name, AccessorType.SETTER, method);
+                return new PropertyAccessor(name, AccessorType.SETTER, method,
+                        method.getGenericParameterTypes()[0]);
             }
 
         }
@@ -91,6 +72,21 @@ public class PropertyUtil {
      */
     static public Map<String, PropertyDeclaration> getDeclaredProperties(
             Class<?> type) {
+        HashSet<String> failingProperties = new HashSet<>();
+        Map<String, PropertyDeclaration> result = getDeclaredProperties(type,
+                failingProperties);
+        failingProperties.forEach(x -> result.remove(x));
+        return result;
+    }
+
+    /**
+     * @param failingProperties
+     *            if an inconsistency is detected with a property, it's name
+     *            will be put to this set. Properties in this set have to be
+     *            removed from the result by the caller
+     */
+    static public Map<String, PropertyDeclaration> getDeclaredProperties(
+            Class<?> type, Set<String> failingProperties) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
 
         // scan methods
@@ -98,26 +94,26 @@ public class PropertyUtil {
             PropertyAccessor accessor = getAccessor(method);
             if (accessor == null)
                 continue;
-
-            Putter putter = new Putter(result, type);
-
-            switch (accessor.getType()) {
-            case GETTER:
-                putter.put(accessor.getName(), p -> p.withGetter(method));
-                break;
-            case SETTER:
-                putter.put(accessor.getName(), p -> p.withSetter(method));
-                break;
-            default:
-                throw new RuntimeException("should not happen");
+            PropertyDeclaration property = result.get(accessor.getName());
+            if (property == null) {
+                property = new PropertyDeclaration(accessor.getName(), type);
+            }
+            if (property.matchesPropertyType(accessor))
+                result.put(accessor.getName(), property.withAccessor(accessor));
+            else {
+                failingProperties.add(accessor.getName());
             }
         }
+
         // fill backing fields
         for (Field f : type.getDeclaredFields()) {
             String name = f.getName();
             PropertyDeclaration property = result.get(name);
             if (property != null) {
-                result.put(name, property.withBackingField(f));
+                if (property.matchesPropertyType(f.getGenericType()))
+                    result.put(name, property.withBackingField(f));
+                else
+                    failingProperties.add(name);
             }
         }
         return result;

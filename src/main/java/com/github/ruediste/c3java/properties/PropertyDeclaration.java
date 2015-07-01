@@ -89,22 +89,30 @@ public class PropertyDeclaration {
         return backingField;
     }
 
-    public PropertyDeclaration withGetter(Method getter) {
-        Type returnType = getter.getGenericReturnType();
-        if (propertyType != null && !propertyType.equals(returnType))
-            throw new RuntimeException("return type of " + getter
+    public PropertyDeclaration withAccessor(PropertyAccessor accessor) {
+        if (!matchesPropertyType(accessor))
+            throw new RuntimeException("property type of " + accessor
                     + " does not match property type " + propertyType);
-        return new PropertyDeclaration(name, declaringType, returnType, getter,
-                setter, backingField);
+        switch (accessor.getType()) {
+        case GETTER:
+            return new PropertyDeclaration(name, declaringType,
+                    accessor.getPropertyType(), accessor.getMethod(), setter,
+                    backingField);
+        case SETTER:
+            return new PropertyDeclaration(name, declaringType,
+                    accessor.getPropertyType(), getter, accessor.getMethod(),
+                    backingField);
+        default:
+            throw new RuntimeException("should not happen");
+        }
     }
 
-    public PropertyDeclaration withSetter(Method setter) {
-        Type valueType = setter.getGenericParameterTypes()[0];
-        if (propertyType != null && !propertyType.equals(valueType))
-            throw new RuntimeException("value argument type of " + setter
-                    + " does not match property type " + propertyType);
-        return new PropertyDeclaration(name, declaringType, valueType, getter,
-                setter, backingField);
+    public boolean matchesPropertyType(PropertyAccessor accessor) {
+        return matchesPropertyType(accessor.getPropertyType());
+    }
+
+    public boolean matchesPropertyType(Type type) {
+        return propertyType == null || propertyType.equals(type);
     }
 
     public PropertyDeclaration withBackingField(Field backingField) {
