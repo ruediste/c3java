@@ -17,7 +17,11 @@ public class PropertyInfo {
             Method setter, Class<?> declaringType) {
         this.name = name;
         this.propertyType = propertyType;
+        if (getter != null)
+            getter.setAccessible(true);
         this.getter = getter;
+        if (setter != null)
+            setter.setAccessible(true);
         this.setter = setter;
         this.declaringType = declaringType;
     }
