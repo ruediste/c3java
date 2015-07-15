@@ -51,10 +51,10 @@ public class MethodInvocationRecorder {
         return (T) e.create();
     }
 
-    private boolean isTerminal(TypeToken<?> returnType) {
+    boolean isTerminal(TypeToken<?> returnType) {
         Class<?> clazz = returnType.getRawType();
         return clazz.isPrimitive() || String.class.equals(clazz)
-                || Date.class.equals(clazz);
+                || Date.class.equals(clazz) || clazz.isEnum();
     }
 
     public List<MethodInvocation<Object>> getInvocations() {
