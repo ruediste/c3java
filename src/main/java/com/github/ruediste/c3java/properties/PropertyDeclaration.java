@@ -1,6 +1,7 @@
 package com.github.ruediste.c3java.properties;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
@@ -131,6 +132,35 @@ public class PropertyDeclaration {
 
     public Type getPropertyType() {
         return propertyType;
+    }
+
+    public Object getValue(Object target) {
+        try {
+            if (getter != null)
+                return getter.invoke(target);
+            if (backingField != null) {
+                return backingField.get(target);
+            }
+        } catch (IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        throw new RuntimeException("Property declaration " + getDeclaringType()
+                + "." + getName() + " is not readable");
+    }
+
+    public void setValue(Object target, Object value) {
+        try {
+            if (setter != null)
+                setter.invoke(target, value);
+            if (backingField != null)
+                backingField.set(target, value);
+        } catch (IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        throw new RuntimeException("Property declaration " + getDeclaringType()
+                + "." + getName() + " is not writeable");
     }
 
 }
