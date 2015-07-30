@@ -19,6 +19,7 @@ import com.github.ruediste.c3java.linearization.JavaC3;
 import com.github.ruediste.c3java.properties.PropertyAccessor.AccessorType;
 import com.github.ruediste.c3java.properties.PropertyPath.PropertyPathNode;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 
@@ -183,6 +184,7 @@ public class PropertyUtil {
      */
     static public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
             Class<?> type) {
+        Preconditions.checkNotNull(type, "type is null");
         return propertyIntroductionMapCache.computeIfAbsent(type,
                 PropertyUtil::calculatePropertyIntroductionMap);
     }

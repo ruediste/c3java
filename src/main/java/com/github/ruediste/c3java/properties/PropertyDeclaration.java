@@ -36,8 +36,14 @@ public class PropertyDeclaration {
         this.declaringType = declaringType;
         this.propertyType = propertyType;
         this.getter = getter;
+        if (getter != null)
+            getter.setAccessible(true);
         this.setter = setter;
+        if (setter != null)
+            setter.setAccessible(true);
         this.backingField = backingField;
+        if (backingField != null)
+            backingField.setAccessible(true);
     }
 
     @Override
@@ -151,10 +157,14 @@ public class PropertyDeclaration {
 
     public void setValue(Object target, Object value) {
         try {
-            if (setter != null)
+            if (setter != null) {
                 setter.invoke(target, value);
-            if (backingField != null)
+                return;
+            }
+            if (backingField != null) {
                 backingField.set(target, value);
+                return;
+            }
         } catch (IllegalAccessException | IllegalArgumentException
                 | InvocationTargetException e) {
             throw new RuntimeException(e);
