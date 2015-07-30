@@ -8,9 +8,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
+import net.sf.cglib.proxy.Callback;
+import net.sf.cglib.proxy.CallbackFilter;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
+import net.sf.cglib.proxy.NoOp;
 
 import com.google.common.base.Defaults;
 import com.google.common.collect.Iterables;
@@ -27,6 +30,18 @@ public class MethodInvocationRecorder {
         return getProxy(TypeToken.of(type));
     }
 
+    private static final CallbackFilter FINALIZE_FILTER = new CallbackFilter() {
+        @Override
+        public int accept(Method method) {
+            if (method.getName().equals("finalize")
+                    && method.getParameterTypes().length == 0
+                    && method.getReturnType() == Void.TYPE) {
+                return 0;
+            }
+            return 1;
+        }
+    };
+
     @SuppressWarnings("unchecked")
     public <T> T getProxy(TypeToken<T> type) {
         if (isTerminal(type)) {
@@ -35,7 +50,8 @@ public class MethodInvocationRecorder {
 
         Enhancer e = new Enhancer();
         e.setSuperclass(type.getRawType());
-        e.setCallback(new MethodInterceptor() {
+        e.setCallbackFilter(FINALIZE_FILTER);
+        e.setCallbacks(new Callback[] { NoOp.INSTANCE, new MethodInterceptor() {
 
             @Override
             public Object intercept(Object obj, Method method, Object[] args,
@@ -46,7 +62,7 @@ public class MethodInvocationRecorder {
                 return getProxy(type.resolveType(method.getGenericReturnType()));
             }
 
-        });
+        } });
 
         return (T) e.create();
     }
