@@ -64,7 +64,12 @@ public class MethodInvocationRecorder {
 
         } });
 
-        return (T) e.create();
+        try {
+            return (T) e.create();
+        } catch (Exception ex) {
+            throw new RuntimeException("Error while creating proxy of " + type,
+                    ex);
+        }
     }
 
     boolean isTerminal(TypeToken<?> returnType) {
