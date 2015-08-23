@@ -121,7 +121,14 @@ public class PropertyUtil {
     }
 
     static public PropertyInfo getPropertyInfo(Class<?> type, String name) {
-        return getPropertyInfoMap(type).get(name);
+        return tryGetPropertyInfo(type, name).orElseThrow(
+                () -> new RuntimeException("no property named " + name
+                        + " found on class " + type));
+    }
+
+    public static Optional<PropertyInfo> tryGetPropertyInfo(Class<?> type,
+            String name) {
+        return Optional.ofNullable(getPropertyInfoMap(type).get(name));
     }
 
     private static Map<Class<?>, Map<String, PropertyInfo>> propertyInfoMapCache = new ConcurrentHashMap<>();
@@ -252,12 +259,9 @@ public class PropertyUtil {
         if (accessor == null)
             return Optional.empty();
 
-        PropertyInfo info = getPropertyInfo(accessorInvocation
-                .getInstanceType().getRawType(), accessor.getName());
+        return tryGetPropertyInfo(accessorInvocation.getInstanceType()
+                .getRawType(), accessor.getName());
 
-        if (info == null)
-            return Optional.empty();
-        return Optional.of(info);
     }
 
     static public PropertyInfo getAccessedProperty(
@@ -272,10 +276,6 @@ public class PropertyUtil {
         PropertyInfo info = getPropertyInfo(accessorInvocation
                 .getInstanceType().getRawType(), accessor.getName());
 
-        if (info == null)
-            throw new RuntimeException("no property named "
-                    + accessor.getName() + " found on "
-                    + accessorInvocation.getInstanceType());
         return info;
     }
 
