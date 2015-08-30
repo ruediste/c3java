@@ -44,12 +44,19 @@ public class MethodInvocationRecorder {
 
     @SuppressWarnings("unchecked")
     public <T> T getProxy(TypeToken<T> type) {
+        Class<? super T> cls = type.getRawType();
+
         if (isTerminal(type)) {
-            return (T) Defaults.defaultValue(type.getRawType());
+            return (T) Defaults.defaultValue(cls);
         }
 
         Enhancer e = new Enhancer();
-        e.setSuperclass(type.getRawType());
+        if (Enhancer.isEnhanced(cls)) {
+            e.setSuperclass(cls.getSuperclass());
+            e.setInterfaces(cls.getInterfaces());
+        } else {
+            e.setSuperclass(cls);
+        }
         e.setCallbackFilter(FINALIZE_FILTER);
         e.setCallbacks(new Callback[] { NoOp.INSTANCE, new MethodInterceptor() {
 
