@@ -9,7 +9,7 @@
 
 	<groupId>com.github.ruediste</groupId>
 	<artifactId>c3java</artifactId>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 	<name>C3 Linearization Implementation for Java</name>
 
 	<packaging>jar</packaging>
