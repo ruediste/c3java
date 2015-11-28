@@ -6,7 +6,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
+
+import com.google.common.base.Defaults;
+import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 
 import net.sf.cglib.proxy.Callback;
 import net.sf.cglib.proxy.CallbackFilter;
@@ -15,14 +21,27 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import net.sf.cglib.proxy.NoOp;
 
-import com.google.common.base.Defaults;
-import com.google.common.collect.Iterables;
-import com.google.common.reflect.TypeToken;
-
 /**
  * Records invocations of methods to a proxy.
  */
 public class MethodInvocationRecorder {
+
+    private static Object placeHolder = new Object();
+    private static volatile Map<Class<?>, Object> terminalTypes = new WeakHashMap<>();
+
+    public static void addTerminalType(Class<?> clazz) {
+        synchronized (placeHolder) {
+            WeakHashMap<Class<?>, Object> tmp = new WeakHashMap<>(
+                    terminalTypes);
+            tmp.put(clazz, placeHolder);
+            terminalTypes = tmp;
+        }
+    }
+
+    static {
+        addTerminalType(String.class);
+        addTerminalType(Date.class);
+    }
 
     private final ArrayList<MethodInvocation<Object>> invocations = new ArrayList<>();
 
@@ -66,7 +85,8 @@ public class MethodInvocationRecorder {
                 invocations.add(new MethodInvocation<Object>(type, method,
                         Arrays.asList(args)));
 
-                return getProxy(type.resolveType(method.getGenericReturnType()));
+                return getProxy(
+                        type.resolveType(method.getGenericReturnType()));
             }
 
         } });
@@ -79,10 +99,11 @@ public class MethodInvocationRecorder {
         }
     }
 
-    boolean isTerminal(TypeToken<?> returnType) {
+    protected boolean isTerminal(TypeToken<?> returnType) {
         Class<?> clazz = returnType.getRawType();
-        return clazz.isPrimitive() || String.class.equals(clazz)
-                || Date.class.equals(clazz) || clazz.isEnum();
+        return clazz.isPrimitive() || clazz.isEnum()
+                || clazz.isAnnotationPresent(TerminalType.class)
+                || terminalTypes.containsKey(clazz);
     }
 
     public List<MethodInvocation<Object>> getInvocations() {
