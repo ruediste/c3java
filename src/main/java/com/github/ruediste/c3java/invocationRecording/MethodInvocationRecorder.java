@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
 
@@ -41,6 +42,7 @@ public class MethodInvocationRecorder {
     static {
         addTerminalType(String.class);
         addTerminalType(Date.class);
+        addTerminalType(Optional.class);
     }
 
     private final ArrayList<MethodInvocation<Object>> invocations = new ArrayList<>();
