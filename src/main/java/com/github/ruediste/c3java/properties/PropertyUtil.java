@@ -58,7 +58,7 @@ public class PropertyUtil {
         if (method.getName().startsWith("set")) {
             String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
                     method.getName().substring("set".length()));
-            // setFoo()
+            // setFoo(value)
             if (method.getParameterCount() == 1) {
                 return new PropertyAccessor(name, AccessorType.SETTER, method,
                         method.getGenericParameterTypes()[0]);
@@ -121,9 +121,9 @@ public class PropertyUtil {
     }
 
     static public PropertyInfo getPropertyInfo(Class<?> type, String name) {
-        return tryGetPropertyInfo(type, name).orElseThrow(
-                () -> new RuntimeException("no property named " + name
-                        + " found on class " + type));
+        return tryGetPropertyInfo(type, name)
+                .orElseThrow(() -> new RuntimeException("no property named "
+                        + name + " found on class " + type));
     }
 
     public static Optional<PropertyInfo> tryGetPropertyInfo(Class<?> type,
@@ -200,12 +200,13 @@ public class PropertyUtil {
             Class<?> type) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
 
-        for (Class<?> cls : Lists.reverse(Lists.newArrayList(JavaC3
-                .allSuperclasses(type)))) {
+        for (Class<?> cls : Lists
+                .reverse(Lists.newArrayList(JavaC3.allSuperclasses(type)))) {
             if (Object.class.equals(cls)) {
                 continue;
             }
-            for (PropertyDeclaration prop : getDeclaredProperties(cls).values()) {
+            for (PropertyDeclaration prop : getDeclaredProperties(cls)
+                    .values()) {
                 result.putIfAbsent(prop.getName(), prop);
             }
         }
@@ -217,7 +218,8 @@ public class PropertyUtil {
         return toPath(recorder.getInvocations());
     }
 
-    static public PropertyPath toPath(List<MethodInvocation<Object>> invocations) {
+    static public PropertyPath toPath(
+            List<MethodInvocation<Object>> invocations) {
         PropertyPath result = new PropertyPath();
         for (MethodInvocation<Object> invocation : invocations) {
             result.nodes.add(getPathNode(invocation));
@@ -239,9 +241,9 @@ public class PropertyUtil {
 
     static public PropertyPathNode getPathNode(
             MethodInvocation<Object> invocation) {
-        return tryGetAccessedProperty(invocation).<PropertyPathNode> map(
-                p -> new PropertyPath.PropertyNode(p)).orElseGet(
-                () -> new PropertyPath.MethodNode(invocation));
+        return tryGetAccessedProperty(invocation)
+                .<PropertyPathNode> map(p -> new PropertyPath.PropertyNode(p))
+                .orElseGet(() -> new PropertyPath.MethodNode(invocation));
 
     }
 
@@ -259,8 +261,9 @@ public class PropertyUtil {
         if (accessor == null)
             return Optional.empty();
 
-        return tryGetPropertyInfo(accessorInvocation.getInstanceType()
-                .getRawType(), accessor.getName());
+        return tryGetPropertyInfo(
+                accessorInvocation.getInstanceType().getRawType(),
+                accessor.getName());
 
     }
 
@@ -269,12 +272,13 @@ public class PropertyUtil {
         PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 
         if (accessor == null)
-            throw new RuntimeException("method "
-                    + accessorInvocation.getMethod()
-                    + " is no property accessor");
+            throw new RuntimeException(
+                    "method " + accessorInvocation.getMethod()
+                            + " is no property accessor");
 
-        PropertyInfo info = getPropertyInfo(accessorInvocation
-                .getInstanceType().getRawType(), accessor.getName());
+        PropertyInfo info = getPropertyInfo(
+                accessorInvocation.getInstanceType().getRawType(),
+                accessor.getName());
 
         return info;
     }

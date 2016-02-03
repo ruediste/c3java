@@ -1,7 +1,11 @@
 package com.github.ruediste.c3java.properties;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.github.ruediste.c3java.invocationRecording.MethodInvocation;
 import com.github.ruediste.c3java.invocationRecording.MethodInvocationUtil;
@@ -19,6 +23,11 @@ public class PropertyPath {
 
     public interface PropertyPathNode {
         Object evaluate(Object target);
+
+        /**
+         * Return the segment to be used for {@link PropertyPath#getPath()}
+         */
+        String pathSegment();
     }
 
     public static class PropertyNode implements PropertyPathNode {
@@ -37,6 +46,11 @@ public class PropertyPath {
         public String toString() {
             return "PropertyNode[" + property.getName() + "]";
         }
+
+        @Override
+        public String pathSegment() {
+            return property.getName();
+        }
     }
 
     public static class MethodNode implements PropertyPathNode {
@@ -54,6 +68,14 @@ public class PropertyPath {
         @Override
         public String toString() {
             return "MethodNode[" + invocation + "]";
+        }
+
+        @Override
+        public String pathSegment() {
+            return invocation.getMethod().getName() + "("
+                    + invocation.getArguments().stream().map(Objects::toString)
+                            .collect(Collectors.joining(","))
+                    + ")";
         }
     }
 
@@ -93,5 +115,13 @@ public class PropertyPath {
             current = nodes.get(i).evaluate(current);
         }
         getAccessedProperty().setValue(current, value);
+    }
+
+    /**
+     * Get a string representation of this path in the form of
+     * "propertyName"."propertyName". ...
+     */
+    public String getPath() {
+        return nodes.stream().map(n -> n.pathSegment()).collect(joining("."));
     }
 }

@@ -81,9 +81,21 @@ public class PropertyPathTest {
     }
 
     @Test
+    public void testPathNested() {
+        recorder.getProxy(B.class).getA().getInt();
+        assertEquals("a.int", toPath().getPath());
+    }
+
+    @Test
     public void testEvaluateComplex() {
         recorder.getProxy(B.class).getComplex(0, null).getInt();
         assertEquals(5, toPath().evaluate(b));
+    }
+
+    @Test
+    public void testPathComplex() {
+        recorder.getProxy(B.class).getComplex(0, null).getInt();
+        assertEquals("getComplex(0,null).int", toPath().getPath());
     }
 
     @Test
