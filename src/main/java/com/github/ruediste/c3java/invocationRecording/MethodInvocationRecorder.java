@@ -105,7 +105,7 @@ public class MethodInvocationRecorder {
         Class<?> clazz = returnType.getRawType();
         return clazz.isPrimitive() || clazz.isEnum()
                 || clazz.isAnnotationPresent(TerminalType.class)
-                || terminalTypes.containsKey(clazz);
+                || terminalTypes.containsKey(clazz) || clazz.isArray();
     }
 
     public List<MethodInvocation<Object>> getInvocations() {
