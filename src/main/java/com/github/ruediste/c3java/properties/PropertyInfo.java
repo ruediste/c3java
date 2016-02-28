@@ -11,10 +11,10 @@ public class PropertyInfo {
     private final Type propertyType;
     private final Method getter;
     private final Method setter;
-    private final Class<?> declaringType;
+    private final Class<?> introducingType;
 
     public PropertyInfo(String name, Type propertyType, Method getter,
-            Method setter, Class<?> declaringType) {
+            Method setter, Class<?> introducingType) {
         this.name = name;
         this.propertyType = propertyType;
         if (getter != null)
@@ -23,7 +23,7 @@ public class PropertyInfo {
         if (setter != null)
             setter.setAccessible(true);
         this.setter = setter;
-        this.declaringType = declaringType;
+        this.introducingType = introducingType;
     }
 
     public Object getValue(Object target) {
@@ -62,12 +62,12 @@ public class PropertyInfo {
 
     public PropertyInfo withGetter(Method getter) {
         return new PropertyInfo(name, propertyType, getter, setter,
-                declaringType);
+                introducingType);
     }
 
     public PropertyInfo withSetter(Method setter) {
         return new PropertyInfo(name, propertyType, getter, setter,
-                declaringType);
+                introducingType);
     }
 
     public PropertyInfo mergedWith(PropertyInfo info) {
@@ -82,13 +82,13 @@ public class PropertyInfo {
             result = result.withGetter(info.getGetter());
         if (setter == null && info.getSetter() != null)
             result = result.withSetter(info.getSetter());
-        if (declaringType.isAssignableFrom(info.declaringType)) {
-            result = result.withDeclaringType(info.declaringType);
+        if (introducingType.isAssignableFrom(info.introducingType)) {
+            result = result.withIntroducingType(info.introducingType);
         }
         return result;
     }
 
-    private PropertyInfo withDeclaringType(Class<?> declaringType) {
+    public PropertyInfo withIntroducingType(Class<?> declaringType) {
         return new PropertyInfo(name, propertyType, getter, setter,
                 declaringType);
     }
@@ -103,7 +103,8 @@ public class PropertyInfo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, propertyType, getter, setter, declaringType);
+        return Objects.hash(name, propertyType, getter, setter,
+                introducingType);
     }
 
     @Override
@@ -119,18 +120,24 @@ public class PropertyInfo {
                 && Objects.equals(propertyType, other.propertyType)
                 && Objects.equals(getter, other.getter)
                 && Objects.equals(setter, other.setter)
-                && Objects.equals(declaringType, other.declaringType);
+                && Objects.equals(introducingType, other.introducingType);
 
     }
 
     @Override
     public String toString() {
         return "PropertyInfo [name=" + name + ", propertyType=" + propertyType
-                + ", getter=" + getter + ", setter=" + setter + "]";
+                + ", getter=" + getter + ", setter=" + setter
+                + ", introducingType=" + introducingType + "]";
     }
 
-    public Class<?> getDeclaringType() {
-        return declaringType;
+    /**
+     * The type first introducing the property
+     * 
+     * @return
+     */
+    public Class<?> getIntroducingType() {
+        return introducingType;
     }
 
 }

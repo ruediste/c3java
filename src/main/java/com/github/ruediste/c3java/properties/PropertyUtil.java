@@ -133,6 +133,10 @@ public class PropertyUtil {
 
     private static Map<Class<?>, Map<String, PropertyInfo>> propertyInfoMapCache = new ConcurrentHashMap<>();
 
+    /**
+     * Return a map containing all property infos for a type. Inheritance is
+     * taken into account.
+     */
     static public Map<String, PropertyInfo> getPropertyInfoMap(Class<?> type) {
         if (type == null || type == Object.class)
             return Collections.emptyMap();
@@ -172,6 +176,9 @@ public class PropertyUtil {
             PropertyInfo existingInfo = result.get(decl.getName());
             if (existingInfo == null) {
                 result.put(decl.getName(), decl.toInfo());
+            } else {
+                result.put(decl.getName(),
+                        existingInfo.mergedWith(decl.toInfo()));
             }
         }
         return result;
