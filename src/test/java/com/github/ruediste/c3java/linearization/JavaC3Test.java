@@ -11,8 +11,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.github.ruediste.c3java.linearization.DefaultDirectSuperclassesInspector;
-import com.github.ruediste.c3java.linearization.JavaC3;
 import com.google.common.collect.ImmutableList;
 
 public class JavaC3Test {
@@ -33,8 +31,9 @@ public class JavaC3Test {
 
     @Test
     public void testDirectSuperClasses() {
-        assertEquals(ImmutableList.of(AbstractSet.class, Set.class,
-                Cloneable.class, Serializable.class),
+        assertEquals(
+                ImmutableList.of(AbstractSet.class, Set.class, Cloneable.class,
+                        Serializable.class),
                 DefaultDirectSuperclassesInspector.INSTANCE
                         .directParentClasses(HashSet.class));
     }
@@ -70,8 +69,10 @@ public class JavaC3Test {
         Iterable<Class<?>> linearization = JavaC3.allSuperclasses(Short.TYPE);
         assertEquals(ImmutableList.of(short.class, byte.class), linearization);
         linearization = JavaC3.allSuperclasses(Double.TYPE);
-        assertEquals(ImmutableList.of(double.class, float.class, long.class,
-                int.class, short.class, byte.class, char.class), linearization);
+        assertEquals(
+                ImmutableList.of(double.class, float.class, long.class,
+                        int.class, short.class, byte.class, char.class),
+                linearization);
         linearization = JavaC3.allSuperclasses(Boolean.TYPE);
         assertEquals(ImmutableList.of(boolean.class), linearization);
     }
@@ -79,11 +80,35 @@ public class JavaC3Test {
     @Test
     public void testArrays() throws Exception {
         Set<?>[] array1 = new HashSet[0];
-        Iterable<Class<?>> linearization = JavaC3.allSuperclasses(array1
-                .getClass());
+        Iterable<Class<?>> linearization = JavaC3
+                .allSuperclasses(array1.getClass());
         System.out.println("HashSet[]: " + linearization);
         Set<?>[][] array2 = new HashSet[0][0];
         linearization = JavaC3.allSuperclasses(array2.getClass());
         System.out.println("HashSet[][]: " + linearization);
+    }
+
+    class TestA {
+
+    }
+
+    interface TestB {
+    }
+
+    class TestC extends TestA implements TestB {
+
+    }
+
+    @Test
+    public void testInheritance() {
+        assertEquals(ImmutableList.of(TestC.class, TestA.class, TestB.class,
+                Object.class), JavaC3.allSuperclasses(TestC.class));
+        assertEquals(ImmutableList.of(TestA.class, Object.class),
+                JavaC3.allSuperclasses(TestA.class));
+        assertEquals(ImmutableList.of(TestB.class, Object.class),
+                JavaC3.allSuperclasses(TestB.class));
+        assertEquals(ImmutableList.of(Object.class),
+                JavaC3.allSuperclasses(Object.class));
+
     }
 }

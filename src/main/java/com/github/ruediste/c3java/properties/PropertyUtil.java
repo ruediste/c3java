@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -33,22 +32,18 @@ public class PropertyUtil {
      * accessor
      */
     static public PropertyAccessor getAccessor(Method method) {
-        if (Modifier.isPrivate(method.getModifiers())
-                || Modifier.isStatic(method.getModifiers())
+        if (Modifier.isPrivate(method.getModifiers()) || Modifier.isStatic(method.getModifiers())
                 || method.isAnnotationPresent(NoPropertyAccessor.class)) {
             return null;
         }
 
         // check for getters
-        if (method.getName().startsWith("get")
-                && method.getReturnType() != null) {
-            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
-                    method.getName().substring("get".length()));
+        if (method.getName().startsWith("get") && method.getReturnType() != null) {
+            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("get".length()));
 
             // getFoo()
             if (method.getParameterCount() == 0) {
-                return new PropertyAccessor(name, AccessorType.GETTER, method,
-                        method.getGenericReturnType());
+                return new PropertyAccessor(name, AccessorType.GETTER, method, method.getReturnType());
             }
 
         }
@@ -56,12 +51,10 @@ public class PropertyUtil {
         // check for setters
 
         if (method.getName().startsWith("set")) {
-            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
-                    method.getName().substring("set".length()));
+            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("set".length()));
             // setFoo(value)
             if (method.getParameterCount() == 1) {
-                return new PropertyAccessor(name, AccessorType.SETTER, method,
-                        method.getGenericParameterTypes()[0]);
+                return new PropertyAccessor(name, AccessorType.SETTER, method, method.getParameterTypes()[0]);
             }
 
         }
@@ -71,24 +64,9 @@ public class PropertyUtil {
     /**
      * Return all properties which are directly declared on the provided type
      */
-    static public Map<String, PropertyDeclaration> getDeclaredProperties(
-            Class<?> type) {
-        HashSet<String> failingProperties = new HashSet<>();
-        Map<String, PropertyDeclaration> result = getDeclaredProperties(type,
-                failingProperties);
-        failingProperties.forEach(x -> result.remove(x));
-        return result;
-    }
-
-    /**
-     * @param failingProperties
-     *            if an inconsistency is detected with a property, it's name
-     *            will be put to this set. Properties in this set have to be
-     *            removed from the result by the caller
-     */
-    static public Map<String, PropertyDeclaration> getDeclaredProperties(
-            Class<?> type, Set<String> failingProperties) {
+    static public Map<String, PropertyDeclaration> getPropertyDeclarations(Class<?> type) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
+        HashSet<String> failingProperties = new HashSet<>();
 
         // scan methods
         for (Method method : type.getDeclaredMethods()) {
@@ -113,21 +91,18 @@ public class PropertyUtil {
             if (property != null) {
                 if (property.matchesPropertyType(f.getGenericType()))
                     result.put(name, property.withBackingField(f));
-                else
-                    failingProperties.add(name);
             }
         }
+        failingProperties.forEach(x -> result.remove(x));
         return result;
     }
 
     static public PropertyInfo getPropertyInfo(Class<?> type, String name) {
         return tryGetPropertyInfo(type, name)
-                .orElseThrow(() -> new RuntimeException("no property named "
-                        + name + " found on class " + type));
+                .orElseThrow(() -> new RuntimeException("no property named " + name + " found on class " + type));
     }
 
-    public static Optional<PropertyInfo> tryGetPropertyInfo(Class<?> type,
-            String name) {
+    public static Optional<PropertyInfo> tryGetPropertyInfo(Class<?> type, String name) {
         return Optional.ofNullable(getPropertyInfoMap(type).get(name));
     }
 
@@ -151,41 +126,26 @@ public class PropertyUtil {
         return result;
     }
 
-    private static Map<String, PropertyInfo> calculatePropertyInfoMap(
-            Class<?> type) {
+    private static Map<String, PropertyInfo> calculatePropertyInfoMap(Class<?> type) {
         Map<String, PropertyInfo> result = new HashMap<>();
 
-        // copy map from superclass
-        result.putAll(getPropertyInfoMap(type.getSuperclass()));
-
-        // merge with all interfaces
-        for (Class<?> t : type.getInterfaces()) {
-            Map<String, PropertyInfo> map = getPropertyInfoMap(t);
-            for (PropertyInfo info : map.values()) {
-                PropertyInfo existingInfo = result.get(info.getName());
-                if (existingInfo == null)
-                    result.put(info.getName(), info);
-                else {
-                    result.put(info.getName(), existingInfo.mergedWith(info));
+        for (Class<?> cls : JavaC3.allSuperclassesReverse(type)) {
+            if (Object.class.equals(cls))
+                continue;
+            for (PropertyDeclaration decl : getPropertyDeclarations(cls).values()) {
+                PropertyInfo existingInfo = result.get(decl.getName());
+                if (existingInfo == null) {
+                    result.put(decl.getName(), decl.toInfo(type));
+                } else {
+                    result.put(decl.getName(), existingInfo.extendedWith(decl));
                 }
             }
         }
 
-        // merge with declarations
-        for (PropertyDeclaration decl : getDeclaredProperties(type).values()) {
-            PropertyInfo existingInfo = result.get(decl.getName());
-            if (existingInfo == null) {
-                result.put(decl.getName(), decl.toInfo());
-            } else {
-                result.put(decl.getName(),
-                        existingInfo.mergedWith(decl.toInfo()));
-            }
-        }
         return result;
     }
 
-    static public PropertyDeclaration getPropertyIntroduction(Class<?> type,
-            String name) {
+    static public PropertyDeclaration getPropertyIntroduction(Class<?> type, String name) {
         return getPropertyIntroductionMap(type).get(name);
     }
 
@@ -196,24 +156,19 @@ public class PropertyUtil {
      * property, the property declaration which introduced the property is
      * returned.
      */
-    static public Map<String, PropertyDeclaration> getPropertyIntroductionMap(
-            Class<?> type) {
+    static public Map<String, PropertyDeclaration> getPropertyIntroductionMap(Class<?> type) {
         Preconditions.checkNotNull(type, "type is null");
-        return propertyIntroductionMapCache.computeIfAbsent(type,
-                PropertyUtil::calculatePropertyIntroductionMap);
+        return propertyIntroductionMapCache.computeIfAbsent(type, PropertyUtil::calculatePropertyIntroductionMap);
     }
 
-    static private Map<String, PropertyDeclaration> calculatePropertyIntroductionMap(
-            Class<?> type) {
+    static private Map<String, PropertyDeclaration> calculatePropertyIntroductionMap(Class<?> type) {
         Map<String, PropertyDeclaration> result = new HashMap<>();
 
-        for (Class<?> cls : Lists
-                .reverse(Lists.newArrayList(JavaC3.allSuperclasses(type)))) {
+        for (Class<?> cls : Lists.reverse(Lists.newArrayList(JavaC3.allSuperclasses(type)))) {
             if (Object.class.equals(cls)) {
                 continue;
             }
-            for (PropertyDeclaration prop : getDeclaredProperties(cls)
-                    .values()) {
+            for (PropertyDeclaration prop : getPropertyDeclarations(cls).values()) {
                 result.putIfAbsent(prop.getName(), prop);
             }
         }
@@ -225,8 +180,7 @@ public class PropertyUtil {
         return toPath(recorder.getInvocations());
     }
 
-    static public PropertyPath toPath(
-            List<MethodInvocation<Object>> invocations) {
+    static public PropertyPath toPath(List<MethodInvocation<Object>> invocations) {
         PropertyPath result = new PropertyPath();
         for (MethodInvocation<Object> invocation : invocations) {
             result.nodes.add(getPathNode(invocation));
@@ -234,58 +188,45 @@ public class PropertyUtil {
         return result;
     }
 
-    static public <T> PropertyPath getPropertyPath(Class<T> type,
-            Consumer<T> pathAccessor) {
+    static public <T> PropertyPath getPropertyPath(Class<T> type, Consumer<T> pathAccessor) {
         return getPropertyPath(TypeToken.of(type), pathAccessor);
     }
 
-    static public <T> PropertyPath getPropertyPath(TypeToken<T> type,
-            Consumer<T> pathAccessor) {
+    static public <T> PropertyPath getPropertyPath(TypeToken<T> type, Consumer<T> pathAccessor) {
         MethodInvocationRecorder recorder = new MethodInvocationRecorder();
         pathAccessor.accept(recorder.getProxy(type));
         return toPath(recorder.getInvocations());
     }
 
-    static public PropertyPathNode getPathNode(
-            MethodInvocation<Object> invocation) {
-        return tryGetAccessedProperty(invocation)
-                .<PropertyPathNode> map(p -> new PropertyPath.PropertyNode(p))
+    static public PropertyPathNode getPathNode(MethodInvocation<Object> invocation) {
+        return tryGetAccessedProperty(invocation).<PropertyPathNode> map(p -> new PropertyPath.PropertyNode(p))
                 .orElseGet(() -> new PropertyPath.MethodNode(invocation));
 
     }
 
-    static public PropertyInfo getAccessedProperty(
-            List<MethodInvocation<Object>> invocations) {
+    static public PropertyInfo getAccessedProperty(List<MethodInvocation<Object>> invocations) {
         MethodInvocation<Object> last = invocations.get(invocations.size() - 1);
 
         return getAccessedProperty(last);
     }
 
-    static public Optional<PropertyInfo> tryGetAccessedProperty(
-            MethodInvocation<Object> accessorInvocation) {
+    static public Optional<PropertyInfo> tryGetAccessedProperty(MethodInvocation<Object> accessorInvocation) {
         PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 
         if (accessor == null)
             return Optional.empty();
 
-        return tryGetPropertyInfo(
-                accessorInvocation.getInstanceType().getRawType(),
-                accessor.getName());
+        return tryGetPropertyInfo(accessorInvocation.getInstanceType().getRawType(), accessor.getName());
 
     }
 
-    static public PropertyInfo getAccessedProperty(
-            MethodInvocation<Object> accessorInvocation) {
+    static public PropertyInfo getAccessedProperty(MethodInvocation<Object> accessorInvocation) {
         PropertyAccessor accessor = getAccessor(accessorInvocation.getMethod());
 
         if (accessor == null)
-            throw new RuntimeException(
-                    "method " + accessorInvocation.getMethod()
-                            + " is no property accessor");
+            throw new RuntimeException("method " + accessorInvocation.getMethod() + " is no property accessor");
 
-        PropertyInfo info = getPropertyInfo(
-                accessorInvocation.getInstanceType().getRawType(),
-                accessor.getName());
+        PropertyInfo info = getPropertyInfo(accessorInvocation.getInstanceType().getRawType(), accessor.getName());
 
         return info;
     }
@@ -294,4 +235,5 @@ public class PropertyUtil {
         propertyInfoMapCache.clear();
         propertyIntroductionMapCache.clear();
     }
+
 }

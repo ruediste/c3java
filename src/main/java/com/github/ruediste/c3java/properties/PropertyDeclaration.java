@@ -1,9 +1,16 @@
 package com.github.ruediste.c3java.properties;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Objects;
 
@@ -17,20 +24,21 @@ import com.google.common.base.Objects;
  * where.
  * </p>
  */
-public class PropertyDeclaration {
+public class PropertyDeclaration implements AnnotatedElement {
     private final String name;
     private final Class<?> declaringType;
     private final Method getter;
     private final Method setter;
     private final Field backingField;
-    private final Type propertyType;
+    private final Class<?> propertyType;
 
     public PropertyDeclaration(String name, Class<?> declaringType) {
         this(name, declaringType, null, null, null, null);
     }
 
     public PropertyDeclaration(String name, Class<?> declaringType,
-            Type propertyType, Method getter, Method setter, Field backingField) {
+            Class<?> propertyType, Method getter, Method setter,
+            Field backingField) {
         super();
         this.name = name;
         this.declaringType = declaringType;
@@ -49,7 +57,7 @@ public class PropertyDeclaration {
     @Override
     public int hashCode() {
         return Objects.hashCode(name, declaringType, getter, setter,
-                backingField);
+                backingField, propertyType);
     }
 
     @Override
@@ -68,7 +76,8 @@ public class PropertyDeclaration {
                 && Objects.equal(declaringType, other.declaringType)
                 && Objects.equal(getter, other.getter)
                 && Objects.equal(setter, other.setter)
-                && Objects.equal(backingField, other.backingField);
+                && Objects.equal(backingField, other.backingField)
+                && Objects.equal(propertyType, other.propertyType);
     }
 
     @Override
@@ -80,6 +89,9 @@ public class PropertyDeclaration {
         return name;
     }
 
+    /**
+     * The type containing the property declaration
+     */
     public Class<?> getDeclaringType() {
         return declaringType;
     }
@@ -123,7 +135,7 @@ public class PropertyDeclaration {
     }
 
     public PropertyDeclaration withBackingField(Field backingField) {
-        Type fieldType = backingField.getGenericType();
+        Class<?> fieldType = backingField.getType();
         if (propertyType != null && !propertyType.equals(fieldType))
             throw new RuntimeException("field type of " + backingField
                     + " does not match property type " + propertyType);
@@ -131,9 +143,9 @@ public class PropertyDeclaration {
                 setter, backingField);
     }
 
-    public PropertyInfo toInfo() {
+    public PropertyInfo toInfo(Class<?> bearingType) {
         return new PropertyInfo(name, propertyType, getter, setter,
-                declaringType);
+                backingField, this, null, bearingType);
     }
 
     public Type getPropertyType() {
@@ -173,4 +185,35 @@ public class PropertyDeclaration {
                 + "." + getName() + " is not writeable");
     }
 
+    private Stream<AnnotatedElement> elements() {
+        return Stream
+                .of(Optional.ofNullable(backingField),
+                        Optional.ofNullable(getter),
+                        Optional.ofNullable(setter))
+                .filter(x -> x.isPresent()).map(x -> x.get());
+    }
+
+    @Override
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        return elements()
+                .map(x -> Optional.ofNullable(x.getAnnotation(annotationClass)))
+                .filter(x -> x.isPresent()).map(x -> x.get()).findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public Annotation[] getAnnotations() {
+        return getAnnotationsImpl(x -> x.getAnnotations());
+    }
+
+    public Annotation[] getAnnotationsImpl(
+            Function<AnnotatedElement, Annotation[]> f) {
+        return elements().flatMap(x -> Arrays.stream(f.apply(x)))
+                .collect(Collectors.toList()).toArray(new Annotation[] {});
+    }
+
+    @Override
+    public Annotation[] getDeclaredAnnotations() {
+        return getAnnotationsImpl(x -> x.getDeclaredAnnotations());
+    }
 }
