@@ -16,8 +16,7 @@ public class PropertyAccessor {
     private final Method method;
     private final Class<?> propertyType;
 
-    public PropertyAccessor(String name, AccessorType type, Method method,
-            Class<?> propertyType) {
+    public PropertyAccessor(String name, AccessorType type, Method method, Class<?> propertyType) {
         super();
         this.name = name;
         this.type = type;

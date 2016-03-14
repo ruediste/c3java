@@ -18,13 +18,11 @@ public class MethodUtil {
     public static Iterable<Method> getDeclarations(Method method) {
         ArrayList<Method> result = new ArrayList<>();
         result.add(method);
-        for (Class<?> cls : Iterables.skip(
-                JavaC3.allSuperclasses(method.getDeclaringClass()), 1)) {
+        for (Class<?> cls : Iterables.skip(JavaC3.allSuperclasses(method.getDeclaringClass()), 1)) {
             for (Method m : cls.getDeclaredMethods()) {
 
                 if (m.getName().equals(method.getName())
-                        && Arrays.equals(m.getParameterTypes(),
-                                method.getParameterTypes())) {
+                        && Arrays.equals(m.getParameterTypes(), method.getParameterTypes())) {
                     if (doesOverride(method, m))
                         result.add(m);
                 }
@@ -47,8 +45,7 @@ public class MethodUtil {
             return false;
 
         // ancestorMethod must be package visible
-        String ancestorPackage = ancestorMethod.getDeclaringClass()
-                .getPackage().getName();
+        String ancestorPackage = ancestorMethod.getDeclaringClass().getPackage().getName();
         String mPackage = m.getDeclaringClass().getPackage().getName();
         if (Objects.equals(ancestorPackage, mPackage))
             return true;

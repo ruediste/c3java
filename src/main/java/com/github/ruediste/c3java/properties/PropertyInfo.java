@@ -27,9 +27,8 @@ public class PropertyInfo implements AnnotatedElement {
     private final PropertyInfo parent;
     private final Class<?> bearingType;
 
-    public PropertyInfo(String name, Class<?> propertyType, Method getter,
-            Method setter, Field backingField, PropertyDeclaration declaration,
-            PropertyInfo parent, Class<?> bearingType) {
+    public PropertyInfo(String name, Class<?> propertyType, Method getter, Method setter, Field backingField,
+            PropertyDeclaration declaration, PropertyInfo parent, Class<?> bearingType) {
         this.name = name;
         this.propertyType = propertyType;
         this.getter = getter;
@@ -80,8 +79,7 @@ public class PropertyInfo implements AnnotatedElement {
     public Object getValue(Object target) {
         try {
             return getter.invoke(target);
-        } catch (IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
@@ -89,8 +87,7 @@ public class PropertyInfo implements AnnotatedElement {
     public void setValue(Object target, Object value) {
         try {
             setter.invoke(target, value);
-        } catch (IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
@@ -112,27 +109,22 @@ public class PropertyInfo implements AnnotatedElement {
     }
 
     public PropertyInfo withGetter(Method getter) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, declaration, parent, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, declaration, parent, bearingType);
     }
 
     public PropertyInfo withSetter(Method setter) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, declaration, parent, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, declaration, parent, bearingType);
     }
 
     public PropertyInfo withBackingField(Field backingField) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, declaration, parent, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, declaration, parent, bearingType);
     }
 
     public PropertyInfo extendedWith(PropertyDeclaration decl) {
         if (!Objects.equals(name, decl.getName()))
-            throw new RuntimeException(
-                    "names of to be merged properties does not match");
+            throw new RuntimeException("names of to be merged properties does not match");
         if (!Objects.equals(propertyType, decl.getPropertyType()))
-            throw new RuntimeException(
-                    "types of to be merged properties does not match");
+            throw new RuntimeException("types of to be merged properties does not match");
 
         PropertyInfo result = this;
         if (decl.getGetter() != null)
@@ -146,8 +138,7 @@ public class PropertyInfo implements AnnotatedElement {
     }
 
     public PropertyInfo withParent(PropertyInfo parent) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, declaration, parent, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, declaration, parent, bearingType);
     }
 
     public PropertyDeclaration getDeclaration() {
@@ -155,13 +146,11 @@ public class PropertyInfo implements AnnotatedElement {
     }
 
     public PropertyInfo withDeclaration(PropertyDeclaration declaration) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, declaration, parent, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, declaration, parent, bearingType);
     }
 
     public PropertyInfo withIntroducingType(Class<?> declaringType) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, declaration, parent, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, declaration, parent, bearingType);
     }
 
     public Method getGetter() {
@@ -194,15 +183,13 @@ public class PropertyInfo implements AnnotatedElement {
         if (getClass() != obj.getClass())
             return false;
         PropertyInfo other = (PropertyInfo) obj;
-        return Objects.equals(name, other.name)
-                && Objects.equals(bearingType, other.bearingType);
+        return Objects.equals(name, other.name) && Objects.equals(bearingType, other.bearingType);
 
     }
 
     @Override
     public String toString() {
-        return "PropertyInfo [name=" + name + ", bearingType=" + bearingType
-                + "]";
+        return "PropertyInfo [name=" + name + ", bearingType=" + bearingType + "]";
     }
 
     /**
@@ -227,10 +214,8 @@ public class PropertyInfo implements AnnotatedElement {
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return getDeclarationStream()
-                .map(x -> Optional.ofNullable(x.getAnnotation(annotationClass)))
-                .filter(x -> x.isPresent()).map(x -> x.get()).findFirst()
-                .orElse(null);
+        return getDeclarationStream().map(x -> Optional.ofNullable(x.getAnnotation(annotationClass)))
+                .filter(x -> x.isPresent()).map(x -> x.get()).findFirst().orElse(null);
     }
 
     @Override
@@ -238,10 +223,9 @@ public class PropertyInfo implements AnnotatedElement {
         return getAnnotationsImpl(x -> x.getAnnotations());
     }
 
-    public Annotation[] getAnnotationsImpl(
-            Function<AnnotatedElement, Annotation[]> f) {
-        return getDeclarationStream().flatMap(x -> Arrays.stream(f.apply(x)))
-                .collect(Collectors.toList()).toArray(new Annotation[] {});
+    public Annotation[] getAnnotationsImpl(Function<AnnotatedElement, Annotation[]> f) {
+        return getDeclarationStream().flatMap(x -> Arrays.stream(f.apply(x))).collect(Collectors.toList())
+                .toArray(new Annotation[] {});
     }
 
     @Override

@@ -36,8 +36,7 @@ public class PropertyDeclaration implements AnnotatedElement {
         this(name, declaringType, null, null, null, null);
     }
 
-    public PropertyDeclaration(String name, Class<?> declaringType,
-            Class<?> propertyType, Method getter, Method setter,
+    public PropertyDeclaration(String name, Class<?> declaringType, Class<?> propertyType, Method getter, Method setter,
             Field backingField) {
         super();
         this.name = name;
@@ -56,8 +55,7 @@ public class PropertyDeclaration implements AnnotatedElement {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(name, declaringType, getter, setter,
-                backingField, propertyType);
+        return Objects.hashCode(name, declaringType, getter, setter, backingField, propertyType);
     }
 
     @Override
@@ -72,12 +70,9 @@ public class PropertyDeclaration implements AnnotatedElement {
             return false;
         }
         PropertyDeclaration other = (PropertyDeclaration) obj;
-        return Objects.equal(name, other.name)
-                && Objects.equal(declaringType, other.declaringType)
-                && Objects.equal(getter, other.getter)
-                && Objects.equal(setter, other.setter)
-                && Objects.equal(backingField, other.backingField)
-                && Objects.equal(propertyType, other.propertyType);
+        return Objects.equal(name, other.name) && Objects.equal(declaringType, other.declaringType)
+                && Objects.equal(getter, other.getter) && Objects.equal(setter, other.setter)
+                && Objects.equal(backingField, other.backingField) && Objects.equal(propertyType, other.propertyType);
     }
 
     @Override
@@ -110,17 +105,15 @@ public class PropertyDeclaration implements AnnotatedElement {
 
     public PropertyDeclaration withAccessor(PropertyAccessor accessor) {
         if (!matchesPropertyType(accessor))
-            throw new RuntimeException("property type of " + accessor
-                    + " does not match property type " + propertyType);
+            throw new RuntimeException(
+                    "property type of " + accessor + " does not match property type " + propertyType);
         switch (accessor.getType()) {
         case GETTER:
-            return new PropertyDeclaration(name, declaringType,
-                    accessor.getPropertyType(), accessor.getMethod(), setter,
-                    backingField);
+            return new PropertyDeclaration(name, declaringType, accessor.getPropertyType(), accessor.getMethod(),
+                    setter, backingField);
         case SETTER:
-            return new PropertyDeclaration(name, declaringType,
-                    accessor.getPropertyType(), getter, accessor.getMethod(),
-                    backingField);
+            return new PropertyDeclaration(name, declaringType, accessor.getPropertyType(), getter,
+                    accessor.getMethod(), backingField);
         default:
             throw new RuntimeException("should not happen");
         }
@@ -137,15 +130,13 @@ public class PropertyDeclaration implements AnnotatedElement {
     public PropertyDeclaration withBackingField(Field backingField) {
         Class<?> fieldType = backingField.getType();
         if (propertyType != null && !propertyType.equals(fieldType))
-            throw new RuntimeException("field type of " + backingField
-                    + " does not match property type " + propertyType);
-        return new PropertyDeclaration(name, declaringType, fieldType, getter,
-                setter, backingField);
+            throw new RuntimeException(
+                    "field type of " + backingField + " does not match property type " + propertyType);
+        return new PropertyDeclaration(name, declaringType, fieldType, getter, setter, backingField);
     }
 
     public PropertyInfo toInfo(Class<?> bearingType) {
-        return new PropertyInfo(name, propertyType, getter, setter,
-                backingField, this, null, bearingType);
+        return new PropertyInfo(name, propertyType, getter, setter, backingField, this, null, bearingType);
     }
 
     public Type getPropertyType() {
@@ -159,12 +150,10 @@ public class PropertyDeclaration implements AnnotatedElement {
             if (backingField != null) {
                 return backingField.get(target);
             }
-        } catch (IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        throw new RuntimeException("Property declaration " + getDeclaringType()
-                + "." + getName() + " is not readable");
+        throw new RuntimeException("Property declaration " + getDeclaringType() + "." + getName() + " is not readable");
     }
 
     public void setValue(Object target, Object value) {
@@ -177,28 +166,22 @@ public class PropertyDeclaration implements AnnotatedElement {
                 backingField.set(target, value);
                 return;
             }
-        } catch (IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException e) {
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        throw new RuntimeException("Property declaration " + getDeclaringType()
-                + "." + getName() + " is not writeable");
+        throw new RuntimeException(
+                "Property declaration " + getDeclaringType() + "." + getName() + " is not writeable");
     }
 
     private Stream<AnnotatedElement> elements() {
-        return Stream
-                .of(Optional.ofNullable(backingField),
-                        Optional.ofNullable(getter),
-                        Optional.ofNullable(setter))
+        return Stream.of(Optional.ofNullable(backingField), Optional.ofNullable(getter), Optional.ofNullable(setter))
                 .filter(x -> x.isPresent()).map(x -> x.get());
     }
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return elements()
-                .map(x -> Optional.ofNullable(x.getAnnotation(annotationClass)))
-                .filter(x -> x.isPresent()).map(x -> x.get()).findFirst()
-                .orElse(null);
+        return elements().map(x -> Optional.ofNullable(x.getAnnotation(annotationClass))).filter(x -> x.isPresent())
+                .map(x -> x.get()).findFirst().orElse(null);
     }
 
     @Override
@@ -206,10 +189,9 @@ public class PropertyDeclaration implements AnnotatedElement {
         return getAnnotationsImpl(x -> x.getAnnotations());
     }
 
-    public Annotation[] getAnnotationsImpl(
-            Function<AnnotatedElement, Annotation[]> f) {
-        return elements().flatMap(x -> Arrays.stream(f.apply(x)))
-                .collect(Collectors.toList()).toArray(new Annotation[] {});
+    public Annotation[] getAnnotationsImpl(Function<AnnotatedElement, Annotation[]> f) {
+        return elements().flatMap(x -> Arrays.stream(f.apply(x))).collect(Collectors.toList())
+                .toArray(new Annotation[] {});
     }
 
     @Override

@@ -36,8 +36,7 @@ import com.google.common.collect.ImmutableList;
  * order may not be acceptable anyway.
  * </p>
  */
-public class DefaultDirectSuperclassesInspector implements
-        DirectSuperclassesInspector {
+public class DefaultDirectSuperclassesInspector implements DirectSuperclassesInspector {
     private static final Map<Class<?>, List<Class<?>>> PRIMITIVE_SUPERCLASSES;
 
     static {
@@ -106,23 +105,19 @@ public class DefaultDirectSuperclassesInspector implements
      * java-array-superclasses.
      */
 
-    protected static List<Class<?>> ARRAY_SUPERCLASSES = classList(
-            Serializable.class, Cloneable.class, Object.class);
+    protected static List<Class<?>> ARRAY_SUPERCLASSES = classList(Serializable.class, Cloneable.class, Object.class);
 
     public static List<Class<?>> arrayDirectSuperclasses(int level, Class<?> c,
             DirectSuperclassesInspector parentTypeReader) {
         List<Class<?>> classes;
 
         if (c.isArray()) {
-            classes = arrayDirectSuperclasses(level + 1, c.getComponentType(),
-                    parentTypeReader);
+            classes = arrayDirectSuperclasses(level + 1, c.getComponentType(), parentTypeReader);
         } else {
-            List<Class<?>> componentSuperclasses = parentTypeReader
-                    .directParentClasses(c);
+            List<Class<?>> componentSuperclasses = parentTypeReader.directParentClasses(c);
             if (componentSuperclasses.isEmpty() && !c.isInterface()) {
-                classes = (level == 1) ? new LinkedList<Class<?>>(
-                        ARRAY_SUPERCLASSES) : makeArrayClasses(
-                        ARRAY_SUPERCLASSES, level - 1);
+                classes = (level == 1) ? new LinkedList<Class<?>>(ARRAY_SUPERCLASSES)
+                        : makeArrayClasses(ARRAY_SUPERCLASSES, level - 1);
             } else {
                 classes = makeArrayClasses(componentSuperclasses, level);
             }
@@ -132,8 +127,7 @@ public class DefaultDirectSuperclassesInspector implements
     }
 
     // this compensates for the lack of map
-    public static List<Class<?>> makeArrayClasses(List<Class<?>> classes,
-            int dims) {
+    public static List<Class<?>> makeArrayClasses(List<Class<?>> classes, int dims) {
         Iterator<Class<?>> i = classes.iterator();
         LinkedList<Class<?>> arrayClasses = new LinkedList<Class<?>>();
         while (i.hasNext())

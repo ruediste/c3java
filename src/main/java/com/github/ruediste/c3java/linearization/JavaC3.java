@@ -36,9 +36,7 @@ public class JavaC3 {
         public DirectSuperclassesInspector directParentClassesReader;
         public Class<?> type;
 
-        public LinearizationKey(
-                DirectSuperclassesInspector directParentClassesReader,
-                Class<?> type) {
+        public LinearizationKey(DirectSuperclassesInspector directParentClassesReader, Class<?> type) {
             this.directParentClassesReader = directParentClassesReader;
             this.type = type;
         }
@@ -53,8 +51,7 @@ public class JavaC3 {
                 return false;
             } else {
                 LinearizationKey other = (LinearizationKey) o;
-                return type.equals(other.type) && directParentClassesReader
-                        .equals(other.directParentClassesReader);
+                return type.equals(other.type) && directParentClassesReader.equals(other.directParentClassesReader);
             }
         }
 
@@ -65,8 +62,7 @@ public class JavaC3 {
     }
 
     private static Map<LinearizationKey, Iterable<Class<?>>> linearizations = java.util.Collections
-            .synchronizedMap(
-                    new WeakHashMap<LinearizationKey, Iterable<Class<?>>>());
+            .synchronizedMap(new WeakHashMap<LinearizationKey, Iterable<Class<?>>>());
 
     /**
      * Thrown when its not possible to linearize all superclasses.
@@ -77,8 +73,7 @@ public class JavaC3 {
         private final Iterable<List<Class<?>>> remainingInputs;
         private final DirectSuperclassesInspector dsc;
 
-        protected JavaC3Exception(DirectSuperclassesInspector dsc,
-                Iterable<Class<?>> partialResult,
+        protected JavaC3Exception(DirectSuperclassesInspector dsc, Iterable<Class<?>> partialResult,
                 Iterable<List<Class<?>>> remainingInputs) {
             super("inconsistent precedence");
             this.dsc = dsc;
@@ -109,30 +104,25 @@ public class JavaC3 {
 
         @Override
         public String toString() {
-            List<String> superclasses = Lists
-                    .newArrayListWithCapacity(Iterables.size(partialResult));
+            List<String> superclasses = Lists.newArrayListWithCapacity(Iterables.size(partialResult));
             for (Class<?> c : partialResult) {
-                superclasses.add(MessageFormat.format("    {0}: {1}", c,
-                        dsc.directParentClasses(c)));
+                superclasses.add(MessageFormat.format("    {0}: {1}", c, dsc.directParentClasses(c)));
             }
-            return MessageFormat.format(
-                    "inconsistent precendence:\nsuperclasses:\n {0}\nremaining:\n   {1}",
+            return MessageFormat.format("inconsistent precendence:\nsuperclasses:\n {0}\nremaining:\n   {1}",
                     Joiner.on("\n").join(superclasses, "\n"), remainingInputs);
         }
     }
 
     private static Iterable<Class<?>> mergeLists(List<Class<?>> partialResult,
-            final List<List<Class<?>>> remainingInputs,
-            final DirectSuperclassesInspector directParentClassesReader)
-                    throws JavaC3Exception {
+            final List<List<Class<?>>> remainingInputs, final DirectSuperclassesInspector directParentClassesReader)
+            throws JavaC3Exception {
         if (all(remainingInputs, equalTo(Collections.<Class<?>> emptyList()))) {
             return partialResult;
         }
 
         Optional<Class<?>> nextOption = Optional.absent();
         for (Class<?> c : Lists.reverse(partialResult)) {
-            nextOption = Iterables.tryFind(
-                    directParentClassesReader.directParentClasses(c),
+            nextOption = Iterables.tryFind(directParentClassesReader.directParentClasses(c),
                     isCandidate(remainingInputs));
             if (nextOption.isPresent())
                 break;
@@ -142,16 +132,13 @@ public class JavaC3 {
             List<List<Class<?>>> newRemainingInputs = Lists.newArrayList();
             Class<?> next = nextOption.get();
             for (List<Class<?>> input : remainingInputs) {
-                newRemainingInputs.add(input.indexOf(next) == 0
-                        ? input.subList(1, input.size()) : input);
+                newRemainingInputs.add(input.indexOf(next) == 0 ? input.subList(1, input.size()) : input);
             }
 
-            return mergeLists(
-                    newArrayList(concat(partialResult, singletonList(next))),
-                    newRemainingInputs, directParentClassesReader);
+            return mergeLists(newArrayList(concat(partialResult, singletonList(next))), newRemainingInputs,
+                    directParentClassesReader);
         } else {
-            throw new JavaC3Exception(directParentClassesReader, partialResult,
-                    remainingInputs);
+            throw new JavaC3Exception(directParentClassesReader, partialResult, remainingInputs);
         }
     }
 
@@ -163,8 +150,7 @@ public class JavaC3 {
      *            the lists we are looking for position in.
      * @return true if the class is a candidate for next.
      */
-    private static <X> Predicate<X> isCandidate(
-            final Iterable<List<X>> remainingInputs) {
+    private static <X> Predicate<X> isCandidate(final Iterable<List<X>> remainingInputs) {
         return new Predicate<X>() {
 
             Predicate<List<X>> headIs(final X c) {
@@ -187,14 +173,13 @@ public class JavaC3 {
 
             @Override
             public boolean apply(final X c) {
-                return any(remainingInputs, headIs(c))
-                        && all(remainingInputs, not(tailContains(c)));
+                return any(remainingInputs, headIs(c)) && all(remainingInputs, not(tailContains(c)));
             }
         };
     }
 
-    private static Iterable<Class<?>> computeClassLinearization(Class<?> c,
-            final DirectSuperclassesInspector dsc) throws JavaC3Exception {
+    private static Iterable<Class<?>> computeClassLinearization(Class<?> c, final DirectSuperclassesInspector dsc)
+            throws JavaC3Exception {
         List<Class<?>> cDirectSuperclasses = dsc.directParentClasses(c);
 
         Function<Class<?>, List<Class<?>>> cplList = new Function<Class<?>, List<Class<?>>>() {
@@ -205,9 +190,7 @@ public class JavaC3 {
         };
 
         return mergeLists(Collections.<Class<?>> singletonList(c),
-                newArrayList(
-                        concat(Lists.transform(cDirectSuperclasses, cplList),
-                                singletonList(cDirectSuperclasses))),
+                newArrayList(concat(Lists.transform(cDirectSuperclasses, cplList), singletonList(cDirectSuperclasses))),
                 dsc);
     }
 
@@ -216,16 +199,13 @@ public class JavaC3 {
      * {@link DefaultDirectSuperclassesInspector}. The returned iterable will
      * start with c, followed by the superclasses of c in linearization order.
      */
-    public static Iterable<Class<?>> allSuperclasses(Class<?> c)
-            throws JavaC3Exception {
+    public static Iterable<Class<?>> allSuperclasses(Class<?> c) throws JavaC3Exception {
         return allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE);
     }
 
-    public static Iterable<Class<?>> allSuperclassesReverse(Class<?> c)
-            throws JavaC3Exception {
+    public static Iterable<Class<?>> allSuperclassesReverse(Class<?> c) throws JavaC3Exception {
         ArrayList<Class<?>> result = new ArrayList<>();
-        allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE)
-                .forEach(result::add);
+        allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE).forEach(result::add);
         Collections.reverse(result);
         return result;
     }
@@ -234,15 +214,12 @@ public class JavaC3 {
      * Return the linearization of c. The returned iterable will start with c,
      * followed by the superclasses of c in linearization order.
      */
-    public static Iterable<Class<?>> allSuperclasses(Class<?> c,
-            DirectSuperclassesInspector directParentClassesReader)
-                    throws JavaC3Exception {
-        LinearizationKey key = new LinearizationKey(directParentClassesReader,
-                c);
+    public static Iterable<Class<?>> allSuperclasses(Class<?> c, DirectSuperclassesInspector directParentClassesReader)
+            throws JavaC3Exception {
+        LinearizationKey key = new LinearizationKey(directParentClassesReader, c);
         Iterable<Class<?>> linearization = linearizations.get(key);
         if (linearization == null) {
-            linearization = computeClassLinearization(c,
-                    directParentClassesReader);
+            linearization = computeClassLinearization(c, directParentClassesReader);
             linearizations.put(key, linearization);
         }
 

@@ -32,8 +32,7 @@ public class MethodInvocationRecorder {
 
     public static void addTerminalType(Class<?> clazz) {
         synchronized (placeHolder) {
-            WeakHashMap<Class<?>, Object> tmp = new WeakHashMap<>(
-                    terminalTypes);
+            WeakHashMap<Class<?>, Object> tmp = new WeakHashMap<>(terminalTypes);
             tmp.put(clazz, placeHolder);
             terminalTypes = tmp;
         }
@@ -54,8 +53,7 @@ public class MethodInvocationRecorder {
     private static final CallbackFilter FINALIZE_FILTER = new CallbackFilter() {
         @Override
         public int accept(Method method) {
-            if (method.getName().equals("finalize")
-                    && method.getParameterTypes().length == 0
+            if (method.getName().equals("finalize") && method.getParameterTypes().length == 0
                     && method.getReturnType() == Void.TYPE) {
                 return 0;
             }
@@ -82,13 +80,10 @@ public class MethodInvocationRecorder {
         e.setCallbacks(new Callback[] { NoOp.INSTANCE, new MethodInterceptor() {
 
             @Override
-            public Object intercept(Object obj, Method method, Object[] args,
-                    MethodProxy proxy) throws Throwable {
-                invocations.add(new MethodInvocation<Object>(type, method,
-                        Arrays.asList(args)));
+            public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+                invocations.add(new MethodInvocation<Object>(type, method, Arrays.asList(args)));
 
-                return getProxy(
-                        type.resolveType(method.getGenericReturnType()));
+                return getProxy(type.resolveType(method.getGenericReturnType()));
             }
 
         } });
@@ -96,15 +91,13 @@ public class MethodInvocationRecorder {
         try {
             return (T) e.create();
         } catch (Exception ex) {
-            throw new RuntimeException("Error while creating proxy of " + type,
-                    ex);
+            throw new RuntimeException("Error while creating proxy of " + type, ex);
         }
     }
 
     protected boolean isTerminal(TypeToken<?> returnType) {
         Class<?> clazz = returnType.getRawType();
-        return clazz.isPrimitive() || clazz.isEnum()
-                || clazz.isAnnotationPresent(TerminalType.class)
+        return clazz.isPrimitive() || clazz.isEnum() || clazz.isAnnotationPresent(TerminalType.class)
                 || terminalTypes.containsKey(clazz) || clazz.isArray();
     }
 
@@ -116,25 +109,21 @@ public class MethodInvocationRecorder {
         return Iterables.getLast(invocations);
     }
 
-    public static <T> List<MethodInvocation<Object>> getInvocations(
-            Class<T> cls, Consumer<T> accessor) {
+    public static <T> List<MethodInvocation<Object>> getInvocations(Class<T> cls, Consumer<T> accessor) {
         return getInvocations(TypeToken.of(cls), accessor);
     }
 
-    public static <T> List<MethodInvocation<Object>> getInvocations(
-            TypeToken<T> cls, Consumer<T> accessor) {
+    public static <T> List<MethodInvocation<Object>> getInvocations(TypeToken<T> cls, Consumer<T> accessor) {
         MethodInvocationRecorder recorder = new MethodInvocationRecorder();
         accessor.accept(recorder.getProxy(cls));
         return recorder.getInvocations();
     }
 
-    public static <T> MethodInvocation<Object> getLastInvocation(Class<T> cls,
-            Consumer<T> accessor) {
+    public static <T> MethodInvocation<Object> getLastInvocation(Class<T> cls, Consumer<T> accessor) {
         return getLastInvocation(TypeToken.of(cls), accessor);
     }
 
-    public static <T> MethodInvocation<Object> getLastInvocation(
-            TypeToken<T> cls, Consumer<T> accessor) {
+    public static <T> MethodInvocation<Object> getLastInvocation(TypeToken<T> cls, Consumer<T> accessor) {
         MethodInvocationRecorder recorder = new MethodInvocationRecorder();
         accessor.accept(recorder.getProxy(cls));
         return recorder.getLastInvocation();

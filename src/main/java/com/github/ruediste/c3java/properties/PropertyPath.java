@@ -73,9 +73,7 @@ public class PropertyPath {
         @Override
         public String pathSegment() {
             return invocation.getMethod().getName() + "("
-                    + invocation.getArguments().stream().map(Objects::toString)
-                            .collect(Collectors.joining(","))
-                    + ")";
+                    + invocation.getArguments().stream().map(Objects::toString).collect(Collectors.joining(",")) + ")";
         }
     }
 
@@ -88,8 +86,7 @@ public class PropertyPath {
     public PropertyInfo getAccessedProperty() {
         PropertyPathNode lastNode = getLastNode();
         if (!(lastNode instanceof PropertyNode))
-            throw new RuntimeException(
-                    "Path does not end with a property but with a " + lastNode);
+            throw new RuntimeException("Path does not end with a property but with a " + lastNode);
         return ((PropertyNode) lastNode).property;
     }
 

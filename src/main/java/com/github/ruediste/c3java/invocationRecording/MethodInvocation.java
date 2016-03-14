@@ -22,8 +22,7 @@ public class MethodInvocation<T> {
     final private TypeToken<?> instanceType;
     final private Method method;
 
-    public MethodInvocation(TypeToken<?> instanceType, Method method,
-            List<T> arguments) {
+    public MethodInvocation(TypeToken<?> instanceType, Method method, List<T> arguments) {
         this.instanceType = instanceType;
         this.method = method;
         this.arguments = new ArrayList<>(arguments);
@@ -40,8 +39,7 @@ public class MethodInvocation<T> {
         return Collections.unmodifiableList(arguments);
     }
 
-    public <O> boolean isCallToSameMethod(MethodInvocation<O> other,
-            BiPredicate<? super T, ? super O> comparator) {
+    public <O> boolean isCallToSameMethod(MethodInvocation<O> other, BiPredicate<? super T, ? super O> comparator) {
         if (method != other.method) {
             return false;
         }
@@ -62,8 +60,7 @@ public class MethodInvocation<T> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("method", method)
-                .add("arguments", arguments).toString();
+        return MoreObjects.toStringHelper(this).add("method", method).add("arguments", arguments).toString();
     }
 
     /**
@@ -81,11 +78,9 @@ public class MethodInvocation<T> {
         return instanceType;
     }
 
-    public <R> MethodInvocation<R> map(
-            BiFunction<AnnotatedType, ? super T, R> func) {
+    public <R> MethodInvocation<R> map(BiFunction<AnnotatedType, ? super T, R> func) {
         ArrayList<R> args = new ArrayList<>();
-        Iterator<AnnotatedType> pit = Arrays.asList(
-                getMethod().getAnnotatedParameterTypes()).iterator();
+        Iterator<AnnotatedType> pit = Arrays.asList(getMethod().getAnnotatedParameterTypes()).iterator();
         Iterator<T> ait = getArguments().iterator();
         while (pit.hasNext() && ait.hasNext()) {
             args.add(func.apply(pit.next(), ait.next()));

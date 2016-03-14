@@ -1,26 +1,27 @@
 package com.github.ruediste.c3java.linearization;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Implementation of {@link DirectSuperclassesInspector} which only includes
  * interfaces and java.lang.Object. Note: it includes all the interfaces
  * implemented by all its super classes as directly implemented.
  */
-public class ImplementsOnlyDirectSuperclassesInspector implements
-        DirectSuperclassesInspector {
+public class ImplementsOnlyDirectSuperclassesInspector implements DirectSuperclassesInspector {
     public static final DirectSuperclassesInspector INSTANCE = new ImplementsOnlyDirectSuperclassesInspector();
 
     /**
      * Get the direct superclasses of a class. Interfaces, followed by the
      * superclasses. Interfaces with no super interfaces extend Object.
      */
+    @Override
     public List<Class<?>> directParentClasses(Class<?> c) {
         if (c.isPrimitive()) {
             return DefaultDirectSuperclassesInspector.primitiveSuperclasses(c);
         } else if (c.isArray()) {
-            return DefaultDirectSuperclassesInspector.arrayDirectSuperclasses(
-                    0, c, this);
+            return DefaultDirectSuperclassesInspector.arrayDirectSuperclasses(0, c, this);
         } else {
             Class<?>[] interfaces = c.getInterfaces();
             Class<?> superclass = c.getSuperclass();

@@ -8,18 +8,15 @@ import java.lang.reflect.Method;
  */
 public class MethodInvocationUtil {
 
-    public static Object invoke(Object target,
-            MethodInvocation<Object> invocation) {
+    public static Object invoke(Object target, MethodInvocation<Object> invocation) {
         try {
             Method method = invocation.getMethod();
             method.setAccessible(true);
             return method.invoke(target, invocation.getArguments().toArray());
         } catch (IllegalAccessException | IllegalArgumentException e) {
-            throw new RuntimeException("Error while invoking "
-                    + invocation.getMethod() + " on target " + target, e);
+            throw new RuntimeException("Error while invoking " + invocation.getMethod() + " on target " + target, e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException("Error while executing "
-                    + invocation.getMethod(), e);
+            throw new RuntimeException("Error while executing " + invocation.getMethod(), e);
         }
     }
 }
