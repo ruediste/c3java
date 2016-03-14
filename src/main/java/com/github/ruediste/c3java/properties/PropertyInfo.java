@@ -78,26 +78,36 @@ public class PropertyInfo implements AnnotatedElement {
 
     public Object getValue(Object target) {
         try {
-            return getter.invoke(target);
+            if (getter != null)
+                return getter.invoke(target);
+            if (backingField != null)
+                return backingField.get(target);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+        throw new UnsupportedOperationException("Cannot read property " + name + " of found on type " + bearingType);
     }
 
     public void setValue(Object target, Object value) {
         try {
-            setter.invoke(target, value);
+            if (setter != null)
+                setter.invoke(target, value);
+            else if (backingField != null)
+                backingField.set(target, value);
+            else
+                throw new UnsupportedOperationException(
+                        "Cannot write property " + name + " of found on type " + bearingType);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
     public boolean isReadable() {
-        return getter != null;
+        return getter != null || backingField != null;
     }
 
     public boolean isWriteable() {
-        return setter != null;
+        return setter != null || backingField != null;
     }
 
     public String getName() {

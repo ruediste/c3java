@@ -86,12 +86,15 @@ public class PropertyUtil {
 
         // fill backing fields
         for (Field f : type.getDeclaredFields()) {
+            if (f.isSynthetic())
+                continue;
             String name = f.getName();
             PropertyDeclaration property = result.get(name);
             if (property != null) {
                 if (property.matchesPropertyType(f.getGenericType()))
                     result.put(name, property.withBackingField(f));
-            }
+            } else
+                result.put(name, new PropertyDeclaration(name, type).withBackingField(f));
         }
         failingProperties.forEach(x -> result.remove(x));
         return result;

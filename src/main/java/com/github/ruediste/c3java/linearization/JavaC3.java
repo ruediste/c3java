@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -203,7 +204,13 @@ public class JavaC3 {
         return allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE);
     }
 
-    public static Iterable<Class<?>> allSuperclassesReverse(Class<?> c) throws JavaC3Exception {
+    /**
+     * Return the linearization of c, using the
+     * {@link DefaultDirectSuperclassesInspector}. The returned iterable will
+     * start with {@link Object}, followed by the superclasses of c in
+     * linearization order and end with c.
+     */
+    public static Collection<Class<?>> allSuperclassesReverse(Class<?> c) throws JavaC3Exception {
         ArrayList<Class<?>> result = new ArrayList<>();
         allSuperclasses(c, DefaultDirectSuperclassesInspector.INSTANCE).forEach(result::add);
         Collections.reverse(result);
