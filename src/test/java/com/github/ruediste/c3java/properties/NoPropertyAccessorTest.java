@@ -16,9 +16,7 @@ public class NoPropertyAccessorTest {
 
     @Test
     public void testAccessorIgnored() throws Exception {
-        assertNotNull(PropertyUtil.getAccessor(A.class.getMethod("setI",
-                int.class)));
-        assertNull(PropertyUtil.getAccessor(A.class
-                .getMethod("setJ", int.class)));
+        assertNotNull(PropertyUtil.getAccessor(A.class.getMethod("setI", int.class)));
+        assertNull(PropertyUtil.getAccessor(A.class.getMethod("setJ", int.class)));
     }
 }

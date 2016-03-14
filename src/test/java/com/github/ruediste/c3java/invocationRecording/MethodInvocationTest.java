@@ -39,8 +39,7 @@ public class MethodInvocationTest {
     }
 
     private boolean isCallToSame(int idx1, int idx2) {
-        return get(idx1).isCallToSameMethod(get(idx2),
-                (a, b) -> Objects.equals(a, b));
+        return get(idx1).isCallToSameMethod(get(idx2), (a, b) -> Objects.equals(a, b));
     }
 
     private MethodInvocation<Object> get(int idx) {
