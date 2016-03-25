@@ -185,4 +185,29 @@ public class PropertyUtilTest {
         assertEquals(3, info.getValue(d));
 
     }
+
+    class ClassE {
+        private boolean foo;
+
+        public boolean isFoo() {
+            return foo;
+        }
+
+        public void setFoo(boolean foo) {
+            this.foo = foo;
+        }
+    }
+
+    @Test
+    public void testBooleanProperty() throws ReflectiveOperationException {
+        Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(ClassE.class);
+        assertEquals(1, props.size());
+        PropertyInfo info = props.get("foo");
+        checkPropertyInfo("foo", boolean.class, ClassE.class.getDeclaredMethod("isFoo"),
+                ClassE.class.getDeclaredMethod("setFoo", boolean.class), ClassE.class.getDeclaredField("foo"),
+                ClassE.class, info);
+        ClassE instance = new ClassE();
+        info.setValue(instance, true);
+        assertEquals(true, info.getValue(instance));
+    }
 }

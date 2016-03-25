@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import com.google.common.base.Defaults;
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 
 import net.sf.cglib.proxy.Callback;
@@ -98,7 +99,7 @@ public class MethodInvocationRecorder {
     protected boolean isTerminal(TypeToken<?> returnType) {
         Class<?> clazz = returnType.getRawType();
         return clazz.isPrimitive() || clazz.isEnum() || clazz.isAnnotationPresent(TerminalType.class)
-                || terminalTypes.containsKey(clazz) || clazz.isArray();
+                || Primitives.isWrapperType(clazz) || terminalTypes.containsKey(clazz) || clazz.isArray();
     }
 
     public List<MethodInvocation<Object>> getInvocations() {

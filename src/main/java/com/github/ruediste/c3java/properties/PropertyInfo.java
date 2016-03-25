@@ -98,7 +98,7 @@ public class PropertyInfo implements AnnotatedElement {
                 throw new UnsupportedOperationException(
                         "Cannot write property " + name + " of found on type " + bearingType);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while setting property " + this + " to value " + value, e);
         }
     }
 

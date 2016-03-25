@@ -38,18 +38,19 @@ public class PropertyUtil {
         }
 
         // check for getters
-        if (method.getName().startsWith("get") && method.getReturnType() != null) {
-            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("get".length()));
-
+        if (method.getName().startsWith("get") && method.getReturnType() != null && method.getParameterCount() == 0) {
             // getFoo()
-            if (method.getParameterCount() == 0) {
-                return new PropertyAccessor(name, AccessorType.GETTER, method, method.getReturnType());
-            }
+            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("get".length()));
+            return new PropertyAccessor(name, AccessorType.GETTER, method, method.getReturnType());
 
+        }
+        if (method.getName().startsWith("is") && method.getReturnType() != null && method.getParameterCount() == 0) {
+            // isFoo()
+            String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("is".length()));
+            return new PropertyAccessor(name, AccessorType.GETTER, method, method.getReturnType());
         }
 
         // check for setters
-
         if (method.getName().startsWith("set")) {
             String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("set".length()));
             // setFoo(value)
