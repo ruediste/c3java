@@ -15,11 +15,12 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 
 public class PropertyInfo implements AnnotatedElement {
 
     private final String name;
-    private final Class<?> propertyType;
+    private final TypeToken<?> propertyType;
     private final Method getter;
     private final Method setter;
     private final Field backingField;
@@ -27,7 +28,7 @@ public class PropertyInfo implements AnnotatedElement {
     private final PropertyInfo parent;
     private final Class<?> bearingType;
 
-    public PropertyInfo(String name, Class<?> propertyType, Method getter, Method setter, Field backingField,
+    public PropertyInfo(String name, TypeToken<?> propertyType, Method getter, Method setter, Field backingField,
             PropertyDeclaration declaration, PropertyInfo parent, Class<?> bearingType) {
         this.name = name;
         this.propertyType = propertyType;
@@ -114,7 +115,7 @@ public class PropertyInfo implements AnnotatedElement {
         return name;
     }
 
-    public Class<?> getPropertyType() {
+    public TypeToken<?> getPropertyType() {
         return propertyType;
     }
 

@@ -5,11 +5,14 @@ import static org.junit.Assert.assertEquals;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
 import com.github.ruediste.c3java.properties.PropertyPath.PropertyNode;
+import com.google.common.reflect.TypeToken;
 
 public class PropertyUtilTest {
 
@@ -64,7 +67,7 @@ public class PropertyUtilTest {
             Field backingField, PropertyDeclaration decl) {
         assertEquals(name, decl.getName());
         assertEquals(declaringType, decl.getDeclaringType());
-        assertEquals(propertyType, decl.getPropertyType());
+        assertEquals(TypeToken.of(propertyType), decl.getPropertyType());
         assertEquals(getter, decl.getGetter());
         assertEquals(setter, decl.getSetter());
         assertEquals(backingField, decl.getBackingField());
@@ -124,8 +127,8 @@ public class PropertyUtilTest {
                 TestClassProperties.class.getDeclaredMethod("setRW", int.class), null, props.get("rW"));
     }
 
-    void checkPropertyInfo(String name, Type propertyType, Method getter, Method setter, Field backingField,
-            Type bearingType, PropertyInfo info) {
+    private void checkPropertyInfo(String name, Method getter, Method setter, Field backingField, Type bearingType,
+            TypeToken<?> propertyType, PropertyInfo info) {
         assertEquals(name, info.getName());
         assertEquals(propertyType, info.getPropertyType());
         assertEquals(getter, info.getGetter());
@@ -138,30 +141,30 @@ public class PropertyUtilTest {
     public void testPropertyInfoA() throws Exception {
         Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(ClassA.class);
         assertEquals(1, props.size());
-        checkPropertyInfo("a", int.class, ClassA.class.getDeclaredMethod("getA"), null, null, ClassA.class,
-                props.get("a"));
+        checkPropertyInfo("a", ClassA.class.getDeclaredMethod("getA"), null, null, ClassA.class,
+                TypeToken.of(int.class), props.get("a"));
     }
 
     @Test
     public void testPropertyInfoB() throws Exception {
         Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(InterfaceB.class);
         assertEquals(2, props.size());
-        checkPropertyInfo("b", int.class, InterfaceB.class.getDeclaredMethod("getB"), null, null, InterfaceB.class,
-                props.get("b"));
-        checkPropertyInfo("b1", int.class, InterfaceB.class.getDeclaredMethod("getB1"), null, null, InterfaceB.class,
-                props.get("b1"));
+        checkPropertyInfo("b", InterfaceB.class.getDeclaredMethod("getB"), null, null, InterfaceB.class,
+                TypeToken.of(int.class), props.get("b"));
+        checkPropertyInfo("b1", InterfaceB.class.getDeclaredMethod("getB1"), null, null, InterfaceB.class,
+                TypeToken.of(int.class), props.get("b1"));
     }
 
     @Test
     public void testPropertyInfoC() throws Exception {
         Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(ClassC.class);
         assertEquals(3, props.size());
-        checkPropertyInfo("a", int.class, ClassC.class.getDeclaredMethod("getA"), null, null, ClassC.class,
-                props.get("a"));
-        checkPropertyInfo("b", int.class, ClassC.class.getDeclaredMethod("getB"), null, null, ClassC.class,
-                props.get("b"));
-        checkPropertyInfo("b1", int.class, InterfaceB.class.getDeclaredMethod("getB1"), null, null, ClassC.class,
-                props.get("b1"));
+        checkPropertyInfo("a", ClassC.class.getDeclaredMethod("getA"), null, null, ClassC.class,
+                TypeToken.of(int.class), props.get("a"));
+        checkPropertyInfo("b", ClassC.class.getDeclaredMethod("getB"), null, null, ClassC.class,
+                TypeToken.of(int.class), props.get("b"));
+        checkPropertyInfo("b1", InterfaceB.class.getDeclaredMethod("getB1"), null, null, ClassC.class,
+                TypeToken.of(int.class), props.get("b1"));
     }
 
     @Test
@@ -179,7 +182,8 @@ public class PropertyUtilTest {
         Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(ClassD.class);
         assertEquals(1, props.size());
         PropertyInfo info = props.get("foo");
-        checkPropertyInfo("foo", int.class, null, null, ClassD.class.getDeclaredField("foo"), ClassD.class, info);
+        checkPropertyInfo("foo", null, null, ClassD.class.getDeclaredField("foo"), ClassD.class,
+                TypeToken.of(int.class), info);
         ClassD d = new ClassD();
         info.setValue(d, 3);
         assertEquals(3, info.getValue(d));
@@ -203,11 +207,39 @@ public class PropertyUtilTest {
         Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(ClassE.class);
         assertEquals(1, props.size());
         PropertyInfo info = props.get("foo");
-        checkPropertyInfo("foo", boolean.class, ClassE.class.getDeclaredMethod("isFoo"),
+        checkPropertyInfo("foo", ClassE.class.getDeclaredMethod("isFoo"),
                 ClassE.class.getDeclaredMethod("setFoo", boolean.class), ClassE.class.getDeclaredField("foo"),
-                ClassE.class, info);
+                ClassE.class, TypeToken.of(boolean.class), info);
         ClassE instance = new ClassE();
         info.setValue(instance, true);
         assertEquals(true, info.getValue(instance));
+    }
+
+    class ClassF {
+        private Set<Integer> foo;
+
+        public Set<Integer> getFoo() {
+            return foo;
+        }
+
+        public void setFoo(Set<Integer> foo) {
+            this.foo = foo;
+        }
+
+    }
+
+    @Test
+    public void testGenericCollection() throws ReflectiveOperationException {
+        Map<String, PropertyInfo> props = PropertyUtil.getPropertyInfoMap(ClassF.class);
+        assertEquals(1, props.size());
+        PropertyInfo info = props.get("foo");
+        checkPropertyInfo("foo", ClassF.class.getDeclaredMethod("getFoo"),
+                ClassF.class.getDeclaredMethod("setFoo", Set.class), ClassF.class.getDeclaredField("foo"), ClassF.class,
+                new TypeToken<Set<Integer>>() {
+                    private static final long serialVersionUID = 1L;
+                }, info);
+        ClassF instance = new ClassF();
+        info.setValue(instance, Collections.emptySet());
+        assertEquals(Collections.emptySet(), info.getValue(instance));
     }
 }

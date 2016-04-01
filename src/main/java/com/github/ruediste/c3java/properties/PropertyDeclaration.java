@@ -5,7 +5,6 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
@@ -13,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Objects;
+import com.google.common.reflect.TypeToken;
 
 /**
  * The property declaration of a single type regarding a single property.
@@ -30,14 +30,14 @@ public class PropertyDeclaration implements AnnotatedElement {
     private final Method getter;
     private final Method setter;
     private final Field backingField;
-    private final Class<?> propertyType;
+    private final TypeToken<?> propertyType;
 
     public PropertyDeclaration(String name, Class<?> declaringType) {
         this(name, declaringType, null, null, null, null);
     }
 
-    public PropertyDeclaration(String name, Class<?> declaringType, Class<?> propertyType, Method getter, Method setter,
-            Field backingField) {
+    public PropertyDeclaration(String name, Class<?> declaringType, TypeToken<?> propertyType, Method getter,
+            Method setter, Field backingField) {
         super();
         this.name = name;
         this.declaringType = declaringType;
@@ -123,12 +123,12 @@ public class PropertyDeclaration implements AnnotatedElement {
         return matchesPropertyType(accessor.getPropertyType());
     }
 
-    public boolean matchesPropertyType(Type type) {
+    public boolean matchesPropertyType(TypeToken<?> type) {
         return propertyType == null || propertyType.equals(type);
     }
 
     public PropertyDeclaration withBackingField(Field backingField) {
-        Class<?> fieldType = backingField.getType();
+        TypeToken<?> fieldType = TypeToken.of(backingField.getGenericType());
         if (propertyType != null && !propertyType.equals(fieldType))
             throw new RuntimeException(
                     "field type of " + backingField + " does not match property type " + propertyType);
@@ -139,7 +139,7 @@ public class PropertyDeclaration implements AnnotatedElement {
         return new PropertyInfo(name, propertyType, getter, setter, backingField, this, null, bearingType);
     }
 
-    public Type getPropertyType() {
+    public TypeToken<?> getPropertyType() {
         return propertyType;
     }
 

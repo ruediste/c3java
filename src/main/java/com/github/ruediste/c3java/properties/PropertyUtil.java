@@ -41,13 +41,13 @@ public class PropertyUtil {
         if (method.getName().startsWith("get") && method.getReturnType() != null && method.getParameterCount() == 0) {
             // getFoo()
             String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("get".length()));
-            return new PropertyAccessor(name, AccessorType.GETTER, method, method.getReturnType());
+            return new PropertyAccessor(name, AccessorType.GETTER, method, TypeToken.of(method.getGenericReturnType()));
 
         }
         if (method.getName().startsWith("is") && method.getReturnType() != null && method.getParameterCount() == 0) {
             // isFoo()
             String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("is".length()));
-            return new PropertyAccessor(name, AccessorType.GETTER, method, method.getReturnType());
+            return new PropertyAccessor(name, AccessorType.GETTER, method, TypeToken.of(method.getGenericReturnType()));
         }
 
         // check for setters
@@ -55,7 +55,8 @@ public class PropertyUtil {
             String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName().substring("set".length()));
             // setFoo(value)
             if (method.getParameterCount() == 1) {
-                return new PropertyAccessor(name, AccessorType.SETTER, method, method.getParameterTypes()[0]);
+                return new PropertyAccessor(name, AccessorType.SETTER, method,
+                        TypeToken.of(method.getGenericParameterTypes()[0]));
             }
 
         }
@@ -92,7 +93,7 @@ public class PropertyUtil {
             String name = f.getName();
             PropertyDeclaration property = result.get(name);
             if (property != null) {
-                if (property.matchesPropertyType(f.getGenericType()))
+                if (property.matchesPropertyType(TypeToken.of(f.getGenericType())))
                     result.put(name, property.withBackingField(f));
             } else
                 result.put(name, new PropertyDeclaration(name, type).withBackingField(f));
