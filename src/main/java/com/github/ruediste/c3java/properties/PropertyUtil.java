@@ -1,6 +1,7 @@
 package com.github.ruediste.c3java.properties;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -88,7 +89,9 @@ public class PropertyUtil {
 
         // fill backing fields
         for (Field f : type.getDeclaredFields()) {
-            if (f.isSynthetic())
+            if (f.isSynthetic() || f.isEnumConstant())
+                continue;
+            if (f.isAnnotationPresent(NoPropertyField.class))
                 continue;
             String name = f.getName();
             PropertyDeclaration property = result.get(name);
@@ -134,20 +137,24 @@ public class PropertyUtil {
     private static Map<String, PropertyInfo> calculatePropertyInfoMap(Class<?> type) {
         Map<String, PropertyInfo> result = new HashMap<>();
 
-        for (Class<?> cls : JavaC3.allSuperclassesReverse(type)) {
-            if (Object.class.equals(cls))
-                continue;
-            for (PropertyDeclaration decl : getPropertyDeclarations(cls).values()) {
-                PropertyInfo existingInfo = result.get(decl.getName());
-                if (existingInfo == null) {
-                    result.put(decl.getName(), decl.toInfo(type));
-                } else {
-                    result.put(decl.getName(), existingInfo.extendedWith(decl));
+        try {
+            for (Class<?> cls : JavaC3.allSuperclassesReverse(type)) {
+                if (Object.class.equals(cls))
+                    continue;
+                for (PropertyDeclaration decl : getPropertyDeclarations(cls).values()) {
+                    PropertyInfo existingInfo = result.get(decl.getName());
+                    if (existingInfo == null) {
+                        result.put(decl.getName(), decl.toInfo(type));
+                    } else {
+                        result.put(decl.getName(), existingInfo.extendedWith(decl));
+                    }
                 }
             }
-        }
 
-        return result;
+            return result;
+        } catch (Throwable t) {
+            throw new RuntimeException("Error while creating property info map for " + type, t);
+        }
     }
 
     static public PropertyDeclaration getPropertyIntroduction(Class<?> type, String name) {
@@ -222,6 +229,25 @@ public class PropertyUtil {
             return Optional.empty();
 
         return tryGetPropertyInfo(accessorInvocation.getInstanceType().getRawType(), accessor.getName());
+
+    }
+
+    static public PropertyInfo getProperty(Member member) {
+        return tryGetProperty(member).orElseThrow(() -> new RuntimeException(member + " is no property accessor"));
+    }
+
+    static public Optional<PropertyInfo> tryGetProperty(Member member) {
+        String name;
+        if (member instanceof Method) {
+            PropertyAccessor accessor = getAccessor((Method) member);
+            if (accessor == null)
+                return Optional.empty();
+            name = accessor.getName();
+        } else if (member instanceof Field) {
+            name = member.getName();
+        } else
+            return Optional.empty();
+        return Optional.of(getPropertyInfo(member.getDeclaringClass(), name));
 
     }
 

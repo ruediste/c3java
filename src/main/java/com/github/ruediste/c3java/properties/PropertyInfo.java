@@ -133,9 +133,11 @@ public class PropertyInfo implements AnnotatedElement {
 
     public PropertyInfo extendedWith(PropertyDeclaration decl) {
         if (!Objects.equals(name, decl.getName()))
-            throw new RuntimeException("names of to be merged properties does not match");
+            throw new RuntimeException(
+                    "names of to be merged properties does not match: " + name + ", " + decl.getName());
         if (!Objects.equals(propertyType, decl.getPropertyType()))
-            throw new RuntimeException("types of to be merged properties does not match");
+            throw new RuntimeException("types of to be merged properties does not match. name: " + name + " types: "
+                    + propertyType + ", " + decl.getPropertyType());
 
         PropertyInfo result = this;
         if (decl.getGetter() != null)
